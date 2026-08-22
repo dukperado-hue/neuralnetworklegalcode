@@ -7,11 +7,17 @@ import {
   ArrowUpRight,
   BookOpen,
   ChevronRight,
+  Layers2,
+  Link2,
   List,
+  Music2,
+  Orbit,
   Network,
   RotateCcw,
   Search,
   Sparkles,
+  Volume2,
+  VolumeX,
   X,
   ZoomIn,
   ZoomOut,
@@ -51,17 +57,15 @@ const legalDomains: LegalDomain[] = [
     softColor: "#A4EAF1",
     x: 342,
     y: 277,
-    radius: 43,
-    description: "โครงสร้างกฎหมายเอกชน ตั้งแต่บุคคล นิติกรรม หนี้ ทรัพย์ ครอบครัว และมรดก",
+    radius: 52,
+    description: "ประมวลกฎหมายแพ่งและพาณิชย์ แบ่งเป็น 6 บรรพ ตั้งแต่หลักทั่วไปจนถึงมรดก",
     children: [
-      { id: "person", label: "บุคคล", x: 206, y: 198, radius: 20, description: "สถานะและความสามารถของบุคคลตามกฎหมาย", references: ["บรรพ 1", "หลักบุคคล"] },
-      { id: "juristic-act", label: "นิติกรรม", x: 250, y: 378, radius: 24, description: "การแสดงเจตนาและผลของนิติกรรม", references: ["มาตรา 149", "การแสดงเจตนา"] },
-      { id: "obligation", label: "หนี้", x: 379, y: 384, radius: 25, description: "สิทธิ หน้าที่ และการระงับแห่งหนี้", references: ["บรรพ 2", "หนี้"] },
-      { id: "contract", label: "สัญญา", x: 474, y: 245, radius: 19, description: "หลักและเอกเทศสัญญา", references: ["สัญญา", "หนี้"] },
-      { id: "property", label: "ทรัพย์", x: 280, y: 494, radius: 20, description: "ทรัพย์สินและทรัพยสิทธิ", references: ["บรรพ 4", "ทรัพยสิทธิ"] },
-      { id: "tort", label: "ละเมิด", x: 443, y: 484, radius: 27, description: "กลุ่มแนวคิดเกี่ยวกับการกระทำละเมิดและความรับผิด", references: ["มาตรา 420", "มาตรา 425", "มาตรา 429"] },
-      { id: "family", label: "ครอบครัว", x: 159, y: 414, radius: 18, description: "สถานะความสัมพันธ์ในครอบครัว", references: ["บรรพ 5", "ครอบครัว"] },
-      { id: "inheritance", label: "มรดก", x: 127, y: 302, radius: 18, description: "การตกทอดและจัดการมรดก", references: ["บรรพ 6", "มรดก"] },
+      { id: "civil-book-1", label: "บรรพ 1 · หลักทั่วไป", x: 201, y: 183, radius: 20, description: "หลักทั่วไปของประมวลกฎหมายแพ่งและพาณิชย์", references: ["มาตรา 4–193/35", "225 มาตรา"] },
+      { id: "civil-book-2", label: "บรรพ 2 · หนี้", x: 254, y: 390, radius: 23, description: "หลักแห่งหนี้ สิทธิ และหน้าที่ของคู่กรณี", references: ["มาตรา 194–452", "259 มาตรา"] },
+      { id: "civil-book-3", label: "บรรพ 3 · เอกเทศสัญญา", x: 403, y: 394, radius: 29, description: "เอกเทศสัญญาและกลุ่มสัญญาสำคัญ", references: ["มาตรา 453–798", "847 มาตรา"] },
+      { id: "civil-book-4", label: "บรรพ 4 · ทรัพย์สิน", x: 493, y: 239, radius: 20, description: "ทรัพย์สินและทรัพยสิทธิ", references: ["มาตรา 1298–1434", "137 มาตรา"] },
+      { id: "civil-book-5", label: "บรรพ 5 · ครอบครัว", x: 288, y: 508, radius: 21, description: "กฎหมายครอบครัว", references: ["มาตรา 1435–1598/41", "215 มาตรา"] },
+      { id: "civil-book-6", label: "บรรพ 6 · มรดก", x: 139, y: 329, radius: 19, description: "การตกทอดและการจัดการมรดก", references: ["มาตรา 1599–1755", "157 มาตรา"] },
     ],
   },
   {
@@ -73,30 +77,13 @@ const legalDomains: LegalDomain[] = [
     softColor: "#D99DAE",
     x: 1055,
     y: 244,
-    radius: 39,
+    radius: 40,
     description: "หลักความผิด โทษ ความรับผิดทางอาญา และกลุ่มความผิดสำคัญ",
     children: [
       { id: "criminal-general", label: "ภาคทั่วไป", x: 953, y: 160, radius: 22, description: "หลักทั่วไปของความรับผิดและโทษ", references: ["ภาค 1", "หลักทั่วไป"] },
       { id: "person-offence", label: "ความผิดต่อชีวิต", x: 1167, y: 174, radius: 22, description: "กลุ่มความผิดต่อชีวิตและร่างกาย", references: ["ภาค 2", "ความผิดต่อบุคคล"] },
       { id: "property-offence", label: "ความผิดเกี่ยวกับทรัพย์", x: 1178, y: 348, radius: 24, description: "กลุ่มความผิดต่อทรัพย์", references: ["ภาค 2", "ทรัพย์"] },
       { id: "attempt", label: "พยายาม", x: 950, y: 361, radius: 17, description: "เงื่อนไขความรับผิดในขั้นพยายามกระทำความผิด", references: ["ภาค 1", "ความพยายาม"] },
-    ],
-  },
-  {
-    id: "constitution",
-    shortLabel: "รัฐธรรมนูญ",
-    title: "กฎหมายรัฐธรรมนูญ",
-    abbreviation: "รธน.",
-    color: "#D6A83F",
-    softColor: "#EBCF82",
-    x: 719,
-    y: 160,
-    radius: 36,
-    description: "หลักรัฐธรรมนูญ สิทธิ เสรีภาพ และโครงสร้างสถาบันทางการเมือง",
-    children: [
-      { id: "rights", label: "สิทธิและเสรีภาพ", x: 620, y: 97, radius: 21, description: "หมวดสิทธิและเสรีภาพของปวงชน", references: ["สิทธิ", "เสรีภาพ"] },
-      { id: "state-power", label: "องค์กรของรัฐ", x: 822, y: 101, radius: 22, description: "โครงสร้างและการใช้อำนาจรัฐ", references: ["องค์กรรัฐ", "ตรวจสอบ"] },
-      { id: "rule-law", label: "หลักนิติรัฐ", x: 741, y: 252, radius: 17, description: "หลักการใช้อำนาจภายใต้กฎหมาย", references: ["หลักการ", "คุ้มครองสิทธิ"] },
     ],
   },
   {
@@ -134,20 +121,20 @@ const legalDomains: LegalDomain[] = [
     ],
   },
   {
-    id: "administrative",
-    shortLabel: "ปกครอง",
-    title: "กฎหมายปกครอง",
-    abbreviation: "ปกครอง",
-    color: "#46BDB4",
-    softColor: "#9BDED9",
-    x: 700,
-    y: 757,
+    id: "public",
+    shortLabel: "มหาชน",
+    title: "กฎหมายมหาชน",
+    abbreviation: "มหาชน",
+    color: "#D6A83F",
+    softColor: "#EBCF82",
+    x: 720,
+    y: 752,
     radius: 37,
-    description: "การใช้อำนาจทางปกครอง คำสั่งทางปกครอง และการคุ้มครองสิทธิของประชาชน",
+    description: "โครงสร้างอำนาจรัฐ สิทธิและเสรีภาพ กฎหมายปกครอง และกลไกตรวจสอบของรัฐ",
     children: [
-      { id: "admin-order", label: "คำสั่งทางปกครอง", x: 607, y: 659, radius: 22, description: "การออกคำสั่งและผลทางกฎหมาย", references: ["คำสั่ง", "เจ้าหน้าที่"] },
-      { id: "admin-case", label: "คดีปกครอง", x: 816, y: 682, radius: 22, description: "ข้อพิพาทเกี่ยวกับการใช้อำนาจทางปกครอง", references: ["คดีปกครอง", "ศาลปกครอง"] },
-      { id: "public-contract", label: "สัญญาทางปกครอง", x: 779, y: 842, radius: 19, description: "ความสัมพันธ์ทางสัญญาของรัฐ", references: ["สัญญา", "ประโยชน์สาธารณะ"] },
+      { id: "public-constitution", label: "รัฐธรรมนูญ", x: 627, y: 647, radius: 22, description: "หลักรัฐธรรมนูญ สิทธิ เสรีภาพ และโครงสร้างของรัฐ", references: ["สิทธิ", "องค์กรของรัฐ"] },
+      { id: "public-administration", label: "กฎหมายปกครอง", x: 838, y: 684, radius: 22, description: "การใช้อำนาจทางปกครองและการคุ้มครองสิทธิ", references: ["คำสั่งทางปกครอง", "คดีปกครอง"] },
+      { id: "public-procedure", label: "วิธีพิจารณาคดีปกครอง", x: 789, y: 840, radius: 19, description: "กระบวนพิจารณาคดีและการตรวจสอบทางปกครอง", references: ["ศาลปกครอง", "กระบวนพิจารณา"] },
     ],
   },
   {
@@ -157,8 +144,8 @@ const legalDomains: LegalDomain[] = [
     abbreviation: "เฉพาะด้าน",
     color: "#B38AD9",
     softColor: "#D6C0EB",
-    x: 1052,
-    y: 761,
+    x: 1077,
+    y: 746,
     radius: 34,
     description: "พื้นที่สำหรับกฎหมายเฉพาะด้านและกฎหมายที่มีความเชื่อมโยงข้ามประมวล",
     children: [
@@ -191,6 +178,27 @@ export default function Home() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"network" | "book">("network");
   const [zoom, setZoom] = useState(1);
+  const [showConnections, setShowConnections] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [motionEnabled, setMotionEnabled] = useState(true);
+  const [is3D, setIs3D] = useState(false);
+
+  const playSoftTone = () => {
+    if (!soundEnabled || typeof window === "undefined") return;
+    const audio = new window.AudioContext();
+    const oscillator = audio.createOscillator();
+    const gain = audio.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(392, audio.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(523.25, audio.currentTime + 0.16);
+    gain.gain.setValueAtTime(0.0001, audio.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.045, audio.currentTime + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + 0.2);
+    oscillator.connect(gain).connect(audio.destination);
+    oscillator.start();
+    oscillator.stop(audio.currentTime + 0.21);
+    window.setTimeout(() => { void audio.close(); }, 260);
+  };
 
   const selectedDomain = legalDomains.find((domain) => domain.id === selectedId) ?? null;
   const selectedSubject = selectedDomain?.children.find((subject) => subject.id === selectedSubjectId) ?? null;
@@ -215,6 +223,7 @@ export default function Home() {
     : [];
 
   const exploreDomain = (domainId: string, subjectId: string | null = null) => {
+    playSoftTone();
     setExpanded(true);
     setSelectedId(domainId);
     setSelectedSubjectId(subjectId);
@@ -236,16 +245,19 @@ export default function Home() {
   const activeReferences = selectedSubject ? selectedSubject.references : selectedDomain ? [selectedDomain.abbreviation, "กลุ่มประมวล"] : [];
 
   return (
-    <main className="legal-universe">
+    <main className={`legal-universe ${motionEnabled ? "" : "motion-off"} ${is3D ? "is-3d" : ""}`}>
       <div className="graph-atmosphere" aria-hidden="true" />
       <header className="universe-header">
-        <button className="brand-lockup" onClick={resetExplorer} aria-label="กลับสู่จุดเริ่มต้นของแผนที่กฎหมาย">
-          <img src="/manus-storage/legal-atlas-mark_676ff7e4.png" alt="" className="brand-mark" />
-          <span>
-            <strong>คลังประมวลกฎหมาย</strong>
-            <small>LEGAL KNOWLEDGE ATLAS</small>
-          </span>
-        </button>
+        <div className="header-brand-row">
+          <a className="lab-return" href="https://coolunclelab.com" target="_blank" rel="noreferrer"><ArrowUpRight size={14} /> <span>Cool Uncle Legal Lab</span></a>
+          <button className="brand-lockup" onClick={resetExplorer} aria-label="กลับสู่จุดเริ่มต้นของแผนที่กฎหมาย">
+            <img src="/manus-storage/legal-atlas-mark_676ff7e4.png" alt="" className="brand-mark" />
+            <span>
+              <strong>คลังประมวลกฎหมาย</strong>
+              <small>LEGAL KNOWLEDGE ATLAS</small>
+            </span>
+          </button>
+        </div>
 
         <div className="header-center">
           <span className="header-kicker"><Sparkles size={13} /> LEGAL RELATIONSHIP ATLAS</span>
@@ -275,6 +287,13 @@ export default function Home() {
           {selectedDomain && <><ChevronRight size={13} /><button onClick={() => exploreDomain(selectedDomain.id)}>{selectedDomain.shortLabel}</button></>}
           {selectedSubject && <><ChevronRight size={13} /><span>{selectedSubject.label}</span></>}
         </nav>
+
+        <div className="atlas-controls" aria-label="ควบคุมการแสดงแผนที่">
+          <button className={showConnections ? "is-active" : ""} onClick={() => setShowConnections((value) => !value)} aria-pressed={showConnections}><Link2 size={15} /><span>เส้นโยง</span></button>
+          <button className={soundEnabled ? "is-active" : ""} onClick={() => setSoundEnabled((value) => !value)} aria-pressed={soundEnabled}>{soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}<span>เสียง</span></button>
+          <button className={motionEnabled ? "is-active" : ""} onClick={() => setMotionEnabled((value) => !value)} aria-pressed={motionEnabled}><Orbit size={15} /><span>Motion</span></button>
+          <button className={is3D ? "is-active" : ""} onClick={() => setIs3D((value) => !value)} aria-pressed={is3D}><Layers2 size={15} /><span>{is3D ? "3D" : "2D"}</span></button>
+        </div>
 
         <div className="search-shell">
           <Search size={18} aria-hidden="true" />
@@ -310,7 +329,7 @@ export default function Home() {
           <span><i className="legend-dot legend-dot--small" />จุดเชื่อมโยง</span>
         </div>
 
-        <svg className="law-map" viewBox="0 0 1440 900" role="img" aria-label="จักรวาลความรู้ของประมวลกฎหมายไทย">
+        <svg className="law-map" viewBox="0 0 1440 900" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย">
           <defs>
             <filter id="softBlur"><feGaussianBlur stdDeviation="16" /></filter>
             <filter id="nodeShadow" x="-70%" y="-70%" width="240%" height="240%"><feDropShadow dx="0" dy="9" stdDeviation="8" floodColor="#3C3651" floodOpacity="0.16" /></filter>
@@ -332,14 +351,14 @@ export default function Home() {
               ))}
             </g>
 
-            {expanded && (
+            {expanded && showConnections && (
               <g className="network-connections">
                 {legalDomains.map((domain) => {
                   const isDimmed = Boolean(selectedId && selectedId !== domain.id);
                   return <path key={`root-${domain.id}`} d={curvedPath(720, 450, domain.x, domain.y)} fill="none" stroke={domain.color} strokeWidth={selectedId === domain.id ? 2 : 1.1} opacity={isDimmed ? 0.11 : selectedId === domain.id ? 0.64 : 0.37} />;
                 })}
                 <path d={curvedPath(342, 277, 1055, 244)} fill="none" stroke="#B38AD9" strokeWidth="0.9" strokeDasharray="4 7" opacity={selectedId === "civil" || selectedId === "criminal" ? 0.43 : 0.13} />
-                <path d={curvedPath(700, 757, 719, 160)} fill="none" stroke="#D6A83F" strokeWidth="0.8" strokeDasharray="3 9" opacity={selectedId === "administrative" || selectedId === "constitution" ? 0.38 : 0.1} />
+                <path d={curvedPath(720, 752, 1055, 244)} fill="none" stroke="#D6A83F" strokeWidth="0.8" strokeDasharray="3 9" opacity={selectedId === "public" || selectedId === "criminal" ? 0.38 : 0.1} />
                 {selectedDomain?.children.map((subject) => (
                   <path key={`subject-${subject.id}`} className="subject-connection" d={curvedPath(selectedDomain.x, selectedDomain.y, subject.x, subject.y)} fill="none" stroke={selectedDomain.color} strokeWidth={selectedSubjectId === subject.id ? 1.75 : 1.05} opacity={selectedSubjectId && selectedSubjectId !== subject.id ? 0.18 : 0.54} />
                 ))}
@@ -347,20 +366,21 @@ export default function Home() {
             )}
 
             {!expanded ? (
-              <g className="origin-node origin-node--initial" role="button" tabIndex={0} aria-label="คลิกเพื่อสำรวจโครงสร้างกฎหมายไทย" onClick={() => setExpanded(true)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setExpanded(true); } }}>
+              <g className="origin-node origin-node--initial" role="button" tabIndex={0} aria-label="คลิกเพื่อสำรวจโครงสร้างกฎหมายไทย" onClick={() => { playSoftTone(); setExpanded(true); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); playSoftTone(); setExpanded(true); } }}>
                 <circle cx="720" cy="450" r="94" fill="#9D6EEA" opacity="0.12" filter="url(#softBlur)" />
                 <circle cx="720" cy="450" r="73" fill="none" stroke="#9D6EEA" strokeOpacity="0.28" strokeWidth="1" strokeDasharray="2 7" />
-                <circle cx="720" cy="450" r="58" fill="#76568E" filter="url(#nodeShadow)" />
+                <circle cx="720" cy="450" r="58" fill="#9D6EEA" filter="url(#nodeShadow)" />
                 <circle cx="720" cy="450" r="65" fill="none" stroke="#9D6EEA" strokeOpacity="0.7" strokeWidth="1.25" />
-                <circle cx="720" cy="450" r="36" fill="#BDA1D4" opacity="0.16" />
+                <circle cx="720" cy="450" r="41" fill="#FFFFFF" opacity="0.13" />
+                <text x="720" y="456" textAnchor="middle" className="origin-brand">ประมวล.com</text>
                 <text x="720" y="548" textAnchor="middle" className="explore-prompt">เริ่มสำรวจแผนที่</text>
                 <text x="720" y="574" textAnchor="middle" className="explore-caption">เลือกเพื่อเปิดกลุ่มประมวลกฎหมาย</text>
               </g>
             ) : (
               <g className="origin-node origin-node--expanded" role="button" tabIndex={0} onClick={() => { setSelectedId(null); setSelectedSubjectId(null); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedId(null); setSelectedSubjectId(null); } }}>
-                <circle cx="720" cy="450" r="39" fill="#2F2B3A" opacity="0.08" filter="url(#softBlur)" />
-                <circle cx="720" cy="450" r="16" fill="#2F2B3A" />
-                <circle cx="720" cy="450" r="24" fill="none" stroke="#2F2B3A" strokeOpacity="0.18" strokeWidth="1" />
+                <circle cx="720" cy="450" r="39" fill="#9D6EEA" opacity="0.12" filter="url(#softBlur)" />
+                <circle cx="720" cy="450" r="16" fill="#9D6EEA" />
+                <circle cx="720" cy="450" r="24" fill="none" stroke="#9D6EEA" strokeOpacity="0.45" strokeWidth="1" />
               </g>
             )}
 

@@ -10,6 +10,7 @@ import {
   Layers2,
   Link2,
   List,
+  Move,
   Music2,
   Orbit,
   Network,
@@ -435,8 +436,12 @@ export default function Home() {
   const [is3D, setIs3D] = useState(false);
   const [mapTilt, setMapTilt] = useState({ x: 0, y: 0 });
   const [cameraEnabled, setCameraEnabled] = useState(true);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
   const backgroundMusicRef = useRef<HTMLAudioElement>(null);
+  const panGestureRef = useRef({ pointerId: -1, startX: 0, startY: 0, startPanX: 0, startPanY: 0 });
+  const didDragRef = useRef(false);
 
   const playSoftTone = () => {
     if (!soundEnabled || typeof window === "undefined") return;
@@ -480,12 +485,43 @@ export default function Home() {
     void track.play().catch(() => undefined);
   };
 
+  const handleMapPointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    const gesture = panGestureRef.current;
+    gesture.pointerId = event.pointerId;
+    gesture.startX = event.clientX;
+    gesture.startY = event.clientY;
+    gesture.startPanX = pan.x;
+    gesture.startPanY = pan.y;
+    didDragRef.current = false;
+  };
+
   const handleMapPointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
-    if (!is3D) return;
     const bounds = event.currentTarget.getBoundingClientRect();
-    const horizontal = (event.clientX - bounds.left) / bounds.width - 0.5;
-    const vertical = (event.clientY - bounds.top) / bounds.height - 0.5;
-    setMapTilt({ x: Number((-vertical * 4.4).toFixed(2)), y: Number((horizontal * 6.4).toFixed(2)) });
+    if (is3D) {
+      const horizontal = (event.clientX - bounds.left) / bounds.width - 0.5;
+      const vertical = (event.clientY - bounds.top) / bounds.height - 0.5;
+      setMapTilt({ x: Number((-vertical * 4.4).toFixed(2)), y: Number((horizontal * 6.4).toFixed(2)) });
+    }
+
+    const gesture = panGestureRef.current;
+    if (gesture.pointerId !== event.pointerId) return;
+    const dx = ((event.clientX - gesture.startX) / bounds.width) * 1440;
+    const dy = ((event.clientY - gesture.startY) / bounds.height) * 900;
+    if (Math.hypot(dx, dy) > 4) {
+      didDragRef.current = true;
+      if (!event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.setPointerCapture(event.pointerId);
+      setIsPanning(true);
+      setPan({ x: Math.max(-300, Math.min(300, gesture.startPanX + dx)), y: Math.max(-210, Math.min(210, gesture.startPanY + dy)) });
+    }
+  };
+
+  const handleMapPointerUp = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (panGestureRef.current.pointerId !== event.pointerId) return;
+    panGestureRef.current.pointerId = -1;
+    setIsPanning(false);
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    window.setTimeout(() => { didDragRef.current = false; }, 0);
   };
 
   const selectedDomain = legalDomains.find((domain) => domain.id === selectedId) ?? null;
@@ -494,15 +530,32 @@ export default function Home() {
   const microOrbitScale = selectedDomain?.id === "criminal" ? 1.82 : 1.58;
   const cameraScale = cameraEnabled && cameraTarget ? zoom * (selectedSubject ? 1.72 : 1.45) : zoom;
   const cameraTransform = cameraEnabled && cameraTarget
-    ? `translate(720 450) scale(${cameraScale}) translate(-${cameraTarget.x} -${cameraTarget.y})`
-    : `translate(720 450) scale(${zoom}) translate(-720 -450)`;
+    ? `translate(${720 + pan.x} ${450 + pan.y}) scale(${cameraScale}) translate(-${cameraTarget.x} -${cameraTarget.y})`
+    : `translate(${720 + pan.x} ${450 + pan.y}) scale(${zoom}) translate(-720 -450)`;
 
   const exploreDomain = (domainId: string, subjectId: string | null = null) => {
+    if (didDragRef.current) return;
     playSoftTone();
     setExpanded(true);
+    setPan({ x: 0, y: 0 });
+    if (!subjectId && selectedId === domainId) {
+      setSelectedId(null);
+      setSelectedSubjectId(null);
+      return;
+    }
+    if (subjectId && selectedId === domainId && selectedSubjectId === subjectId) {
+      setSelectedSubjectId(null);
+      return;
+    }
     setSelectedId(domainId);
     setSelectedSubjectId(subjectId);
     setViewMode("network");
+  };
+
+  const returnToAllDomains = () => {
+    setSelectedId(null);
+    setSelectedSubjectId(null);
+    setPan({ x: 0, y: 0 });
   };
 
   const resetExplorer = () => {
@@ -511,6 +564,7 @@ export default function Home() {
     setSelectedSubjectId(null);
     setViewMode("network");
     setZoom(1);
+    setPan({ x: 0, y: 0 });
   };
 
   return (
@@ -590,7 +644,9 @@ export default function Home() {
         </div>
 
         {is3D && <div className="three-d-hint" role="status"><Layers2 size={13} /> 3D interactive · เลื่อนตัวชี้เพื่อเอียงมุมมอง</div>}
-        <svg className="law-map" viewBox="0 0 1440 900" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" style={is3D ? ({ "--tilt-x": `${mapTilt.x}deg`, "--tilt-y": `${mapTilt.y}deg` } as CSSProperties) : undefined} onPointerMove={handleMapPointerMove} onPointerLeave={() => setMapTilt({ x: 0, y: 0 })}>
+        {expanded && <div className="pan-hint" aria-hidden="true"><Move size={14} /> ลากเพื่อสำรวจ · กดวงเดิมเพื่อยุบ</div>}
+        {selectedDomain && <button className="return-overview-chip" onClick={returnToAllDomains}><RotateCcw size={14} /> กลับภาพรวม</button>}
+        <svg className={`law-map ${isPanning ? "is-panning" : ""}`} viewBox="0 0 1440 900" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" style={is3D ? ({ "--tilt-x": `${mapTilt.x}deg`, "--tilt-y": `${mapTilt.y}deg` } as CSSProperties) : undefined} onPointerDown={handleMapPointerDown} onPointerMove={handleMapPointerMove} onPointerUp={handleMapPointerUp} onPointerCancel={handleMapPointerUp} onPointerLeave={() => { setMapTilt({ x: 0, y: 0 }); if (panGestureRef.current.pointerId === -1) setIsPanning(false); }}>
           <defs>
             <filter id="softBlur"><feGaussianBlur stdDeviation="16" /></filter>
             <filter id="nodeShadow" x="-70%" y="-70%" width="240%" height="240%"><feDropShadow dx="0" dy="9" stdDeviation="8" floodColor="#3C3651" floodOpacity="0.16" /></filter>
@@ -627,7 +683,7 @@ export default function Home() {
             )}
 
             {!expanded ? (
-              <g className="origin-node origin-node--initial" role="button" tabIndex={0} aria-label="คลิกเพื่อสำรวจโครงสร้างกฎหมายไทย" onClick={() => { playSoftTone(); setExpanded(true); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); playSoftTone(); setExpanded(true); } }}>
+              <g className="origin-node origin-node--initial" role="button" tabIndex={0} aria-label="คลิกเพื่อสำรวจโครงสร้างกฎหมายไทย" onClick={() => { if (didDragRef.current) return; playSoftTone(); setExpanded(true); setPan({ x: 0, y: 0 }); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); playSoftTone(); setExpanded(true); setPan({ x: 0, y: 0 }); } }}>
                 <circle cx="720" cy="450" r="94" fill="#9D6EEA" opacity="0.12" filter="url(#softBlur)" />
                 <circle cx="720" cy="450" r="73" fill="none" stroke="#9D6EEA" strokeOpacity="0.28" strokeWidth="1" strokeDasharray="2 7" />
                 <circle cx="720" cy="450" r="58" fill="#9D6EEA" filter="url(#nodeShadow)" />
@@ -638,7 +694,7 @@ export default function Home() {
                 <text x="720" y="574" textAnchor="middle" className="explore-caption">เลือกเพื่อเปิดแผนที่เครือข่ายกฎหมาย</text>
               </g>
             ) : (
-              <g className="origin-node origin-node--expanded" role="button" tabIndex={0} aria-label="กลับสู่ภาพรวมกฎหมายทั้งหมด" onClick={resetExplorer} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); resetExplorer(); } }}>
+              <g className="origin-node origin-node--expanded" role="button" tabIndex={0} aria-label="กลับสู่ภาพรวมกฎหมายทั้งหมด" onClick={() => { if (!didDragRef.current) resetExplorer(); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); resetExplorer(); } }}>
                 <circle cx="720" cy="450" r="39" fill="#9D6EEA" opacity="0.12" filter="url(#softBlur)" />
                 <circle cx="720" cy="450" r="16" fill="#9D6EEA" />
                 <circle cx="720" cy="450" r="24" fill="none" stroke="#9D6EEA" strokeOpacity="0.45" strokeWidth="1" />

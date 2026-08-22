@@ -152,7 +152,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid #9d6eea; outline-
 .return-overview-chip:active { transform: scale(0.97); }
 .force-network-3d { position: relative; width: 100%; height: calc(100dvh - 86px); min-height: 670px; overflow: hidden; cursor: grab; touch-action: none; background: radial-gradient(circle at 50% 48%, rgba(157,110,234,0.11), transparent 32%), radial-gradient(circle at 80% 28%, rgba(95,212,232,0.08), transparent 28%), radial-gradient(circle at 16% 76%, rgba(214,168,63,0.07), transparent 30%); }
 .force-network-webgl { position: relative; width: 100%; height: calc(100dvh - 86px); min-height: 670px; overflow: hidden; cursor: grab; touch-action: none; background: #FAF9F6; }
-.force-network-webgl canvas { display: block; width: 100% !important; height: 100% !important; cursor: grab; outline: none; touch-action: none; }
+.force-network-webgl canvas { display: block; width: 100% !important; height: 100% !important; cursor: grab; outline: none; touch-action: none; overscroll-behavior: contain; -webkit-user-select: none; user-select: none; }
 .force-network-webgl canvas:active { cursor: grabbing; }
 .force-network-3d.is-dragging { cursor: grabbing; }
 .force-network-3d svg { display: block; width: 100%; height: 100%; }

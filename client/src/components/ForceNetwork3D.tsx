@@ -6,7 +6,7 @@ import ForceGraph3D, { type ForceGraphMethods } from "react-force-graph-3d";
 import { forceCollide } from "d3-force-3d";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import { recordWebGLTelemetry } from "@/lib/webglTelemetry";
 
 type MicroNode = { id: string; label: string; radius: number };
 type Subject = { id: string; label: string; radius: number; microNodes?: MicroNode[] };
@@ -54,6 +54,7 @@ type ForceNetwork3DProps = {
   onExploreDomain: (domainId: string, subjectId?: string | null) => void;
   onOpen: () => void;
   onReset: () => void;
+  onFallbackTo2D: () => void;
 };
 
 const IVORY = "#FAF9F6";
@@ -162,14 +163,27 @@ function useGraphDimensions() {
   return { hostRef, dimensions };
 }
 
-export default function ForceNetwork3D({ domains, expanded, selectedDomainId, selectedSubjectId, showConnections, motionEnabled, onExploreDomain, onOpen, onReset }: ForceNetwork3DProps) {
+export default function ForceNetwork3D({ domains, expanded, selectedDomainId, selectedSubjectId, showConnections, motionEnabled, onExploreDomain, onOpen, onReset, onFallbackTo2D }: ForceNetwork3DProps) {
   const graphRef = useRef<ForceGraphMethods<UniverseNode, UniverseLink> | undefined>(undefined);
-  const bloomPassRef = useRef<UnrealBloomPass | null>(null);
   const initializedSceneRef = useRef(false);
-  const nodeObjectCacheRef = useRef(new Map<string, THREE.Group>());
+  const [coarsePointer, setCoarsePointer] = useState(false);
   const { hostRef, dimensions } = useGraphDimensions();
-  const activeDomain = domains.find((domain) => domain.id === selectedDomainId) ?? null;
-  const activeSubject = activeDomain?.children.find((subject) => subject.id === selectedSubjectId) ?? null;
+  const fallbackTriggeredRef = useRef(false);
+
+  const fallbackTo2D = useCallback((reason: unknown) => {
+    if (fallbackTriggeredRef.current) return;
+    fallbackTriggeredRef.current = true;
+    recordWebGLTelemetry("webgl-fallback", reason);
+    window.setTimeout(onFallbackTo2D, 0);
+  }, [onFallbackTo2D]);
+
+  useEffect(() => {
+    const media = window.matchMedia("(pointer: coarse)");
+    const update = () => setCoarsePointer(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
 
   const graphData = useMemo(() => {
     const root: UniverseNode = {
@@ -255,10 +269,11 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
   }, [expanded, selectedDomainId, selectedSubjectId]);
 
   const linkVisibility = useCallback((link: UniverseLink) => {
+    const sourceId = typeof link.source === "object" ? (link.source as unknown as UniverseNode).id : link.source;
     if (!showConnections || !expanded) return false;
     if (link.kind === "root") return true;
-    if (link.kind === "subject") return link.source === selectedDomainId;
-    return link.source === `${selectedDomainId}-${selectedSubjectId}`;
+    if (link.kind === "subject") return sourceId === selectedDomainId;
+    return sourceId === `${selectedDomainId}-${selectedSubjectId}`;
   }, [expanded, selectedDomainId, selectedSubjectId, showConnections]);
 
   const configureScene = useCallback(() => {
@@ -284,26 +299,43 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
     dustGeometry.setAttribute("position", new THREE.BufferAttribute(dustPositions, 3));
     scene.add(new THREE.Points(dustGeometry, new THREE.PointsMaterial({ color: "#D2C4B4", size: 2.2, transparent: true, opacity: 0.28, depthWrite: false })));
 
-    const controls = graph.controls() as { enableDamping?: boolean; dampingFactor?: number; enablePan?: boolean; minDistance?: number; maxDistance?: number };
+    const controls = graph.controls() as { enableDamping?: boolean; dampingFactor?: number; enablePan?: boolean; minDistance?: number; maxDistance?: number; rotateSpeed?: number; zoomSpeed?: number; dynamicDampingFactor?: number; staticMoving?: boolean; noPan?: boolean; noRotate?: boolean; noZoom?: boolean };
     controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
+    controls.dampingFactor = 0.1;
     controls.enablePan = false;
+    controls.noPan = true;
+    controls.noRotate = false;
+    controls.noZoom = false;
+    controls.rotateSpeed = 0.62;
+    controls.zoomSpeed = 0.86;
+    controls.staticMoving = false;
+    controls.dynamicDampingFactor = 0.16;
     controls.minDistance = 120;
     controls.maxDistance = 1500;
     graph.cameraPosition({ x: 0, y: 90, z: 720 }, ORIGIN, 0);
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
     const frame = window.requestAnimationFrame(() => {
+      if (cancelled) return;
       const graph = graphRef.current;
       if (!graph) return;
-      const collision = forceCollide((node: UniverseNode) => node.radius * (node.kind === "micro" ? 1.85 : 2.25) + 12).strength(0.96);
-      graph.d3Force("collision", collision);
-      graph.d3ReheatSimulation();
-      configureScene();
+      try {
+        const collision = forceCollide((node: UniverseNode) => node.radius * (node.kind === "micro" ? 1.85 : 2.25) + 12).strength(0.96);
+        graph.d3Force("collision", collision);
+        graph.d3ReheatSimulation();
+        configureScene();
+      } catch (error) {
+        recordWebGLTelemetry("webgl-runtime-error", error);
+        fallbackTo2D(error);
+      }
     });
-    return () => window.cancelAnimationFrame(frame);
-  }, [configureScene, graphData.nodes]);
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(frame);
+    };
+  }, [configureScene, fallbackTo2D, graphData.nodes]);
 
   useEffect(() => {
     if (!expanded || selectedDomainId) return;
@@ -314,45 +346,33 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
   }, [expanded, selectedDomainId]);
 
   useEffect(() => {
-    if (dimensions.width < 4 || dimensions.height < 4) return;
-    let bloomPass: UnrealBloomPass | null = null;
-    const frame = window.requestAnimationFrame(() => {
-      const graph = graphRef.current;
-      if (!graph) return;
-      const composer = graph.postProcessingComposer();
-      composer.setSize(dimensions.width, dimensions.height);
-      bloomPass = new UnrealBloomPass(new THREE.Vector2(dimensions.width, dimensions.height), 0.08, 0.24, 1.32);
-      bloomPass.threshold = 1.32;
-      bloomPass.strength = 0.08;
-      bloomPass.radius = 0.24;
-      bloomPass.setSize(dimensions.width, dimensions.height);
-      composer.addPass(bloomPass);
-      bloomPassRef.current = bloomPass;
-    });
-    return () => {
-      window.cancelAnimationFrame(frame);
-      const graph = graphRef.current;
-      if (graph && bloomPass) graph.postProcessingComposer().removePass(bloomPass);
-      bloomPass?.dispose();
-      if (bloomPassRef.current === bloomPass) bloomPassRef.current = null;
+    const host = hostRef.current;
+    if (!host) return;
+    const canvas = host.querySelector("canvas");
+    if (!canvas) return;
+    recordWebGLTelemetry("webgl-start");
+    const onContextLost = (event: Event) => {
+      event.preventDefault();
+      recordWebGLTelemetry("webgl-context-lost");
+      fallbackTo2D("webgl context lost");
     };
-  }, [dimensions.height, dimensions.width]);
-
-  useEffect(() => {
-    let frame = 0;
-    const render = () => {
-      const graph = graphRef.current;
-      if (graph) {
-        const controls = graph.controls() as { update?: () => void };
-        controls.update?.();
-        if (bloomPassRef.current) graph.postProcessingComposer().render();
-        else graph.renderer().render(graph.scene(), graph.camera());
+    const onContextRestored = () => recordWebGLTelemetry("webgl-context-restored");
+    const onWindowError = (event: ErrorEvent) => {
+      const detail = `${event.message} ${event.error?.stack ?? ""}`;
+      if (/force-graph|\.tick\b|webgl/i.test(detail)) {
+        recordWebGLTelemetry("webgl-runtime-error", detail);
+        fallbackTo2D(detail);
       }
-      frame = window.requestAnimationFrame(render);
     };
-    frame = window.requestAnimationFrame(render);
-    return () => window.cancelAnimationFrame(frame);
-  }, [dimensions.height, dimensions.width]);
+    canvas.addEventListener("webglcontextlost", onContextLost, false);
+    canvas.addEventListener("webglcontextrestored", onContextRestored, false);
+    window.addEventListener("error", onWindowError);
+    return () => {
+      canvas.removeEventListener("webglcontextlost", onContextLost);
+      canvas.removeEventListener("webglcontextrestored", onContextRestored);
+      window.removeEventListener("error", onWindowError);
+    };
+  }, [fallbackTo2D, hostRef]);
 
   const onNodeClick = useCallback((node: UniverseNode) => {
     const graph = graphRef.current;
@@ -371,27 +391,6 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
     if ((node.kind === "subject" || node.kind === "micro") && node.domainId && node.subjectId) onExploreDomain(node.domainId, node.subjectId);
   }, [expanded, onExploreDomain, onOpen, onReset]);
 
-  const onEngineTick = useCallback(() => {
-    const graph = graphRef.current;
-    if (!graph) return;
-    const cameraPosition = graph.camera().position;
-    graphData.nodes.forEach((node) => {
-      const label = nodeObjectCacheRef.current.get(node.id)?.userData.labelSprite as THREE.Sprite | undefined;
-      if (!label) return;
-      const distance = cameraPosition.distanceTo(new THREE.Vector3(node.x ?? 0, node.y ?? 0, node.z ?? 0));
-      label.visible = node.kind === "origin" || node.kind === "domain" || (node.kind === "subject" && distance < 620) || (node.kind === "micro" && distance < 300);
-    });
-  }, [graphData.nodes]);
-
-  const nodeThreeObject = useCallback((node: UniverseNode) => {
-    const cached = nodeObjectCacheRef.current.get(node.id);
-    if (cached) return cached;
-    const showLabel = node.kind === "origin" || node.kind === "domain" || node.kind === "subject";
-    const object = createNodeObject(node, showLabel);
-    nodeObjectCacheRef.current.set(node.id, object);
-    return object;
-  }, []);
-
   return (
     <div ref={hostRef} className="force-network-webgl" aria-label="จักรวาลความรู้กฎหมายสามมิติ">
       <div className="force-network-webgl__status"><span className="force-network-webgl__pulse" /> WEBGL LEGAL UNIVERSE · ลากเพื่อหมุน · scroll หรือ pinch เพื่อซูม</div>
@@ -407,7 +406,9 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
         cooldownTicks={motionEnabled ? 210 : 90}
         d3AlphaDecay={motionEnabled ? 0.025 : 0.065}
         d3VelocityDecay={0.32}
-        nodeThreeObject={nodeThreeObject}
+        nodeVal={(node) => Math.pow(Math.max(1.1, node.radius / 10), 3)}
+        nodeColor={(node) => node.color}
+        nodeResolution={20}
         nodeOpacity={1}
         nodeVisibility={nodeVisibility}
         nodeLabel={(node) => `<span>${node.label}</span>`}
@@ -418,10 +419,9 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
         linkCurvature={(link) => link.kind === "root" ? 0.08 : 0.035}
         linkCurveRotation={(link) => link.kind === "root" ? 0.32 : -0.2}
         linkResolution={4}
-        enableNodeDrag
+        enableNodeDrag={!coarsePointer}
         enableNavigationControls
         onNodeClick={onNodeClick}
-        onEngineTick={onEngineTick}
         onEngineStop={configureScene}
       />
     </div>

@@ -2,6 +2,11 @@
 
 ## สถานะบริการ
 
+- [x] เก็บ stack trace และสถานะ WebGL จากหน้าใช้งานจริงที่ยังล้มเหลว
+- [x] ตัด lifecycle/render loop ที่ขัดกับ react-force-graph-3d และทำ fallback เมื่อ 3D ใช้ไม่ได้
+- [x] เพิ่ม telemetry แบบไม่ระบุตัวตนสำหรับ WebGL error, context loss และสถานะ renderer
+- [x] ปรับ touch orbit, pinch zoom และการกัน scroll หลุดบนมือถือ
+- [x] ทดสอบ 3D จริงบนเดสก์ท็อป/มือถือและตรวจ console ก่อนส่งเวอร์ชันแก้ไข
 - [x] แก้ lifecycle ของ react-force-graph-3d ที่เรียก simulation tick หลัง instance ถูกถอดระหว่างเปลี่ยนระดับ node
 - [x] ทดสอบการเปิด/ยุบ/กลับภาพรวมใน WebGL โดยตรวจว่าไม่มี runtime error
 - [x] แทนที่ force SVG ด้วยฉาก WebGL 3 มิติจริงบนพื้นหลัง ivory

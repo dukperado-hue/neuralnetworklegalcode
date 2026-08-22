@@ -170,13 +170,6 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
   const { hostRef, dimensions } = useGraphDimensions();
   const activeDomain = domains.find((domain) => domain.id === selectedDomainId) ?? null;
   const activeSubject = activeDomain?.children.find((subject) => subject.id === selectedSubjectId) ?? null;
-  const graphKey = `${expanded ? "open" : "closed"}:${selectedDomainId ?? "overview"}:${selectedSubjectId ?? "none"}`;
-  const previousGraphKeyRef = useRef(graphKey);
-  if (previousGraphKeyRef.current !== graphKey) {
-    previousGraphKeyRef.current = graphKey;
-    initializedSceneRef.current = false;
-    nodeObjectCacheRef.current.clear();
-  }
 
   const graphData = useMemo(() => {
     const root: UniverseNode = {
@@ -192,8 +185,6 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
       fy: 0,
       fz: 0,
     };
-    if (!expanded) return { nodes: [root], links: [] as UniverseLink[] };
-
     const domainNodes = domains.map((domain, index): UniverseNode => ({
       id: domain.id,
       label: domain.shortLabel,
@@ -206,51 +197,69 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
       ...spherePoint(index, domains.length, 250, 0.4),
     }));
 
-    const domainNode = domainNodes.find((node) => node.id === activeDomain?.id);
-    const subjectNodes = activeDomain && domainNode
-      ? activeDomain.children.map((subject, index): UniverseNode => {
-          const offset = spherePoint(index, activeDomain.children.length, 136, 1.2);
-          return {
-            id: `${activeDomain.id}-${subject.id}`,
-            label: subject.label,
-            color: activeDomain.color,
-            softColor: activeDomain.softColor,
-            radius: Math.max(12, subject.radius * 0.77),
-            kind: "subject",
-            domainId: activeDomain.id,
-            subjectId: subject.id,
-            x: (domainNode.x ?? 0) + offset.x,
-            y: (domainNode.y ?? 0) + offset.y,
-            z: (domainNode.z ?? 0) + offset.z,
-          };
-        })
-      : [];
+    const subjectNodes: UniverseNode[] = [];
+    const microNodes: UniverseNode[] = [];
+    const subjectLinks: UniverseLink[] = [];
+    const microLinks: UniverseLink[] = [];
 
-    const subjectNode = subjectNodes.find((node) => node.subjectId === activeSubject?.id);
-    const microNodes = activeDomain && activeSubject && subjectNode
-      ? (activeSubject.microNodes ?? []).map((micro, index): UniverseNode => {
-          const offset = spherePoint(index, activeSubject.microNodes?.length ?? 1, 72, 0.7);
-          return {
-            id: `${activeDomain.id}-${activeSubject.id}-${micro.id}`,
+    domains.forEach((domain) => {
+      const domainNode = domainNodes.find((node) => node.id === domain.id)!;
+      domain.children.forEach((subject, index) => {
+        const offset = spherePoint(index, domain.children.length, 136, 1.2);
+        const subjectNode: UniverseNode = {
+          id: `${domain.id}-${subject.id}`,
+          label: subject.label,
+          color: domain.color,
+          softColor: domain.softColor,
+          radius: Math.max(12, subject.radius * 0.77),
+          kind: "subject",
+          domainId: domain.id,
+          subjectId: subject.id,
+          x: (domainNode.x ?? 0) + offset.x,
+          y: (domainNode.y ?? 0) + offset.y,
+          z: (domainNode.z ?? 0) + offset.z,
+        };
+        subjectNodes.push(subjectNode);
+        subjectLinks.push({ source: domain.id, target: subjectNode.id, color: domain.color, kind: "subject" });
+
+        (subject.microNodes ?? []).forEach((micro, microIndex) => {
+          const microOffset = spherePoint(microIndex, subject.microNodes?.length ?? 1, 72, 0.7);
+          const microNode: UniverseNode = {
+            id: `${domain.id}-${subject.id}-${micro.id}`,
             label: micro.label,
-            color: activeDomain.color,
-            softColor: activeDomain.softColor,
+            color: domain.color,
+            softColor: domain.softColor,
             radius: Math.max(7, micro.radius * 0.72),
             kind: "micro",
-            domainId: activeDomain.id,
-            subjectId: activeSubject.id,
-            x: (subjectNode.x ?? 0) + offset.x,
-            y: (subjectNode.y ?? 0) + offset.y,
-            z: (subjectNode.z ?? 0) + offset.z,
+            domainId: domain.id,
+            subjectId: subject.id,
+            x: (subjectNode.x ?? 0) + microOffset.x,
+            y: (subjectNode.y ?? 0) + microOffset.y,
+            z: (subjectNode.z ?? 0) + microOffset.z,
           };
-        })
-      : [];
+          microNodes.push(microNode);
+          microLinks.push({ source: subjectNode.id, target: microNode.id, color: domain.color, kind: "micro" });
+        });
+      });
+    });
 
     const rootLinks: UniverseLink[] = domainNodes.map((node) => ({ source: root.id, target: node.id, color: node.color, kind: "root" }));
-    const subjectLinks: UniverseLink[] = subjectNodes.map((node) => ({ source: activeDomain!.id, target: node.id, color: activeDomain!.color, kind: "subject" }));
-    const microLinks: UniverseLink[] = microNodes.map((node) => ({ source: `${activeDomain!.id}-${activeSubject!.id}`, target: node.id, color: activeDomain!.color, kind: "micro" }));
     return { nodes: [root, ...domainNodes, ...subjectNodes, ...microNodes], links: [...rootLinks, ...subjectLinks, ...microLinks] };
-  }, [activeDomain, activeSubject, domains, expanded]);
+  }, [domains]);
+
+  const nodeVisibility = useCallback((node: UniverseNode) => {
+    if (node.kind === "origin") return true;
+    if (node.kind === "domain") return expanded;
+    if (node.kind === "subject") return expanded && node.domainId === selectedDomainId;
+    return expanded && node.domainId === selectedDomainId && node.subjectId === selectedSubjectId;
+  }, [expanded, selectedDomainId, selectedSubjectId]);
+
+  const linkVisibility = useCallback((link: UniverseLink) => {
+    if (!showConnections || !expanded) return false;
+    if (link.kind === "root") return true;
+    if (link.kind === "subject") return link.source === selectedDomainId;
+    return link.source === `${selectedDomainId}-${selectedSubjectId}`;
+  }, [expanded, selectedDomainId, selectedSubjectId, showConnections]);
 
   const configureScene = useCallback(() => {
     const graph = graphRef.current;
@@ -387,7 +396,6 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
     <div ref={hostRef} className="force-network-webgl" aria-label="จักรวาลความรู้กฎหมายสามมิติ">
       <div className="force-network-webgl__status"><span className="force-network-webgl__pulse" /> WEBGL LEGAL UNIVERSE · ลากเพื่อหมุน · scroll หรือ pinch เพื่อซูม</div>
       <ForceGraph3D<UniverseNode, UniverseLink>
-        key={graphKey}
         ref={graphRef}
         width={dimensions.width}
         height={dimensions.height}
@@ -401,9 +409,11 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
         d3VelocityDecay={0.32}
         nodeThreeObject={nodeThreeObject}
         nodeOpacity={1}
+        nodeVisibility={nodeVisibility}
         nodeLabel={(node) => `<span>${node.label}</span>`}
         linkColor={(link) => link.color}
-        linkOpacity={showConnections ? 0.26 : 0}
+        linkVisibility={linkVisibility}
+        linkOpacity={0.26}
         linkWidth={(link) => link.kind === "root" ? 0.56 : link.kind === "subject" ? 0.32 : 0.18}
         linkCurvature={(link) => link.kind === "root" ? 0.08 : 0.035}
         linkCurveRotation={(link) => link.kind === "root" ? 0.32 : -0.2}

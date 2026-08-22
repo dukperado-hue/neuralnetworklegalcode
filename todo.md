@@ -2,6 +2,8 @@
 
 ## สถานะบริการ
 
+- [x] แก้ lifecycle ของ react-force-graph-3d ที่เรียก simulation tick หลัง instance ถูกถอดระหว่างเปลี่ยนระดับ node
+- [x] ทดสอบการเปิด/ยุบ/กลับภาพรวมใน WebGL โดยตรวจว่าไม่มี runtime error
 - [x] แทนที่ force SVG ด้วยฉาก WebGL 3 มิติจริงบนพื้นหลัง ivory
 - [x] เชื่อม d3-force-3d กับ node ข้อมูลกฎหมายชุดเดียวกับแผนที่ 2 มิติ
 - [x] เพิ่มกล้อง orbit, pinch/scroll zoom และ fly-to เมื่อเลือก node

@@ -2,6 +2,9 @@
 
 ## สถานะบริการ
 
+- [x] ยืนยันรีโพ GitHub ปลายทาง: `dukperado-hue/neuralnetworklegalcode`
+- [ ] ยืนยันโดเมน/เส้นทางของ Cool Uncle Legal Lab ที่จะผูกกับหน้า Neural Network
+- [ ] ส่งออกโค้ดไปยัง GitHub และตรวจสอบรีโพปลายทาง
 - [x] รีสตาร์ตบริการพัฒนาและยืนยันว่าหน้าแผนที่ตอบสนอง
 
 ## Network explorer รอบถัดไป

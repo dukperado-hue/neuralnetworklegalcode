@@ -3,6 +3,7 @@
  * จังหวะภาพ: ivory editorial canvas + color-family nodes + restrained orbital motion.
  */
 import { useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import ForceNetwork3D from "@/components/ForceNetwork3D";
 import {
   ArrowUpRight,
   ChevronRight,
@@ -10,7 +11,6 @@ import {
   Layers2,
   Link2,
   List,
-  Move,
   Music2,
   Orbit,
   Network,
@@ -345,9 +345,9 @@ const legalDomains: LegalDomain[] = [
     children: [
       {
         id: "public-constitution",
-        label: "รัฐธรรมนูญ",
-        x: 627,
-        y: 647,
+        label: "กฎหมายรัฐธรรมนูญ",
+        x: 796,
+        y: 634,
         radius: 28,
         description: "หลักรัฐธรรมนูญ สิทธิ เสรีภาพ และโครงสร้างของรัฐ",
         references: ["รัฐธรรมนูญ", "16 หมวด"],
@@ -368,11 +368,22 @@ const legalDomains: LegalDomain[] = [
           { id: "constitution-14", label: "หมวด 14 · ท้องถิ่น", dx: 67, dy: -184, radius: 12 },
           { id: "constitution-15", label: "หมวด 15 · แก้ไขรัฐธรรมนูญ", dx: 164, dy: -135, radius: 12 },
           { id: "constitution-16", label: "หมวด 16 · ปฏิรูปประเทศ", dx: 197, dy: -9, radius: 12 },
+          { id: "constitution-party", label: "พ.ร.ป. พรรคการเมือง", dx: 158, dy: 109, radius: 14 },
         ],
       },
-      { id: "public-party", label: "พ.ร.ป. พรรคการเมือง", x: 1085, y: 633, radius: 21, description: "กฎหมายประกอบรัฐธรรมนูญว่าด้วยพรรคการเมือง", references: ["พ.ร.ป.", "พรรคการเมือง"] },
-      { id: "public-admin-court", label: "พ.ร.บ. จัดตั้งศาลปกครอง", x: 1108, y: 782, radius: 21, description: "โครงสร้างและอำนาจของศาลปกครอง", references: ["ศาลปกครอง", "พ.ร.บ. จัดตั้งศาลปกครอง"] },
-      { id: "public-admin-practice", label: "วิธีปฏิบัติราชการทางปกครอง", x: 862, y: 850, radius: 22, description: "หลักเกณฑ์การใช้อำนาจทางปกครองและการคุ้มครองสิทธิ", references: ["คำสั่งทางปกครอง", "วิธีปฏิบัติราชการ"] },
+      {
+        id: "public-administration",
+        label: "กฎหมายปกครอง",
+        x: 1114,
+        y: 730,
+        radius: 29,
+        description: "หลักการใช้อำนาจทางปกครองและการคุ้มครองสิทธิของประชาชน",
+        references: ["กฎหมายปกครอง", "คำสั่งทางปกครอง"],
+        microNodes: [
+          { id: "admin-court-establishment", label: "พ.ร.บ. จัดตั้งศาลปกครอง", dx: -103, dy: -63, radius: 15 },
+          { id: "admin-procedure", label: "วิธีปฏิบัติราชการทางปกครอง", dx: 92, dy: 60, radius: 15 },
+        ],
+      },
     ],
   },
   {
@@ -434,7 +445,6 @@ export default function Home() {
   const [musicVolume, setMusicVolume] = useState(0.16);
   const [motionEnabled, setMotionEnabled] = useState(true);
   const [is3D, setIs3D] = useState(false);
-  const [mapTilt, setMapTilt] = useState({ x: 0, y: 0 });
   const [cameraEnabled, setCameraEnabled] = useState(true);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -498,12 +508,6 @@ export default function Home() {
 
   const handleMapPointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
     const bounds = event.currentTarget.getBoundingClientRect();
-    if (is3D) {
-      const horizontal = (event.clientX - bounds.left) / bounds.width - 0.5;
-      const vertical = (event.clientY - bounds.top) / bounds.height - 0.5;
-      setMapTilt({ x: Number((-vertical * 4.4).toFixed(2)), y: Number((horizontal * 6.4).toFixed(2)) });
-    }
-
     const gesture = panGestureRef.current;
     if (gesture.pointerId !== event.pointerId) return;
     const dx = ((event.clientX - gesture.startX) / bounds.width) * 1440;
@@ -627,7 +631,7 @@ export default function Home() {
             {musicEnabled && <label className="music-volume-control"><Volume2 size={14} /><input type="range" min="0" max="0.35" step="0.01" value={musicVolume} onChange={(event) => updateMusicVolume(Number(event.target.value))} aria-label="ระดับเสียงเพลงประกอบ" /></label>}
             <button className={motionEnabled ? "is-active" : ""} onClick={() => setMotionEnabled((value) => !value)} aria-pressed={motionEnabled}><Orbit size={15} /><span>Motion</span></button>
             <button className={cameraEnabled ? "is-active" : ""} onClick={() => setCameraEnabled((value) => !value)} aria-pressed={cameraEnabled}><Crosshair size={15} /><span>กล้อง</span></button>
-            <button className={is3D ? "is-active" : ""} onClick={() => { setIs3D((value) => !value); setMapTilt({ x: 0, y: 0 }); }} aria-pressed={is3D} title={is3D ? "กลับสู่มุมมอง 2D" : "เปิดมุมมอง 3D แบบโต้ตอบ"}><Layers2 size={15} /><span>{is3D ? "3D · ลากได้" : "2D"}</span></button>
+            <button className={is3D ? "is-active" : ""} onClick={() => setIs3D((value) => !value)} aria-pressed={is3D} title={is3D ? "กลับสู่มุมมอง 2D" : "เปิดมุมมอง 3D แบบโต้ตอบ"}><Layers2 size={15} /><span>{is3D ? "3D · ลากได้" : "2D"}</span></button>
           </div>
         </div>
 
@@ -643,10 +647,11 @@ export default function Home() {
           <span><i className="legend-dot legend-dot--small" />จุดเชื่อมโยง</span>
         </div>
 
-        {is3D && <div className="three-d-hint" role="status"><Layers2 size={13} /> 3D interactive · เลื่อนตัวชี้เพื่อเอียงมุมมอง</div>}
-        {expanded && <div className="pan-hint" aria-hidden="true"><Move size={14} /> ลากเพื่อสำรวจ · กดวงเดิมเพื่อยุบ</div>}
         {selectedDomain && <button className="return-overview-chip" onClick={returnToAllDomains}><RotateCcw size={14} /> กลับภาพรวม</button>}
-        <svg className={`law-map ${isPanning ? "is-panning" : ""}`} viewBox="0 0 1440 900" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" style={is3D ? ({ "--tilt-x": `${mapTilt.x}deg`, "--tilt-y": `${mapTilt.y}deg` } as CSSProperties) : undefined} onPointerDown={handleMapPointerDown} onPointerMove={handleMapPointerMove} onPointerUp={handleMapPointerUp} onPointerCancel={handleMapPointerUp} onPointerLeave={() => { setMapTilt({ x: 0, y: 0 }); if (panGestureRef.current.pointerId === -1) setIsPanning(false); }}>
+        {is3D && viewMode === "network" ? (
+          <ForceNetwork3D domains={legalDomains} expanded={expanded} selectedDomainId={selectedId} selectedSubjectId={selectedSubjectId} showConnections={showConnections} motionEnabled={motionEnabled} onExploreDomain={exploreDomain} onOpen={() => { playSoftTone(); setExpanded(true); }} onReset={resetExplorer} />
+        ) : (
+        <svg className={`law-map ${isPanning ? "is-panning" : ""}`} viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" onPointerDown={handleMapPointerDown} onPointerMove={handleMapPointerMove} onPointerUp={handleMapPointerUp} onPointerCancel={handleMapPointerUp} onPointerLeave={() => { if (panGestureRef.current.pointerId === -1) setIsPanning(false); }}>
           <defs>
             <filter id="softBlur"><feGaussianBlur stdDeviation="16" /></filter>
             <filter id="nodeShadow" x="-70%" y="-70%" width="240%" height="240%"><feDropShadow dx="0" dy="9" stdDeviation="8" floodColor="#3C3651" floodOpacity="0.16" /></filter>
@@ -683,7 +688,7 @@ export default function Home() {
             )}
 
             {!expanded ? (
-              <g className="origin-node origin-node--initial" role="button" tabIndex={0} aria-label="คลิกเพื่อสำรวจโครงสร้างกฎหมายไทย" onClick={() => { if (didDragRef.current) return; playSoftTone(); setExpanded(true); setPan({ x: 0, y: 0 }); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); playSoftTone(); setExpanded(true); setPan({ x: 0, y: 0 }); } }}>
+              <g className="origin-node origin-node--initial" role="button" tabIndex={0} aria-label="คลิกเพื่อสำรวจโครงสร้างกฎหมายไทย" onPointerDown={(event) => event.stopPropagation()} onClick={() => { if (didDragRef.current) return; playSoftTone(); setExpanded(true); setPan({ x: 0, y: 0 }); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); playSoftTone(); setExpanded(true); setPan({ x: 0, y: 0 }); } }}>
                 <circle cx="720" cy="450" r="94" fill="#9D6EEA" opacity="0.12" filter="url(#softBlur)" />
                 <circle cx="720" cy="450" r="73" fill="none" stroke="#9D6EEA" strokeOpacity="0.28" strokeWidth="1" strokeDasharray="2 7" />
                 <circle cx="720" cy="450" r="58" fill="#9D6EEA" filter="url(#nodeShadow)" />
@@ -694,7 +699,7 @@ export default function Home() {
                 <text x="720" y="574" textAnchor="middle" className="explore-caption">เลือกเพื่อเปิดแผนที่เครือข่ายกฎหมาย</text>
               </g>
             ) : (
-              <g className="origin-node origin-node--expanded" role="button" tabIndex={0} aria-label="กลับสู่ภาพรวมกฎหมายทั้งหมด" onClick={() => { if (!didDragRef.current) resetExplorer(); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); resetExplorer(); } }}>
+              <g className="origin-node origin-node--expanded" role="button" tabIndex={0} aria-label="กลับสู่ภาพรวมกฎหมายทั้งหมด" onPointerDown={(event) => event.stopPropagation()} onClick={() => { if (!didDragRef.current) resetExplorer(); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); resetExplorer(); } }}>
                 <circle cx="720" cy="450" r="39" fill="#9D6EEA" opacity="0.12" filter="url(#softBlur)" />
                 <circle cx="720" cy="450" r="16" fill="#9D6EEA" />
                 <circle cx="720" cy="450" r="24" fill="none" stroke="#9D6EEA" strokeOpacity="0.45" strokeWidth="1" />
@@ -712,7 +717,7 @@ export default function Home() {
                     <circle cx={domain.x + domain.radius + 14} cy={domain.y - 12} r="3.5" fill={domain.color} />
                     <circle cx={domain.x + 7} cy={domain.y - domain.radius - 18} r="3" fill={domain.softColor} />
                   </g>
-                  <g className={`graph-node graph-node--domain ${isSelected ? "is-selected" : ""}`} role="button" tabIndex={0} aria-label={`เปิด ${domain.title}`} onClick={() => exploreDomain(domain.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); exploreDomain(domain.id); } }}>
+                  <g className={`graph-node graph-node--domain ${isSelected ? "is-selected" : ""}`} role="button" tabIndex={0} aria-label={`เปิด ${domain.title}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => exploreDomain(domain.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); exploreDomain(domain.id); } }}>
                     <circle cx={domain.x} cy={domain.y} r={domain.radius + 17} fill={domain.color} opacity={isSelected ? 0.19 : 0.1} filter="url(#softBlur)" />
                     <circle cx={domain.x} cy={domain.y} r={domain.radius + 5} fill="none" stroke={domain.color} strokeOpacity={isSelected ? 0.65 : 0.28} strokeWidth="1.3" />
                     <circle cx={domain.x} cy={domain.y} r={domain.radius} fill={domain.color} filter="url(#nodeShadow)" />
@@ -732,7 +737,7 @@ export default function Home() {
                           </g>
                         )}
                         <g className="subject-node-drift">
-                          <g className={`graph-node graph-node--subject ${isSubjectSelected ? "is-selected" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onClick={() => exploreDomain(domain.id, subject.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); exploreDomain(domain.id, subject.id); } }}>
+                          <g className={`graph-node graph-node--subject ${isSubjectSelected ? "is-selected" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => exploreDomain(domain.id, subject.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); exploreDomain(domain.id, subject.id); } }}>
                             <circle cx={subject.x} cy={subject.y} r={subject.radius + 10} fill={domain.color} opacity={isSubjectSelected ? 0.19 : 0.075} filter="url(#softBlur)" />
                             <circle cx={subject.x} cy={subject.y} r={subject.radius} fill={domain.softColor} stroke={domain.color} strokeWidth={isSubjectSelected ? 2.1 : 1.15} filter="url(#nodeShadow)" />
                             <circle cx={subject.x} cy={subject.y} r={Math.max(4, subject.radius * 0.3)} fill="#FFFFFF" opacity="0.38" />
@@ -756,6 +761,7 @@ export default function Home() {
             })}
           </g>
         </svg>
+        )}
 
         {!expanded && (
           <aside className="opening-note">

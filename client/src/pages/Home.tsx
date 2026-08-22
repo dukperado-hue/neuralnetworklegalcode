@@ -2,7 +2,7 @@
  * รัศมีนิติธรรม — แผนที่ความรู้กฎหมายแบบ organic radial constellation
  * จังหวะภาพ: ivory editorial canvas + color-family nodes + restrained orbital motion.
  */
-import { useState, type CSSProperties } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import {
   ArrowUpRight,
   ChevronRight,
@@ -294,10 +294,13 @@ export default function Home() {
   const [zoom, setZoom] = useState(1);
   const [showConnections, setShowConnections] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [musicEnabled, setMusicEnabled] = useState(false);
+  const [musicVolume, setMusicVolume] = useState(0.16);
   const [motionEnabled, setMotionEnabled] = useState(true);
   const [is3D, setIs3D] = useState(false);
   const [cameraEnabled, setCameraEnabled] = useState(true);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const backgroundMusicRef = useRef<HTMLAudioElement>(null);
 
   const playSoftTone = () => {
     if (!soundEnabled || typeof window === "undefined") return;
@@ -314,6 +317,23 @@ export default function Home() {
     oscillator.start();
     oscillator.stop(audio.currentTime + 0.21);
     window.setTimeout(() => { void audio.close(); }, 260);
+  };
+
+  const toggleBackgroundMusic = () => {
+    const track = backgroundMusicRef.current;
+    if (!track) return;
+    if (musicEnabled) {
+      track.pause();
+      setMusicEnabled(false);
+      return;
+    }
+    track.volume = musicVolume;
+    void track.play().then(() => setMusicEnabled(true)).catch(() => setMusicEnabled(false));
+  };
+
+  const updateMusicVolume = (nextVolume: number) => {
+    setMusicVolume(nextVolume);
+    if (backgroundMusicRef.current) backgroundMusicRef.current.volume = nextVolume;
   };
 
   const selectedDomain = legalDomains.find((domain) => domain.id === selectedId) ?? null;
@@ -343,6 +363,7 @@ export default function Home() {
 
   return (
     <main className={`legal-universe ${motionEnabled ? "" : "motion-off"} ${is3D ? "is-3d" : ""} ${cameraEnabled && cameraTarget ? "camera-focus" : ""}`}>
+      <audio ref={backgroundMusicRef} src="/manus-storage/alex-morgan-jazz-restaurant-music-556244_b7af9a94.mp3" loop preload="metadata" />
       <div className="graph-atmosphere" aria-hidden="true" />
       <header className="universe-header">
         <div className="header-brand-row">
@@ -392,6 +413,8 @@ export default function Home() {
           <div className="atlas-controls__content">
             <button className={showConnections ? "is-active" : ""} onClick={() => setShowConnections((value) => !value)} aria-pressed={showConnections}><Link2 size={15} /><span>เส้นโยง</span></button>
             <button className={soundEnabled ? "is-active" : ""} onClick={() => setSoundEnabled((value) => !value)} aria-pressed={soundEnabled}>{soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}<span>เสียง</span></button>
+            <button className={musicEnabled ? "is-active" : ""} onClick={toggleBackgroundMusic} aria-pressed={musicEnabled}><Music2 size={15} /><span>{musicEnabled ? "เพลง · เล่น" : "เพลง"}</span></button>
+            {musicEnabled && <label className="music-volume-control"><Volume2 size={14} /><input type="range" min="0" max="0.35" step="0.01" value={musicVolume} onChange={(event) => updateMusicVolume(Number(event.target.value))} aria-label="ระดับเสียงเพลงประกอบ" /></label>}
             <button className={motionEnabled ? "is-active" : ""} onClick={() => setMotionEnabled((value) => !value)} aria-pressed={motionEnabled}><Orbit size={15} /><span>Motion</span></button>
             <button className={cameraEnabled ? "is-active" : ""} onClick={() => setCameraEnabled((value) => !value)} aria-pressed={cameraEnabled}><Crosshair size={15} /><span>กล้อง</span></button>
             <button className={is3D ? "is-active" : ""} onClick={() => setIs3D((value) => !value)} aria-pressed={is3D}><Layers2 size={15} /><span>{is3D ? "3D" : "2D"}</span></button>

@@ -139,6 +139,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid #9d6eea; outline-
 .atlas-controls__content { display: flex; flex-direction: column; width: 100%; max-height: 0; overflow: hidden; opacity: 0; pointer-events: none; transition: max-height 250ms cubic-bezier(0.23, 1, 0.32, 1), opacity 180ms ease; }
 .atlas-controls.is-open .atlas-controls__content { max-height: 150px; opacity: 1; pointer-events: auto; }
 .atlas-controls__content > * { margin-top: 2px; }
+.music-volume-control { display: flex; align-items: center; gap: 7px; width: 116px; margin: 2px 4px 1px; color: #8a7196; }
+.music-volume-control input { width: 86px; accent-color: #9d6eea; }
 .search-shell { position: absolute; top: 68px; left: 34px; z-index: 8; width: min(290px, calc(100vw - 68px)); display: flex; align-items: center; gap: 9px; padding: 0 12px; height: 43px; color: #8a7d92; border: 1px solid rgba(119,101,139,0.16); border-radius: 8px; background: rgba(255,253,249,0.76); backdrop-filter: blur(15px); box-shadow: 0 6px 20px rgba(72,57,85,0.04); transition: border-color 180ms ease, box-shadow 180ms ease; }
 .search-shell:focus-within { border-color: rgba(157,110,234,0.47); box-shadow: 0 8px 24px rgba(85,57,110,0.1); }
 .search-shell input { width: 100%; min-width: 0; border: 0; outline: none; background: transparent; color: #443b4d; font-size: 12px; }

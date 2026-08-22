@@ -546,7 +546,7 @@ export default function Home() {
           <div className="atlas-controls__content">
             <button className={showConnections ? "is-active" : ""} onClick={() => setShowConnections((value) => !value)} aria-pressed={showConnections}><Link2 size={15} /><span>เส้นโยง</span></button>
             <button className={soundEnabled ? "is-active" : ""} onClick={() => setSoundEnabled((value) => !value)} aria-pressed={soundEnabled}>{soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}<span>เสียง</span></button>
-            <button className={musicEnabled ? "is-active" : ""} onClick={toggleBackgroundMusic} aria-pressed={musicEnabled}><Music2 size={15} /><span>{musicEnabled ? "เพลง · เล่น" : "เพลง"}</span></button>
+            <button className={`music-toggle ${musicEnabled ? "is-active" : ""}`} onClick={toggleBackgroundMusic} aria-pressed={musicEnabled} aria-label={musicEnabled ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"} title={musicEnabled ? "ปิดเพลงประกอบ" : "เปิดเพลงประกอบ"}><Music2 size={15} /><span>{musicEnabled ? "เพลง · เปิด" : "เพลง · ปิด"}</span></button>
             {musicEnabled && <label className="music-volume-control"><Volume2 size={14} /><input type="range" min="0" max="0.35" step="0.01" value={musicVolume} onChange={(event) => updateMusicVolume(Number(event.target.value))} aria-label="ระดับเสียงเพลงประกอบ" /></label>}
             <button className={motionEnabled ? "is-active" : ""} onClick={() => setMotionEnabled((value) => !value)} aria-pressed={motionEnabled}><Orbit size={15} /><span>Motion</span></button>
             <button className={cameraEnabled ? "is-active" : ""} onClick={() => setCameraEnabled((value) => !value)} aria-pressed={cameraEnabled}><Crosshair size={15} /><span>กล้อง</span></button>
@@ -660,10 +660,12 @@ export default function Home() {
                           </g>
                         </g>
                         {isSubjectSelected && subject.microNodes?.map((micro, microIndex) => (
-                          <g key={micro.id} className="micro-node-wrap" style={{ "--micro-delay": `${microIndex * 75}ms` } as CSSProperties}>
-                            <circle cx={subject.x + micro.dx * microOrbitScale} cy={subject.y + micro.dy * microOrbitScale} r={micro.radius + 5} fill={domain.color} opacity="0.12" filter="url(#softBlur)" />
-                            <circle cx={subject.x + micro.dx * microOrbitScale} cy={subject.y + micro.dy * microOrbitScale} r={micro.radius} fill={domain.softColor} stroke={domain.color} strokeWidth="1" />
-                            <text x={subject.x + micro.dx * microOrbitScale} y={subject.y + micro.dy * microOrbitScale + micro.radius + 14} textAnchor="middle" className="micro-label">{micro.label}</text>
+                          <g key={micro.id} className="micro-node-wrap" style={{ "--micro-delay": `${microIndex * 75}ms`, "--micro-drift-delay": `${(microIndex % 5) * -1.1}s` } as CSSProperties}>
+                            <g className="micro-node-drift">
+                              <circle cx={subject.x + micro.dx * microOrbitScale} cy={subject.y + micro.dy * microOrbitScale} r={micro.radius + 5} fill={domain.color} opacity="0.12" filter="url(#softBlur)" />
+                              <circle cx={subject.x + micro.dx * microOrbitScale} cy={subject.y + micro.dy * microOrbitScale} r={micro.radius} fill={domain.softColor} stroke={domain.color} strokeWidth="1" />
+                              <text x={subject.x + micro.dx * microOrbitScale} y={subject.y + micro.dy * microOrbitScale + micro.radius + 14} textAnchor="middle" className="micro-label">{micro.label}</text>
+                            </g>
                           </g>
                         ))}
                       </g>

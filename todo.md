@@ -2,9 +2,12 @@
 
 ## สถานะบริการ
 
+- [x] แก้ workflow ให้ติดตั้ง pnpm ก่อนตั้งค่า Node cache
+- [ ] ส่ง workflow ที่แก้ไขแล้วไปยัง GitHub และให้ผู้ใช้รันใหม่
 - [x] ผู้ใช้เปลี่ยน GitHub Pages Source เป็น GitHub Actions
 - [x] สร้าง workflow เพื่อ build จาก client และส่ง dist/public เป็น GitHub Pages artifact
-- [ ] ตรวจ run ของ GitHub Actions และยืนยัน URL หลังผู้ใช้เปิดใช้งาน
+- [x] ส่ง workflow GitHub Pages ขึ้นรีโพและยืนยันว่าสถานะพร้อมใช้งาน
+- [ ] ผู้ใช้กด Run workflow แล้วตรวจ URL ของ GitHub Pages
 - [x] ตรวจสอบความพร้อมของรีโพสำหรับ GitHub Pages และแจ้งขั้นตอนตั้งค่า
 - [ ] ให้ผู้ใช้ยืนยันการเปิด GitHub Pages และกำหนดโดเมนย่อยตามต้องการ (GitHub Pages ยังไม่ถูกเปิดใช้)
 - [x] ยืนยันรีโพ GitHub ปลายทาง: `dukperado-hue/neuralnetworklegalcode`

@@ -2,6 +2,8 @@
 
 ## สถานะบริการ
 
+- [x] ย้ายลิงก์ Cool Uncle, Lab และ ประมวล.com ไปกลุ่มด้านขวาของ header และลดระยะของแถบนำทาง
+- [x] ตรวจ header บนเดสก์ท็อปและมือถือหลังปรับตำแหน่งลิงก์
 - [x] สร้างและตรวจ skill ใช้ซ้ำสำหรับแก้ lifecycle ของ react-force-graph-3d
 - [x] เพิ่ม LOD label ผ่าน declarative nodeLabel ให้แสดงตามระดับการซูมที่ปลอดภัย
 - [x] เพิ่ม glow แบบ declarative โดยไม่ใช้ custom scene หรือ post-processing loop

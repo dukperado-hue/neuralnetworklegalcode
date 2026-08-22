@@ -578,11 +578,6 @@ export default function Home() {
       <div className="graph-atmosphere" aria-hidden="true" />
       <header className="universe-header">
         <div className="header-brand-row">
-          <div className="route-links" aria-label="เส้นทางเครือข่ายที่เกี่ยวข้อง">
-            <a className="lab-return" href="https://coolunclelab.com" target="_blank" rel="noreferrer"><ArrowUpRight size={13} /> <span>Cool Uncle</span></a>
-            <a className="lab-return" href="https://coolunclelab.com/lab" target="_blank" rel="noreferrer"><span>Lab</span></a>
-            <a className="lab-return" href="https://ประมวล.com" target="_blank" rel="noreferrer"><span>ประมวล.com</span></a>
-          </div>
           <button className="brand-lockup" onClick={resetExplorer} aria-label="กลับสู่จุดเริ่มต้นของแผนที่กฎหมาย">
             <img src={`${MANUS_ASSET_ORIGIN}/manus-storage/legal-atlas-mark_676ff7e4.png`} alt="" className="brand-mark" />
             <span>
@@ -597,6 +592,11 @@ export default function Home() {
         </div>
 
         <div className="header-actions">
+          <nav className="route-links" aria-label="เส้นทางเครือข่ายที่เกี่ยวข้อง">
+            <a className="lab-return" href="https://coolunclelab.com" target="_blank" rel="noreferrer"><ArrowUpRight size={12} /> <span>Cool Uncle</span></a>
+            <a className="lab-return" href="https://coolunclelab.com/lab" target="_blank" rel="noreferrer"><span>Lab</span></a>
+            <a className="lab-return" href="https://ประมวล.com" target="_blank" rel="noreferrer"><span>ประมวล.com</span></a>
+          </nav>
           <div className="view-switch" aria-label="เลือกรูปแบบการแสดงผล">
             <button className={viewMode === "network" ? "is-active" : ""} onClick={() => setViewMode("network")}>
               <Network size={15} /> <span>แผนที่</span>

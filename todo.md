@@ -2,6 +2,11 @@
 
 ## สถานะบริการ
 
+- [x] สร้างและตรวจ skill ใช้ซ้ำสำหรับแก้ lifecycle ของ react-force-graph-3d
+- [x] เพิ่ม LOD label ผ่าน declarative nodeLabel ให้แสดงตามระดับการซูมที่ปลอดภัย
+- [x] เพิ่ม glow แบบ declarative โดยไม่ใช้ custom scene หรือ post-processing loop
+- [x] ทดสอบ WebGL และ production build หลังเพิ่ม LOD/glow
+- [ ] ส่ง commit และรัน GitHub Pages workflow เพื่อทดสอบบนมือถือจริง
 - [x] ตัด custom scene mutation ที่เหลือและใช้ declarative props มาตรฐานของ ForceGraph3D เท่านั้น
 - [x] เพิ่ม ErrorBoundary เฉพาะมุมมอง 3 มิติที่ส่งกลับ 2 มิติเมื่อ renderer ล้มเหลว
 - [x] ตรวจ telemetry ให้บันทึก mount, context loss และ ErrorBoundary โดยไม่เก็บข้อมูลระบุตัวตน

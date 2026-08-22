@@ -4,6 +4,8 @@
  */
 import ForceGraph3D, { type ForceGraphMethods } from "react-force-graph-3d";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import SpriteText from "three-spritetext";
+import * as THREE from "three";
 import { recordWebGLTelemetry } from "@/lib/webglTelemetry";
 
 type MicroNode = { id: string; label: string; radius: number };
@@ -82,9 +84,45 @@ function useGraphDimensions() {
 
 const endpointId = (endpoint: string | UniverseNode) => typeof endpoint === "string" ? endpoint : endpoint.id;
 
+type NodeAdornment = { label: SpriteText; node: UniverseNode };
+
+function labelTierForDistance(distance: number) {
+  if (distance < 210) return 3;
+  if (distance < 330) return 2;
+  if (distance < 520) return 1;
+  return 0;
+}
+
+function labelIsVisible(node: UniverseNode, tier: number) {
+  if (node.kind === "origin") return true;
+  if (node.kind === "domain") return tier >= 1;
+  if (node.kind === "subject") return tier >= 2;
+  return tier >= 3;
+}
+
+function createGlowTexture() {
+  const canvas = document.createElement("canvas");
+  canvas.width = 128;
+  canvas.height = 128;
+  const context = canvas.getContext("2d");
+  if (!context) return null;
+  const gradient = context.createRadialGradient(64, 64, 8, 64, 64, 64);
+  gradient.addColorStop(0, "rgba(255,255,255,0.82)");
+  gradient.addColorStop(0.28, "rgba(255,255,255,0.28)");
+  gradient.addColorStop(1, "rgba(255,255,255,0)");
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, 128, 128);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
 export default function ForceNetwork3D({ domains, expanded, selectedDomainId, selectedSubjectId, showConnections, motionEnabled, onExploreDomain, onOpen, onReset, onFallbackTo2D }: ForceNetwork3DProps) {
   const graphRef = useRef<ForceGraphMethods<UniverseNode, UniverseLink> | undefined>(undefined);
   const fallbackTriggeredRef = useRef(false);
+  const adornmentsRef = useRef(new Map<string, NodeAdornment>());
+  const lodTierRef = useRef(0);
+  const glowTextureRef = useRef<THREE.CanvasTexture | null>(null);
   const { hostRef, dimensions } = useGraphDimensions();
 
   const fallbackTo2D = useCallback((reason: unknown) => {
@@ -141,6 +179,38 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
     return endpointId(link.source) === `${selectedDomainId}-${selectedSubjectId}`;
   }, [expanded, selectedDomainId, selectedSubjectId, showConnections]);
 
+  const applyLod = useCallback(() => {
+    const camera = graphRef.current?.camera();
+    if (!camera) return;
+    const tier = labelTierForDistance(camera.position.length());
+    if (tier === lodTierRef.current) return;
+    lodTierRef.current = tier;
+    adornmentsRef.current.forEach(({ label, node }) => {
+      label.visible = labelIsVisible(node, tier);
+    });
+  }, []);
+
+  useEffect(() => {
+    let removeListener: (() => void) | undefined;
+    const timer = window.setTimeout(() => {
+      const controls = graphRef.current?.controls() as { addEventListener?: (event: string, callback: () => void) => void; removeEventListener?: (event: string, callback: () => void) => void } | undefined;
+      if (!controls?.addEventListener) return;
+      controls.addEventListener("change", applyLod);
+      applyLod();
+      removeListener = () => controls.removeEventListener?.("change", applyLod);
+    }, 80);
+    return () => {
+      window.clearTimeout(timer);
+      removeListener?.();
+    };
+  }, [applyLod]);
+
+  useEffect(() => () => {
+    adornmentsRef.current.forEach(({ label }) => label.material.map?.dispose());
+    adornmentsRef.current.clear();
+    glowTextureRef.current?.dispose();
+  }, []);
+
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
@@ -186,6 +256,40 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
     if ((node.kind === "subject" || node.kind === "micro") && node.domainId && node.subjectId) onExploreDomain(node.domainId, node.subjectId);
   }, [expanded, onExploreDomain, onOpen, onReset]);
 
+  const nodeThreeObject = useCallback((node: UniverseNode) => {
+    const cached = adornmentsRef.current.get(node.id);
+    if (cached) return cached.label.parent!;
+
+    const group = new THREE.Group();
+    const glowTexture = glowTextureRef.current ?? createGlowTexture();
+    glowTextureRef.current = glowTexture;
+    if (glowTexture) {
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: glowTexture,
+        color: node.color,
+        transparent: true,
+        opacity: node.kind === "origin" ? 0.16 : node.kind === "domain" ? 0.1 : 0.06,
+        depthWrite: false,
+        blending: THREE.NormalBlending,
+      }));
+      const haloSize = node.radius * (node.kind === "origin" ? 3.8 : 3.1);
+      halo.scale.set(haloSize, haloSize, 1);
+      group.add(halo);
+    }
+
+    const label = new SpriteText(node.label);
+    label.color = "#34283A";
+    label.textHeight = node.kind === "origin" ? 9 : node.kind === "domain" ? 7 : node.kind === "subject" ? 5.4 : 4.2;
+    label.backgroundColor = "rgba(250,249,246,0.84)";
+    label.padding = 1.8;
+    label.borderRadius = 2;
+    label.position.set(0, -node.radius - (node.kind === "micro" ? 10 : 16), 0);
+    label.visible = labelIsVisible(node, lodTierRef.current);
+    group.add(label);
+    adornmentsRef.current.set(node.id, { label, node });
+    return group;
+  }, []);
+
   return (
     <div ref={hostRef} className="force-network-webgl" aria-label="จักรวาลความรู้กฎหมายสามมิติ">
       <div className="force-network-webgl__status"><span className="force-network-webgl__pulse" /> WEBGL LEGAL UNIVERSE · ลากเพื่อหมุน · scroll หรือ pinch เพื่อซูม</div>
@@ -207,6 +311,8 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
         nodeResolution={20}
         nodeVisibility={nodeVisibility}
         nodeLabel={(node) => node.label}
+        nodeThreeObject={nodeThreeObject}
+        nodeThreeObjectExtend
         linkVisibility={linkVisibility}
         linkColor={(link) => link.color}
         linkOpacity={0.24}

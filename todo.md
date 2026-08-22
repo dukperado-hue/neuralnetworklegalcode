@@ -2,8 +2,10 @@
 
 ## สถานะบริการ
 
-- [x] แก้ workflow ให้ติดตั้ง pnpm ก่อนตั้งค่า Node cache
+- [x] เอาการระบุเวอร์ชัน pnpm ซ้ำออกจาก workflow ให้ใช้ package.json เป็นแหล่งเดียว
 - [ ] ส่ง workflow ที่แก้ไขแล้วไปยัง GitHub และให้ผู้ใช้รันใหม่
+- [x] แก้ workflow ให้ติดตั้ง pnpm ก่อนตั้งค่า Node cache
+- [x] ส่ง workflow ที่แก้ไขแล้วไปยัง GitHub และให้ผู้ใช้รันใหม่
 - [x] ผู้ใช้เปลี่ยน GitHub Pages Source เป็น GitHub Actions
 - [x] สร้าง workflow เพื่อ build จาก client และส่ง dist/public เป็น GitHub Pages artifact
 - [x] ส่ง workflow GitHub Pages ขึ้นรีโพและยืนยันว่าสถานะพร้อมใช้งาน

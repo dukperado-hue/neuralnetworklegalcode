@@ -2,7 +2,7 @@
  * รัศมีนิติธรรม — แผนที่ความรู้กฎหมายแบบ organic radial constellation
  * จังหวะภาพ: ivory editorial canvas + color-family nodes + restrained orbital motion.
  */
-import { useRef, useState, type CSSProperties } from "react";
+import { useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
 import {
   ArrowUpRight,
   ChevronRight,
@@ -431,6 +431,7 @@ export default function Home() {
   const [musicVolume, setMusicVolume] = useState(0.16);
   const [motionEnabled, setMotionEnabled] = useState(true);
   const [is3D, setIs3D] = useState(false);
+  const [mapTilt, setMapTilt] = useState({ x: 0, y: 0 });
   const [cameraEnabled, setCameraEnabled] = useState(true);
   const [controlsOpen, setControlsOpen] = useState(false);
   const backgroundMusicRef = useRef<HTMLAudioElement>(null);
@@ -469,6 +470,14 @@ export default function Home() {
     if (backgroundMusicRef.current) backgroundMusicRef.current.volume = nextVolume;
   };
 
+  const handleMapPointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (!is3D) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const horizontal = (event.clientX - bounds.left) / bounds.width - 0.5;
+    const vertical = (event.clientY - bounds.top) / bounds.height - 0.5;
+    setMapTilt({ x: Number((-vertical * 4.4).toFixed(2)), y: Number((horizontal * 6.4).toFixed(2)) });
+  };
+
   const selectedDomain = legalDomains.find((domain) => domain.id === selectedId) ?? null;
   const selectedSubject = selectedDomain?.children.find((subject) => subject.id === selectedSubjectId) ?? null;
   const cameraTarget = selectedSubject ?? selectedDomain;
@@ -500,18 +509,22 @@ export default function Home() {
       <div className="graph-atmosphere" aria-hidden="true" />
       <header className="universe-header">
         <div className="header-brand-row">
-          <a className="lab-return" href="https://coolunclelab.com" target="_blank" rel="noreferrer"><ArrowUpRight size={14} /> <span>Cool Uncle Legal Lab</span></a>
+          <div className="route-links" aria-label="เส้นทางเครือข่ายที่เกี่ยวข้อง">
+            <a className="lab-return" href="https://coolunclelab.com" target="_blank" rel="noreferrer"><ArrowUpRight size={13} /> <span>Cool Uncle</span></a>
+            <a className="lab-return" href="https://coolunclelab.com/lab" target="_blank" rel="noreferrer"><span>Lab</span></a>
+            <a className="lab-return" href="https://ประมวล.com" target="_blank" rel="noreferrer"><span>ประมวล.com</span></a>
+          </div>
           <button className="brand-lockup" onClick={resetExplorer} aria-label="กลับสู่จุดเริ่มต้นของแผนที่กฎหมาย">
             <img src="/manus-storage/legal-atlas-mark_676ff7e4.png" alt="" className="brand-mark" />
             <span>
-              <strong>คลังประมวลกฎหมาย</strong>
-              <small>LEGAL KNOWLEDGE ATLAS</small>
+              <strong>ประมวลกฎหมายฉบับ Neural Network</strong>
+              <small>PRAMUAN NN · LEGAL KNOWLEDGE ATLAS</small>
             </span>
           </button>
         </div>
 
         <div className="header-center">
-          <span className="header-kicker"><Sparkles size={13} /> LEGAL RELATIONSHIP ATLAS</span>
+          <span className="header-kicker"><Sparkles size={13} /> NEURAL LEGAL NETWORK</span>
         </div>
 
         <div className="header-actions">
@@ -550,7 +563,7 @@ export default function Home() {
             {musicEnabled && <label className="music-volume-control"><Volume2 size={14} /><input type="range" min="0" max="0.35" step="0.01" value={musicVolume} onChange={(event) => updateMusicVolume(Number(event.target.value))} aria-label="ระดับเสียงเพลงประกอบ" /></label>}
             <button className={motionEnabled ? "is-active" : ""} onClick={() => setMotionEnabled((value) => !value)} aria-pressed={motionEnabled}><Orbit size={15} /><span>Motion</span></button>
             <button className={cameraEnabled ? "is-active" : ""} onClick={() => setCameraEnabled((value) => !value)} aria-pressed={cameraEnabled}><Crosshair size={15} /><span>กล้อง</span></button>
-            <button className={is3D ? "is-active" : ""} onClick={() => setIs3D((value) => !value)} aria-pressed={is3D}><Layers2 size={15} /><span>{is3D ? "3D" : "2D"}</span></button>
+            <button className={is3D ? "is-active" : ""} onClick={() => { setIs3D((value) => !value); setMapTilt({ x: 0, y: 0 }); }} aria-pressed={is3D} title={is3D ? "กลับสู่มุมมอง 2D" : "เปิดมุมมอง 3D แบบโต้ตอบ"}><Layers2 size={15} /><span>{is3D ? "3D · ลากได้" : "2D"}</span></button>
           </div>
         </div>
 
@@ -566,7 +579,8 @@ export default function Home() {
           <span><i className="legend-dot legend-dot--small" />จุดเชื่อมโยง</span>
         </div>
 
-        <svg className="law-map" viewBox="0 0 1440 900" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย">
+        {is3D && <div className="three-d-hint" role="status"><Layers2 size={13} /> 3D interactive · เลื่อนตัวชี้เพื่อเอียงมุมมอง</div>}
+        <svg className="law-map" viewBox="0 0 1440 900" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" style={is3D ? ({ "--tilt-x": `${mapTilt.x}deg`, "--tilt-y": `${mapTilt.y}deg` } as CSSProperties) : undefined} onPointerMove={handleMapPointerMove} onPointerLeave={() => setMapTilt({ x: 0, y: 0 })}>
           <defs>
             <filter id="softBlur"><feGaussianBlur stdDeviation="16" /></filter>
             <filter id="nodeShadow" x="-70%" y="-70%" width="240%" height="240%"><feDropShadow dx="0" dy="9" stdDeviation="8" floodColor="#3C3651" floodOpacity="0.16" /></filter>
@@ -610,15 +624,15 @@ export default function Home() {
                 <circle cx="720" cy="450" r="65" fill="none" stroke="#9D6EEA" strokeOpacity="0.7" strokeWidth="1.25" />
                 <circle cx="720" cy="450" r="41" fill="#FFFFFF" opacity="0.13" />
                 <text x="720" y="456" textAnchor="middle" className="origin-brand">ประมวล.com</text>
-                <text x="720" y="548" textAnchor="middle" className="explore-prompt">เริ่มสำรวจแผนที่</text>
-                <text x="720" y="574" textAnchor="middle" className="explore-caption">เลือกเพื่อเปิดกลุ่มประมวลกฎหมาย</text>
+                <text x="720" y="548" textAnchor="middle" className="explore-prompt">เข้าสู่ ประมวลNN</text>
+                <text x="720" y="574" textAnchor="middle" className="explore-caption">เลือกเพื่อเปิดแผนที่เครือข่ายกฎหมาย</text>
               </g>
             ) : (
               <g className="origin-node origin-node--expanded" role="button" tabIndex={0} aria-label="กลับสู่ภาพรวมกฎหมายทั้งหมด" onClick={resetExplorer} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); resetExplorer(); } }}>
                 <circle cx="720" cy="450" r="39" fill="#9D6EEA" opacity="0.12" filter="url(#softBlur)" />
                 <circle cx="720" cy="450" r="16" fill="#9D6EEA" />
                 <circle cx="720" cy="450" r="24" fill="none" stroke="#9D6EEA" strokeOpacity="0.45" strokeWidth="1" />
-                <text x="720" y="454" textAnchor="middle" className="origin-return">ประมวล.com</text>
+                <text x="720" y="454" textAnchor="middle" className="origin-return">ประมวลNN · กลับ</text>
               </g>
             )}
 
@@ -680,7 +694,7 @@ export default function Home() {
         {!expanded && (
           <aside className="opening-note">
             <span className="note-rule" />
-            <p>เริ่มจากจุดเดียว แล้วค่อยเห็นความสัมพันธ์ของกฎหมายไทยทีละชั้น</p>
+            <p>เริ่มจากจุดเดียว แล้วค่อยเห็นเครือข่ายกฎหมายไทยทีละชั้น</p>
           </aside>
         )}
 

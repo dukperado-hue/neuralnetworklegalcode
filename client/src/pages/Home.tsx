@@ -5,7 +5,6 @@
 import { useMemo, useState, type CSSProperties } from "react";
 import {
   ArrowUpRight,
-  BookOpen,
   ChevronRight,
   Layers2,
   Link2,
@@ -15,6 +14,7 @@ import {
   Network,
   RotateCcw,
   Search,
+  Settings2,
   Sparkles,
   Volume2,
   VolumeX,
@@ -31,6 +31,7 @@ type LegalSubject = {
   radius: number;
   description: string;
   references: string[];
+  microNodes?: { id: string; label: string; dx: number; dy: number; radius: number }[];
 };
 
 type LegalDomain = {
@@ -58,14 +59,23 @@ const legalDomains: LegalDomain[] = [
     x: 342,
     y: 277,
     radius: 52,
-    description: "ประมวลกฎหมายแพ่งและพาณิชย์ แบ่งเป็น 6 บรรพ ตั้งแต่หลักทั่วไปจนถึงมรดก",
+    description: "เครือข่ายกฎหมายเอกชนสำหรับสำรวจตั้งแต่นิติกรรม สัญญา หนี้ ทรัพย์ ละเมิด ครอบครัว และมรดก",
     children: [
-      { id: "civil-book-1", label: "บรรพ 1 · หลักทั่วไป", x: 201, y: 183, radius: 20, description: "หลักทั่วไปของประมวลกฎหมายแพ่งและพาณิชย์", references: ["มาตรา 4–193/35", "225 มาตรา"] },
-      { id: "civil-book-2", label: "บรรพ 2 · หนี้", x: 254, y: 390, radius: 23, description: "หลักแห่งหนี้ สิทธิ และหน้าที่ของคู่กรณี", references: ["มาตรา 194–452", "259 มาตรา"] },
-      { id: "civil-book-3", label: "บรรพ 3 · เอกเทศสัญญา", x: 403, y: 394, radius: 29, description: "เอกเทศสัญญาและกลุ่มสัญญาสำคัญ", references: ["มาตรา 453–798", "847 มาตรา"] },
-      { id: "civil-book-4", label: "บรรพ 4 · ทรัพย์สิน", x: 493, y: 239, radius: 20, description: "ทรัพย์สินและทรัพยสิทธิ", references: ["มาตรา 1298–1434", "137 มาตรา"] },
-      { id: "civil-book-5", label: "บรรพ 5 · ครอบครัว", x: 288, y: 508, radius: 21, description: "กฎหมายครอบครัว", references: ["มาตรา 1435–1598/41", "215 มาตรา"] },
-      { id: "civil-book-6", label: "บรรพ 6 · มรดก", x: 139, y: 329, radius: 19, description: "การตกทอดและการจัดการมรดก", references: ["มาตรา 1599–1755", "157 มาตรา"] },
+      { id: "juristic-contract", label: "นิติกรรมและสัญญา", x: 163, y: 165, radius: 25, description: "หลักนิติกรรมและสัญญา", references: ["นิติกรรม", "สัญญา"] },
+      { id: "debt", label: "หนี้", x: 223, y: 420, radius: 24, description: "หลักแห่งหนี้และการระงับหนี้", references: ["หนี้", "การชำระหนี้"] },
+      { id: "property", label: "ทรัพย์", x: 324, y: 530, radius: 22, description: "ทรัพย์สินและทรัพยสิทธิ", references: ["ทรัพย์สิน", "ทรัพยสิทธิ"] },
+      { id: "sale", label: "ซื้อขาย", x: 505, y: 158, radius: 18, description: "สัญญาซื้อขาย", references: ["ซื้อขาย", "ส่งมอบ"] },
+      { id: "exchange", label: "แลกเปลี่ยน", x: 526, y: 241, radius: 16, description: "สัญญาแลกเปลี่ยน", references: ["แลกเปลี่ยน"] },
+      { id: "gift", label: "ให้", x: 522, y: 325, radius: 15, description: "สัญญาให้", references: ["ให้"] },
+      { id: "lease", label: "เช่าทรัพย์", x: 477, y: 413, radius: 18, description: "สัญญาเช่าทรัพย์", references: ["เช่าทรัพย์"] },
+      { id: "hire-purchase", label: "เช่าซื้อ", x: 383, y: 469, radius: 17, description: "สัญญาเช่าซื้อ", references: ["เช่าซื้อ"] },
+      { id: "sale-redemption", label: "ขายฝาก", x: 214, y: 520, radius: 16, description: "สัญญาขายฝาก", references: ["ขายฝาก"] },
+      { id: "loan", label: "ยืม", x: 93, y: 447, radius: 15, description: "ยืมใช้คงรูปและยืมใช้สิ้นเปลือง", references: ["ยืม"] },
+      { id: "hire-work", label: "จ้างทำของ", x: 79, y: 344, radius: 17, description: "สัญญาจ้างทำของ", references: ["จ้างทำของ"] },
+      { id: "agency", label: "ตัวแทน", x: 106, y: 246, radius: 16, description: "ตัวแทน", references: ["ตัวแทน"] },
+      { id: "tort", label: "ละเมิด", x: 401, y: 142, radius: 29, description: "กลุ่มความรับผิดจากการกระทำละเมิด", references: ["มาตรา 420", "มาตรา 425", "มาตรา 429"], microNodes: [{ id: "tort-420", label: "ม.420", dx: -80, dy: 31, radius: 10 }, { id: "tort-425", label: "ม.425", dx: 76, dy: 26, radius: 10 }, { id: "tort-429", label: "ม.429", dx: 7, dy: -76, radius: 10 }, { id: "tort-employer", label: "ผู้ว่าจ้าง", dx: 90, dy: -50, radius: 9 }] },
+      { id: "family", label: "ครอบครัว", x: 429, y: 510, radius: 20, description: "กฎหมายครอบครัว", references: ["ครอบครัว"] },
+      { id: "inheritance", label: "มรดก", x: 267, y: 105, radius: 19, description: "การตกทอดและการจัดการมรดก", references: ["มรดก"] },
     ],
   },
   {
@@ -182,6 +192,7 @@ export default function Home() {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [motionEnabled, setMotionEnabled] = useState(true);
   const [is3D, setIs3D] = useState(false);
+  const [controlsOpen, setControlsOpen] = useState(false);
 
   const playSoftTone = () => {
     if (!soundEnabled || typeof window === "undefined") return;
@@ -240,10 +251,6 @@ export default function Home() {
     setZoom(1);
   };
 
-  const activeTitle = selectedSubject ? selectedSubject.label : selectedDomain?.title;
-  const activeDescription = selectedSubject ? selectedSubject.description : selectedDomain?.description;
-  const activeReferences = selectedSubject ? selectedSubject.references : selectedDomain ? [selectedDomain.abbreviation, "กลุ่มประมวล"] : [];
-
   return (
     <main className={`legal-universe ${motionEnabled ? "" : "motion-off"} ${is3D ? "is-3d" : ""}`}>
       <div className="graph-atmosphere" aria-hidden="true" />
@@ -282,17 +289,22 @@ export default function Home() {
           <span>{expanded ? "กำลังสำรวจโครงสร้างกฎหมาย" : "เริ่มต้นจากภาพรวม"}</span>
         </div>
 
-        <nav className="breadcrumb" aria-label="เส้นทางการสำรวจ">
-          <button onClick={resetExplorer}>กฎหมายทั้งหมด</button>
-          {selectedDomain && <><ChevronRight size={13} /><button onClick={() => exploreDomain(selectedDomain.id)}>{selectedDomain.shortLabel}</button></>}
-          {selectedSubject && <><ChevronRight size={13} /><span>{selectedSubject.label}</span></>}
-        </nav>
+        {expanded && (
+          <nav className="breadcrumb" aria-label="เส้นทางการสำรวจ">
+            <button onClick={resetExplorer}>กฎหมายทั้งหมด</button>
+            {selectedDomain && <><ChevronRight size={13} /><button onClick={() => exploreDomain(selectedDomain.id)}>{selectedDomain.shortLabel}</button></>}
+            {selectedSubject && <><ChevronRight size={13} /><span>{selectedSubject.label}</span></>}
+          </nav>
+        )}
 
-        <div className="atlas-controls" aria-label="ควบคุมการแสดงแผนที่">
-          <button className={showConnections ? "is-active" : ""} onClick={() => setShowConnections((value) => !value)} aria-pressed={showConnections}><Link2 size={15} /><span>เส้นโยง</span></button>
-          <button className={soundEnabled ? "is-active" : ""} onClick={() => setSoundEnabled((value) => !value)} aria-pressed={soundEnabled}>{soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}<span>เสียง</span></button>
-          <button className={motionEnabled ? "is-active" : ""} onClick={() => setMotionEnabled((value) => !value)} aria-pressed={motionEnabled}><Orbit size={15} /><span>Motion</span></button>
-          <button className={is3D ? "is-active" : ""} onClick={() => setIs3D((value) => !value)} aria-pressed={is3D}><Layers2 size={15} /><span>{is3D ? "3D" : "2D"}</span></button>
+        <div className={`atlas-controls ${controlsOpen ? "is-open" : ""}`} aria-label="ควบคุมการแสดงแผนที่">
+          <button className="atlas-controls__trigger" onClick={() => setControlsOpen((value) => !value)} aria-expanded={controlsOpen}><Settings2 size={16} /><span>ตัวเลือก</span></button>
+          <div className="atlas-controls__content">
+            <button className={showConnections ? "is-active" : ""} onClick={() => setShowConnections((value) => !value)} aria-pressed={showConnections}><Link2 size={15} /><span>เส้นโยง</span></button>
+            <button className={soundEnabled ? "is-active" : ""} onClick={() => setSoundEnabled((value) => !value)} aria-pressed={soundEnabled}>{soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}<span>เสียง</span></button>
+            <button className={motionEnabled ? "is-active" : ""} onClick={() => setMotionEnabled((value) => !value)} aria-pressed={motionEnabled}><Orbit size={15} /><span>Motion</span></button>
+            <button className={is3D ? "is-active" : ""} onClick={() => setIs3D((value) => !value)} aria-pressed={is3D}><Layers2 size={15} /><span>{is3D ? "3D" : "2D"}</span></button>
+          </div>
         </div>
 
         <div className="search-shell">
@@ -377,10 +389,11 @@ export default function Home() {
                 <text x="720" y="574" textAnchor="middle" className="explore-caption">เลือกเพื่อเปิดกลุ่มประมวลกฎหมาย</text>
               </g>
             ) : (
-              <g className="origin-node origin-node--expanded" role="button" tabIndex={0} onClick={() => { setSelectedId(null); setSelectedSubjectId(null); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedId(null); setSelectedSubjectId(null); } }}>
+              <g className="origin-node origin-node--expanded" role="button" tabIndex={0} aria-label="กลับสู่ภาพรวมกฎหมายทั้งหมด" onClick={resetExplorer} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); resetExplorer(); } }}>
                 <circle cx="720" cy="450" r="39" fill="#9D6EEA" opacity="0.12" filter="url(#softBlur)" />
                 <circle cx="720" cy="450" r="16" fill="#9D6EEA" />
                 <circle cx="720" cy="450" r="24" fill="none" stroke="#9D6EEA" strokeOpacity="0.45" strokeWidth="1" />
+                <text x="720" y="454" textAnchor="middle" className="origin-return">ประมวล.com</text>
               </g>
             )}
 
@@ -405,13 +418,23 @@ export default function Home() {
                   {isSelected && domain.children.map((subject, subjectIndex) => {
                     const isSubjectSelected = selectedSubjectId === subject.id;
                     return (
-                      <g key={subject.id} className="subject-node-wrap" style={{ "--subject-delay": `${subjectIndex * 55}ms` } as CSSProperties}>
-                        <g className={`graph-node graph-node--subject ${isSubjectSelected ? "is-selected" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onClick={() => exploreDomain(domain.id, subject.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); exploreDomain(domain.id, subject.id); } }}>
-                          <circle cx={subject.x} cy={subject.y} r={subject.radius + 10} fill={domain.color} opacity={isSubjectSelected ? 0.19 : 0.075} filter="url(#softBlur)" />
-                          <circle cx={subject.x} cy={subject.y} r={subject.radius} fill={domain.softColor} stroke={domain.color} strokeWidth={isSubjectSelected ? 2.1 : 1.15} filter="url(#nodeShadow)" />
-                          <circle cx={subject.x} cy={subject.y} r={Math.max(4, subject.radius * 0.3)} fill="#FFFFFF" opacity="0.38" />
-                          <text x={subject.x} y={subject.y + subject.radius + 20} textAnchor="middle" className="subject-label">{subject.label}</text>
+                      <g key={subject.id} className="subject-node-wrap" style={{ "--subject-delay": `${subjectIndex * 55}ms`, "--drift-delay": `${(subjectIndex % 7) * -0.9}s` } as CSSProperties}>
+                        <g className="subject-node-drift">
+                          <g className={`graph-node graph-node--subject ${isSubjectSelected ? "is-selected" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onClick={() => exploreDomain(domain.id, subject.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); exploreDomain(domain.id, subject.id); } }}>
+                            <circle cx={subject.x} cy={subject.y} r={subject.radius + 10} fill={domain.color} opacity={isSubjectSelected ? 0.19 : 0.075} filter="url(#softBlur)" />
+                            <circle cx={subject.x} cy={subject.y} r={subject.radius} fill={domain.softColor} stroke={domain.color} strokeWidth={isSubjectSelected ? 2.1 : 1.15} filter="url(#nodeShadow)" />
+                            <circle cx={subject.x} cy={subject.y} r={Math.max(4, subject.radius * 0.3)} fill="#FFFFFF" opacity="0.38" />
+                            <text x={subject.x} y={subject.y + subject.radius + 20} textAnchor="middle" className="subject-label">{subject.label}</text>
+                          </g>
                         </g>
+                        {isSubjectSelected && subject.microNodes?.map((micro, microIndex) => (
+                          <g key={micro.id} className="micro-node-wrap" style={{ "--micro-delay": `${microIndex * 75}ms` } as CSSProperties}>
+                            {showConnections && <path d={curvedPath(subject.x, subject.y, subject.x + micro.dx, subject.y + micro.dy)} fill="none" stroke={domain.color} strokeWidth="0.8" opacity="0.55" />}
+                            <circle cx={subject.x + micro.dx} cy={subject.y + micro.dy} r={micro.radius + 5} fill={domain.color} opacity="0.12" filter="url(#softBlur)" />
+                            <circle cx={subject.x + micro.dx} cy={subject.y + micro.dy} r={micro.radius} fill={domain.softColor} stroke={domain.color} strokeWidth="1" />
+                            <text x={subject.x + micro.dx} y={subject.y + micro.dy + micro.radius + 14} textAnchor="middle" className="micro-label">{micro.label}</text>
+                          </g>
+                        ))}
                       </g>
                     );
                   })}
@@ -435,21 +458,6 @@ export default function Home() {
           </aside>
         )}
 
-        {selectedDomain && (
-          <aside className="detail-panel" aria-live="polite">
-            <button className="panel-close" onClick={() => { setSelectedId(null); setSelectedSubjectId(null); }} aria-label="ปิดรายละเอียด"><X size={18} /></button>
-            <div className="panel-topline"><span className="panel-orb" style={{ backgroundColor: selectedDomain.color }} />{selectedSubject ? selectedDomain.shortLabel : "เล่มประมวล"}</div>
-            <p className="panel-code">{selectedSubject ? selectedDomain.abbreviation : selectedDomain.abbreviation}</p>
-            <h1>{activeTitle}</h1>
-            <p className="panel-description">{activeDescription}</p>
-            <div className="panel-references">
-              <span>จุดเชื่อมโยง</span>
-              <div>{activeReferences.map((reference) => <button key={reference}>{reference}</button>)}</div>
-            </div>
-            <button className="panel-cta" onClick={() => setViewMode("book")}><BookOpen size={17} /> เปิดสารบัญแบบเล่ม <ArrowUpRight size={16} /></button>
-            <img className="panel-ornament" src="/manus-storage/legal-detail-ornament_b47f6ab1.png" alt="" />
-          </aside>
-        )}
 
         {viewMode === "book" && (
           <section className="book-view" aria-label="สารบัญประมวลกฎหมาย">

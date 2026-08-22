@@ -2,7 +2,7 @@
  * รัศมีนิติธรรม — แผนที่ความรู้กฎหมายแบบ organic radial constellation
  * จังหวะภาพ: ivory editorial canvas + color-family nodes + restrained orbital motion.
  */
-import { useMemo, useState, type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import {
   ArrowUpRight,
   ChevronRight,
@@ -13,7 +13,6 @@ import {
   Orbit,
   Network,
   RotateCcw,
-  Search,
   Settings2,
   Sparkles,
   Volume2,
@@ -185,7 +184,6 @@ export default function Home() {
   const [expanded, setExpanded] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"network" | "book">("network");
   const [zoom, setZoom] = useState(1);
   const [showConnections, setShowConnections] = useState(true);
@@ -214,39 +212,18 @@ export default function Home() {
   const selectedDomain = legalDomains.find((domain) => domain.id === selectedId) ?? null;
   const selectedSubject = selectedDomain?.children.find((subject) => subject.id === selectedSubjectId) ?? null;
 
-  const searchItems = useMemo(
-    () =>
-      legalDomains.flatMap((domain) => [
-        { id: domain.id, domainId: domain.id, label: domain.title, meta: `${domain.abbreviation} · ประมวล`, type: "volume" },
-        ...domain.children.map((subject) => ({
-          id: subject.id,
-          domainId: domain.id,
-          label: subject.label,
-          meta: `${domain.shortLabel} · หัวข้อย่อย`,
-          type: "subject",
-        })),
-      ]),
-    [],
-  );
-
-  const searchResults = searchQuery.trim()
-    ? searchItems.filter((item) => `${item.label} ${item.meta}`.toLocaleLowerCase().includes(searchQuery.toLocaleLowerCase())).slice(0, 6)
-    : [];
-
   const exploreDomain = (domainId: string, subjectId: string | null = null) => {
     playSoftTone();
     setExpanded(true);
     setSelectedId(domainId);
     setSelectedSubjectId(subjectId);
     setViewMode("network");
-    setSearchQuery("");
   };
 
   const resetExplorer = () => {
     setExpanded(false);
     setSelectedId(null);
     setSelectedSubjectId(null);
-    setSearchQuery("");
     setViewMode("network");
     setZoom(1);
   };
@@ -305,28 +282,6 @@ export default function Home() {
             <button className={motionEnabled ? "is-active" : ""} onClick={() => setMotionEnabled((value) => !value)} aria-pressed={motionEnabled}><Orbit size={15} /><span>Motion</span></button>
             <button className={is3D ? "is-active" : ""} onClick={() => setIs3D((value) => !value)} aria-pressed={is3D}><Layers2 size={15} /><span>{is3D ? "3D" : "2D"}</span></button>
           </div>
-        </div>
-
-        <div className="search-shell">
-          <Search size={18} aria-hidden="true" />
-          <input
-            value={searchQuery}
-            onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="ค้นหาเล่ม หมวด หรือมาตรา"
-            aria-label="ค้นหาประมวลกฎหมาย"
-          />
-          {searchQuery && <button className="clear-search" onClick={() => setSearchQuery("")} aria-label="ล้างคำค้น"><X size={15} /></button>}
-          {searchResults.length > 0 && (
-            <div className="search-results">
-              {searchResults.map((result) => (
-                <button key={`${result.domainId}-${result.id}`} onClick={() => exploreDomain(result.domainId, result.type === "subject" ? result.id : null)}>
-                  <span className="result-orb" style={{ backgroundColor: legalDomains.find((domain) => domain.id === result.domainId)?.color }} />
-                  <span><strong>{result.label}</strong><small>{result.meta}</small></span>
-                  <ArrowUpRight size={15} />
-                </button>
-              ))}
-            </div>
-          )}
         </div>
 
         <div className="zoom-controls" aria-label="ควบคุมการซูม">

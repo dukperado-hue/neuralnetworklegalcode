@@ -6,6 +6,7 @@ import { useState, type CSSProperties } from "react";
 import {
   ArrowUpRight,
   ChevronRight,
+  Crosshair,
   Layers2,
   Link2,
   List,
@@ -238,6 +239,7 @@ export default function Home() {
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [motionEnabled, setMotionEnabled] = useState(true);
   const [is3D, setIs3D] = useState(false);
+  const [cameraEnabled, setCameraEnabled] = useState(true);
   const [controlsOpen, setControlsOpen] = useState(false);
 
   const playSoftTone = () => {
@@ -259,6 +261,11 @@ export default function Home() {
 
   const selectedDomain = legalDomains.find((domain) => domain.id === selectedId) ?? null;
   const selectedSubject = selectedDomain?.children.find((subject) => subject.id === selectedSubjectId) ?? null;
+  const cameraTarget = selectedSubject ?? selectedDomain;
+  const cameraScale = cameraEnabled && cameraTarget ? zoom * (selectedSubject ? 1.72 : 1.45) : zoom;
+  const cameraTransform = cameraEnabled && cameraTarget
+    ? `translate(720 450) scale(${cameraScale}) translate(-${cameraTarget.x} -${cameraTarget.y})`
+    : `translate(720 450) scale(${zoom}) translate(-720 -450)`;
 
   const exploreDomain = (domainId: string, subjectId: string | null = null) => {
     playSoftTone();
@@ -277,7 +284,7 @@ export default function Home() {
   };
 
   return (
-    <main className={`legal-universe ${motionEnabled ? "" : "motion-off"} ${is3D ? "is-3d" : ""}`}>
+    <main className={`legal-universe ${motionEnabled ? "" : "motion-off"} ${is3D ? "is-3d" : ""} ${cameraEnabled && cameraTarget ? "camera-focus" : ""}`}>
       <div className="graph-atmosphere" aria-hidden="true" />
       <header className="universe-header">
         <div className="header-brand-row">
@@ -328,6 +335,7 @@ export default function Home() {
             <button className={showConnections ? "is-active" : ""} onClick={() => setShowConnections((value) => !value)} aria-pressed={showConnections}><Link2 size={15} /><span>เส้นโยง</span></button>
             <button className={soundEnabled ? "is-active" : ""} onClick={() => setSoundEnabled((value) => !value)} aria-pressed={soundEnabled}>{soundEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}<span>เสียง</span></button>
             <button className={motionEnabled ? "is-active" : ""} onClick={() => setMotionEnabled((value) => !value)} aria-pressed={motionEnabled}><Orbit size={15} /><span>Motion</span></button>
+            <button className={cameraEnabled ? "is-active" : ""} onClick={() => setCameraEnabled((value) => !value)} aria-pressed={cameraEnabled}><Crosshair size={15} /><span>กล้อง</span></button>
             <button className={is3D ? "is-active" : ""} onClick={() => setIs3D((value) => !value)} aria-pressed={is3D}><Layers2 size={15} /><span>{is3D ? "3D" : "2D"}</span></button>
           </div>
         </div>
@@ -350,7 +358,7 @@ export default function Home() {
             <filter id="nodeShadow" x="-70%" y="-70%" width="240%" height="240%"><feDropShadow dx="0" dy="9" stdDeviation="8" floodColor="#3C3651" floodOpacity="0.16" /></filter>
           </defs>
 
-          <g className="map-zoom-layer" transform={`translate(720 450) scale(${zoom}) translate(-720 -450)`}>
+          <g className="map-zoom-layer" transform={cameraTransform}>
             <g className="atmospheric-zones" aria-hidden="true">
               {expanded && legalDomains.map((domain) => (
                 <circle key={`zone-${domain.id}`} cx={domain.x} cy={domain.y} r={domain.radius * 2.55} fill={domain.softColor} opacity={selectedId && selectedId !== domain.id ? 0.025 : 0.105} filter="url(#softBlur)" />

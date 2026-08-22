@@ -107,6 +107,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid #9d6eea; outline-
 .subject-node-wrap { animation: subject-arrive 390ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) both; animation-delay: var(--subject-delay); }
 .subject-node-drift { transform-box: fill-box; transform-origin: center; animation: node-drift 5.6s ease-in-out infinite alternate; animation-delay: var(--drift-delay); }
 .micro-node-wrap { transform-box: fill-box; transform-origin: center; animation: micro-arrive 420ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) both; animation-delay: var(--micro-delay); }
+.micro-connections-layer { pointer-events: none; }
 .domain-abbr { fill: #fffdfa; font-family: "DM Mono", monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; pointer-events: none; }
 .domain-label { fill: #443b4d; font-family: "Noto Serif Thai", serif; font-size: 18px; font-weight: 700; letter-spacing: -0.035em; pointer-events: none; }
 .subject-label { fill: #51475a; font-family: "IBM Plex Sans Thai Looped", sans-serif; font-size: 13px; font-weight: 600; pointer-events: none; }

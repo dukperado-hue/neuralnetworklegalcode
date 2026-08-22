@@ -262,6 +262,7 @@ export default function Home() {
   const selectedDomain = legalDomains.find((domain) => domain.id === selectedId) ?? null;
   const selectedSubject = selectedDomain?.children.find((subject) => subject.id === selectedSubjectId) ?? null;
   const cameraTarget = selectedSubject ?? selectedDomain;
+  const microOrbitScale = selectedDomain?.id === "criminal" ? 1.82 : 1.58;
   const cameraScale = cameraEnabled && cameraTarget ? zoom * (selectedSubject ? 1.72 : 1.45) : zoom;
   const cameraTransform = cameraEnabled && cameraTarget
     ? `translate(720 450) scale(${cameraScale}) translate(-${cameraTarget.x} -${cameraTarget.y})`
@@ -430,6 +431,13 @@ export default function Home() {
                     const isSubjectSelected = selectedSubjectId === subject.id;
                     return (
                       <g key={subject.id} className="subject-node-wrap" style={{ "--subject-delay": `${subjectIndex * 55}ms`, "--drift-delay": `${(subjectIndex % 7) * -0.9}s` } as CSSProperties}>
+                        {isSubjectSelected && showConnections && (
+                          <g className="micro-connections-layer" aria-hidden="true">
+                            {subject.microNodes?.map((micro) => (
+                              <path key={`micro-link-${micro.id}`} d={curvedPath(subject.x, subject.y, subject.x + micro.dx * microOrbitScale, subject.y + micro.dy * microOrbitScale)} fill="none" stroke={domain.color} strokeWidth="0.8" opacity="0.48" />
+                            ))}
+                          </g>
+                        )}
                         <g className="subject-node-drift">
                           <g className={`graph-node graph-node--subject ${isSubjectSelected ? "is-selected" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onClick={() => exploreDomain(domain.id, subject.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); exploreDomain(domain.id, subject.id); } }}>
                             <circle cx={subject.x} cy={subject.y} r={subject.radius + 10} fill={domain.color} opacity={isSubjectSelected ? 0.19 : 0.075} filter="url(#softBlur)" />
@@ -440,10 +448,9 @@ export default function Home() {
                         </g>
                         {isSubjectSelected && subject.microNodes?.map((micro, microIndex) => (
                           <g key={micro.id} className="micro-node-wrap" style={{ "--micro-delay": `${microIndex * 75}ms` } as CSSProperties}>
-                            {showConnections && <path d={curvedPath(subject.x, subject.y, subject.x + micro.dx, subject.y + micro.dy)} fill="none" stroke={domain.color} strokeWidth="0.8" opacity="0.55" />}
-                            <circle cx={subject.x + micro.dx} cy={subject.y + micro.dy} r={micro.radius + 5} fill={domain.color} opacity="0.12" filter="url(#softBlur)" />
-                            <circle cx={subject.x + micro.dx} cy={subject.y + micro.dy} r={micro.radius} fill={domain.softColor} stroke={domain.color} strokeWidth="1" />
-                            <text x={subject.x + micro.dx} y={subject.y + micro.dy + micro.radius + 14} textAnchor="middle" className="micro-label">{micro.label}</text>
+                            <circle cx={subject.x + micro.dx * microOrbitScale} cy={subject.y + micro.dy * microOrbitScale} r={micro.radius + 5} fill={domain.color} opacity="0.12" filter="url(#softBlur)" />
+                            <circle cx={subject.x + micro.dx * microOrbitScale} cy={subject.y + micro.dy * microOrbitScale} r={micro.radius} fill={domain.softColor} stroke={domain.color} strokeWidth="1" />
+                            <text x={subject.x + micro.dx * microOrbitScale} y={subject.y + micro.dy * microOrbitScale + micro.radius + 14} textAnchor="middle" className="micro-label">{micro.label}</text>
                           </g>
                         ))}
                       </g>

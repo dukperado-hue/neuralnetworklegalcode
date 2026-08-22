@@ -23,6 +23,8 @@ import {
   ZoomOut,
 } from "lucide-react";
 
+const MANUS_ASSET_ORIGIN = "https://legalcodes-wmdmwjtc.manus.space";
+
 type LegalSubject = {
   id: string;
   label: string;
@@ -505,7 +507,7 @@ export default function Home() {
 
   return (
     <main className={`legal-universe ${motionEnabled ? "" : "motion-off"} ${is3D ? "is-3d" : ""} ${cameraEnabled && cameraTarget ? "camera-focus" : ""}`}>
-      <audio ref={backgroundMusicRef} src="/manus-storage/alex-morgan-jazz-restaurant-music-556244_b7af9a94.mp3" loop preload="metadata" />
+      <audio ref={backgroundMusicRef} src={`${MANUS_ASSET_ORIGIN}/manus-storage/alex-morgan-jazz-restaurant-music-556244_b7af9a94.mp3`} loop preload="metadata" />
       <div className="graph-atmosphere" aria-hidden="true" />
       <header className="universe-header">
         <div className="header-brand-row">
@@ -515,7 +517,7 @@ export default function Home() {
             <a className="lab-return" href="https://ประมวล.com" target="_blank" rel="noreferrer"><span>ประมวล.com</span></a>
           </div>
           <button className="brand-lockup" onClick={resetExplorer} aria-label="กลับสู่จุดเริ่มต้นของแผนที่กฎหมาย">
-            <img src="/manus-storage/legal-atlas-mark_676ff7e4.png" alt="" className="brand-mark" />
+            <img src={`${MANUS_ASSET_ORIGIN}/manus-storage/legal-atlas-mark_676ff7e4.png`} alt="" className="brand-mark" />
             <span>
               <strong>ประมวลกฎหมายฉบับ Neural Network</strong>
               <small>PRAMUAN NN · LEGAL KNOWLEDGE ATLAS</small>

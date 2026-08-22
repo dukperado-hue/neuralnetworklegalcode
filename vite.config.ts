@@ -204,8 +204,10 @@ function vitePluginStorageProxy(): Plugin {
 }
 
 const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector(), vitePluginStorageProxy()];
+const isGitHubPages = process.env.GITHUB_PAGES === "true";
 
 export default defineConfig({
+  base: isGitHubPages ? "/neuralnetworklegalcode/" : "/",
   plugins,
   resolve: {
     alias: {

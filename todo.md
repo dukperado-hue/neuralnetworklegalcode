@@ -2,9 +2,14 @@
 
 ## สถานะบริการ
 
+- [x] ผู้ใช้เปลี่ยน GitHub Pages Source เป็น GitHub Actions
+- [x] สร้าง workflow เพื่อ build จาก client และส่ง dist/public เป็น GitHub Pages artifact
+- [ ] ตรวจ run ของ GitHub Actions และยืนยัน URL หลังผู้ใช้เปิดใช้งาน
+- [x] ตรวจสอบความพร้อมของรีโพสำหรับ GitHub Pages และแจ้งขั้นตอนตั้งค่า
+- [ ] ให้ผู้ใช้ยืนยันการเปิด GitHub Pages และกำหนดโดเมนย่อยตามต้องการ (GitHub Pages ยังไม่ถูกเปิดใช้)
 - [x] ยืนยันรีโพ GitHub ปลายทาง: `dukperado-hue/neuralnetworklegalcode`
 - [ ] ยืนยันโดเมน/เส้นทางของ Cool Uncle Legal Lab ที่จะผูกกับหน้า Neural Network
-- [ ] ส่งออกโค้ดไปยัง GitHub และตรวจสอบรีโพปลายทาง
+- [x] ส่งออกโค้ดไปยัง GitHub และตรวจสอบรีโพปลายทาง
 - [x] รีสตาร์ตบริการพัฒนาและยืนยันว่าหน้าแผนที่ตอบสนอง
 
 ## Network explorer รอบถัดไป

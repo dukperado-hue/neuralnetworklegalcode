@@ -62,8 +62,8 @@ button, input { font: inherit; }
 button { border: 0; }
 button:focus-visible, input:focus-visible { outline: 2px solid #9d6eea; outline-offset: 3px; }
 
-.legal-universe { min-height: 100dvh; position: relative; overflow: hidden; isolation: isolate; background: #faf9f6 url("/manus-storage/legal-paper-texture_a247d30c.png") center / cover fixed; }
-.graph-atmosphere { position: absolute; z-index: -1; inset: 0; opacity: 0.31; background: radial-gradient(circle at 50% 46%, rgba(255,255,255,0.18) 0 17%, transparent 44%), radial-gradient(circle at 9% 91%, rgba(159,90,200,0.08), transparent 25%), radial-gradient(circle at 88% 16%, rgba(95,212,232,0.11), transparent 23%), url("/manus-storage/legal-atlas-hero_39e2c2b9.png") center / cover; mix-blend-mode: multiply; pointer-events: none; }
+.legal-universe { min-height: 100dvh; position: relative; overflow: hidden; isolation: isolate; background: #faf9f6 url("https://legalcodes-wmdmwjtc.manus.space/manus-storage/legal-paper-texture_a247d30c.png") center / cover fixed; }
+.graph-atmosphere { position: absolute; z-index: -1; inset: 0; opacity: 0.31; background: radial-gradient(circle at 50% 46%, rgba(255,255,255,0.18) 0 17%, transparent 44%), radial-gradient(circle at 9% 91%, rgba(159,90,200,0.08), transparent 25%), radial-gradient(circle at 88% 16%, rgba(95,212,232,0.11), transparent 23%), url("https://legalcodes-wmdmwjtc.manus.space/manus-storage/legal-atlas-hero_39e2c2b9.png") center / cover; mix-blend-mode: multiply; pointer-events: none; }
 
 .universe-header { height: 86px; width: 100%; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 34px; border-bottom: 1px solid rgba(105, 83, 126, 0.11); background: rgba(250,249,246,0.63); backdrop-filter: blur(18px); position: relative; z-index: 12; }
 .header-brand-row { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: max-content; }

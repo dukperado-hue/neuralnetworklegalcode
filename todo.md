@@ -2,6 +2,11 @@
 
 ## สถานะบริการ
 
+- [x] ตัด custom scene mutation ที่เหลือและใช้ declarative props มาตรฐานของ ForceGraph3D เท่านั้น
+- [x] เพิ่ม ErrorBoundary เฉพาะมุมมอง 3 มิติที่ส่งกลับ 2 มิติเมื่อ renderer ล้มเหลว
+- [x] ตรวจ telemetry ให้บันทึก mount, context loss และ ErrorBoundary โดยไม่เก็บข้อมูลระบุตัวตน
+- [x] ยืนยัน controlType/orbit, pinch zoom และการปิด node drag บน pointer แบบสัมผัส
+- [x] ปิด node drag ในมุมมอง orbit เพื่อแก้ OrbitControls/DragControls conflict ที่อ่านพิกัด x ไม่ได้
 - [x] เก็บ stack trace และสถานะ WebGL จากหน้าใช้งานจริงที่ยังล้มเหลว
 - [x] ตัด lifecycle/render loop ที่ขัดกับ react-force-graph-3d และทำ fallback เมื่อ 3D ใช้ไม่ได้
 - [x] เพิ่ม telemetry แบบไม่ระบุตัวตนสำหรับ WebGL error, context loss และสถานะ renderer

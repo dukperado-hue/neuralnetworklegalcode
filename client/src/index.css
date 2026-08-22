@@ -154,6 +154,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid #9d6eea; outline-
 .force-network-webgl { position: relative; width: 100%; height: calc(100dvh - 86px); min-height: 670px; overflow: hidden; cursor: grab; touch-action: none; background: #FAF9F6; }
 .force-network-webgl canvas { display: block; width: 100% !important; height: 100% !important; cursor: grab; outline: none; touch-action: none; overscroll-behavior: contain; -webkit-user-select: none; user-select: none; }
 .force-network-webgl canvas:active { cursor: grabbing; }
+.force-network-webgl__fallback { display: grid; min-height: inherit; place-items: center; color: #5d4770; background: #FAF9F6; font-family: "IBM Plex Sans Thai Looped", sans-serif; font-size: 13px; }
 .force-network-3d.is-dragging { cursor: grabbing; }
 .force-network-3d svg { display: block; width: 100%; height: 100%; }
 .force-network-3d__status { position: absolute; z-index: 4; top: 22px; left: 50%; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px; border: 1px solid rgba(157,110,234,0.16); border-radius: 999px; color: #6f5e79; background: rgba(255,253,249,0.68); box-shadow: 0 8px 22px rgba(77,51,104,0.06); backdrop-filter: blur(12px); font-family: "DM Mono", monospace; font-size: 9px; letter-spacing: 0.06em; pointer-events: none; }

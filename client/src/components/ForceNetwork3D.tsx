@@ -1,11 +1,9 @@
 /**
- * ประมวลNN 3D — Three.js/WebGL legal knowledge universe บนพื้น ivory
- * ข้อมูล node, สี, ขนาด และลำดับชั้นใช้ชุดเดียวกับแผนที่ 2D เสมอ
+ * ประมวลNN 3D — ใช้ declarative API ของ react-force-graph-3d เท่านั้น
+ * หลีกเลี่ยง custom scene, render loop และ Three.js object reconciliation เพื่อความเสถียร
  */
 import ForceGraph3D, { type ForceGraphMethods } from "react-force-graph-3d";
-import { forceCollide } from "d3-force-3d";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import * as THREE from "three";
 import { recordWebGLTelemetry } from "@/lib/webglTelemetry";
 
 type MicroNode = { id: string; label: string; radius: number };
@@ -23,13 +21,10 @@ export type ForceNetworkDomain = {
 };
 
 type UniverseKind = "origin" | "domain" | "subject" | "micro";
-
 type UniverseNode = {
   id: string;
   label: string;
-  abbreviation?: string;
   color: string;
-  softColor: string;
   radius: number;
   kind: UniverseKind;
   domainId?: string;
@@ -41,8 +36,12 @@ type UniverseNode = {
   fy?: number;
   fz?: number;
 };
-
-type UniverseLink = { source: string; target: string; color: string; kind: "root" | "subject" | "micro" };
+type UniverseLink = {
+  source: string | UniverseNode;
+  target: string | UniverseNode;
+  color: string;
+  kind: "root" | "subject" | "micro";
+};
 
 type ForceNetwork3DProps = {
   domains: ForceNetworkDomain[];
@@ -63,93 +62,12 @@ const ORIGIN = { x: 0, y: 0, z: 0 };
 function spherePoint(index: number, total: number, radius: number, tilt = 0) {
   const phi = Math.acos(1 - 2 * ((index + 0.5) / Math.max(total, 1)));
   const theta = Math.PI * (1 + Math.sqrt(5)) * (index + tilt);
-  return {
-    x: Math.cos(theta) * Math.sin(phi) * radius,
-    y: Math.cos(phi) * radius * 0.76,
-    z: Math.sin(theta) * Math.sin(phi) * radius,
-  };
-}
-
-function labelTexture(text: string, color: string) {
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-  if (!context) return null;
-  const fontSize = 32;
-  context.font = `600 ${fontSize}px \"IBM Plex Sans Thai Looped\", sans-serif`;
-  const width = Math.ceil(context.measureText(text).width) + 36;
-  canvas.width = Math.max(width, 80);
-  canvas.height = 56;
-  context.font = `600 ${fontSize}px \"IBM Plex Sans Thai Looped\", sans-serif`;
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.fillStyle = "rgba(250, 249, 246, 0.92)";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = color;
-  context.fillText(text, canvas.width / 2, canvas.height / 2 + 1);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.needsUpdate = true;
-  return texture;
-}
-
-function createNodeObject(node: UniverseNode, includeLabel: boolean) {
-  const group = new THREE.Group();
-  const radius = node.radius;
-  const isOrigin = node.kind === "origin";
-  const geometry = new THREE.SphereGeometry(radius, 28, 22);
-  const material = new THREE.MeshStandardMaterial({
-    color: node.color,
-    emissive: new THREE.Color(node.color),
-    emissiveIntensity: isOrigin ? 2.8 : 2.1,
-    roughness: 0.34,
-    metalness: 0.08,
-    transparent: true,
-    opacity: node.kind === "micro" ? 0.88 : 0.96,
-  });
-  const sphere = new THREE.Mesh(geometry, material);
-  group.add(sphere);
-
-  const halo = new THREE.Mesh(
-    new THREE.SphereGeometry(radius * (isOrigin ? 1.52 : 1.32), 22, 18),
-    new THREE.MeshBasicMaterial({
-      color: node.softColor,
-      transparent: true,
-      opacity: isOrigin ? 0.14 : 0.08,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending,
-      side: THREE.BackSide,
-    }),
-  );
-  group.add(halo);
-
-  if (isOrigin) {
-    const core = new THREE.Mesh(
-      new THREE.SphereGeometry(radius * 0.4, 20, 16),
-      new THREE.MeshBasicMaterial({ color: "#FFFDF9", transparent: true, opacity: 0.22 }),
-    );
-    group.add(core);
-  }
-
-  if (includeLabel) {
-    const texture = labelTexture(node.label, "#33283A");
-    if (texture) {
-      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false }));
-      const scale = Math.max(46, Math.min(164, node.label.length * 7.1));
-      sprite.scale.set(scale, 15, 1);
-      sprite.position.set(0, -radius - 18, 0);
-      sprite.name = "legal-node-label";
-      group.add(sprite);
-      group.userData.labelSprite = sprite;
-    }
-  }
-
-  return group;
+  return { x: Math.cos(theta) * Math.sin(phi) * radius, y: Math.cos(phi) * radius * 0.76, z: Math.sin(theta) * Math.sin(phi) * radius };
 }
 
 function useGraphDimensions() {
   const hostRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 1, height: 1 });
-
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
@@ -159,16 +77,15 @@ function useGraphDimensions() {
     observer.observe(host);
     return () => observer.disconnect();
   }, []);
-
   return { hostRef, dimensions };
 }
 
+const endpointId = (endpoint: string | UniverseNode) => typeof endpoint === "string" ? endpoint : endpoint.id;
+
 export default function ForceNetwork3D({ domains, expanded, selectedDomainId, selectedSubjectId, showConnections, motionEnabled, onExploreDomain, onOpen, onReset, onFallbackTo2D }: ForceNetwork3DProps) {
   const graphRef = useRef<ForceGraphMethods<UniverseNode, UniverseLink> | undefined>(undefined);
-  const initializedSceneRef = useRef(false);
-  const [coarsePointer, setCoarsePointer] = useState(false);
-  const { hostRef, dimensions } = useGraphDimensions();
   const fallbackTriggeredRef = useRef(false);
+  const { hostRef, dimensions } = useGraphDimensions();
 
   const fallbackTo2D = useCallback((reason: unknown) => {
     if (fallbackTriggeredRef.current) return;
@@ -177,88 +94,37 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
     window.setTimeout(onFallbackTo2D, 0);
   }, [onFallbackTo2D]);
 
-  useEffect(() => {
-    const media = window.matchMedia("(pointer: coarse)");
-    const update = () => setCoarsePointer(media.matches);
-    update();
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
-
   const graphData = useMemo(() => {
-    const root: UniverseNode = {
-      id: "origin",
-      label: "ประมวล.com",
-      abbreviation: "NN",
-      color: "#9D6EEA",
-      softColor: "#CBA9FA",
-      radius: 38,
-      kind: "origin",
-      ...ORIGIN,
-      fx: 0,
-      fy: 0,
-      fz: 0,
-    };
+    const root: UniverseNode = { id: "origin", label: "ประมวล.com", color: "#9D6EEA", radius: 38, kind: "origin", ...ORIGIN, fx: 0, fy: 0, fz: 0 };
     const domainNodes = domains.map((domain, index): UniverseNode => ({
-      id: domain.id,
-      label: domain.shortLabel,
-      abbreviation: domain.abbreviation,
-      color: domain.color,
-      softColor: domain.softColor,
-      radius: Math.max(24, domain.radius * 0.84),
-      kind: "domain",
-      domainId: domain.id,
-      ...spherePoint(index, domains.length, 250, 0.4),
+      id: domain.id, label: domain.shortLabel, color: domain.color, radius: Math.max(24, domain.radius * 0.84), kind: "domain", domainId: domain.id, ...spherePoint(index, domains.length, 250, 0.4),
     }));
-
     const subjectNodes: UniverseNode[] = [];
     const microNodes: UniverseNode[] = [];
-    const subjectLinks: UniverseLink[] = [];
-    const microLinks: UniverseLink[] = [];
+    const links: UniverseLink[] = domainNodes.map((node) => ({ source: root.id, target: node.id, color: node.color, kind: "root" }));
 
     domains.forEach((domain) => {
       const domainNode = domainNodes.find((node) => node.id === domain.id)!;
       domain.children.forEach((subject, index) => {
         const offset = spherePoint(index, domain.children.length, 136, 1.2);
         const subjectNode: UniverseNode = {
-          id: `${domain.id}-${subject.id}`,
-          label: subject.label,
-          color: domain.color,
-          softColor: domain.softColor,
-          radius: Math.max(12, subject.radius * 0.77),
-          kind: "subject",
-          domainId: domain.id,
-          subjectId: subject.id,
-          x: (domainNode.x ?? 0) + offset.x,
-          y: (domainNode.y ?? 0) + offset.y,
-          z: (domainNode.z ?? 0) + offset.z,
+          id: `${domain.id}-${subject.id}`, label: subject.label, color: domain.color, radius: Math.max(12, subject.radius * 0.77), kind: "subject", domainId: domain.id, subjectId: subject.id,
+          x: (domainNode.x ?? 0) + offset.x, y: (domainNode.y ?? 0) + offset.y, z: (domainNode.z ?? 0) + offset.z,
         };
         subjectNodes.push(subjectNode);
-        subjectLinks.push({ source: domain.id, target: subjectNode.id, color: domain.color, kind: "subject" });
-
+        links.push({ source: domain.id, target: subjectNode.id, color: domain.color, kind: "subject" });
         (subject.microNodes ?? []).forEach((micro, microIndex) => {
           const microOffset = spherePoint(microIndex, subject.microNodes?.length ?? 1, 72, 0.7);
           const microNode: UniverseNode = {
-            id: `${domain.id}-${subject.id}-${micro.id}`,
-            label: micro.label,
-            color: domain.color,
-            softColor: domain.softColor,
-            radius: Math.max(7, micro.radius * 0.72),
-            kind: "micro",
-            domainId: domain.id,
-            subjectId: subject.id,
-            x: (subjectNode.x ?? 0) + microOffset.x,
-            y: (subjectNode.y ?? 0) + microOffset.y,
-            z: (subjectNode.z ?? 0) + microOffset.z,
+            id: `${domain.id}-${subject.id}-${micro.id}`, label: micro.label, color: domain.color, radius: Math.max(7, micro.radius * 0.72), kind: "micro", domainId: domain.id, subjectId: subject.id,
+            x: (subjectNode.x ?? 0) + microOffset.x, y: (subjectNode.y ?? 0) + microOffset.y, z: (subjectNode.z ?? 0) + microOffset.z,
           };
           microNodes.push(microNode);
-          microLinks.push({ source: subjectNode.id, target: microNode.id, color: domain.color, kind: "micro" });
+          links.push({ source: subjectNode.id, target: microNode.id, color: domain.color, kind: "micro" });
         });
       });
     });
-
-    const rootLinks: UniverseLink[] = domainNodes.map((node) => ({ source: root.id, target: node.id, color: node.color, kind: "root" }));
-    return { nodes: [root, ...domainNodes, ...subjectNodes, ...microNodes], links: [...rootLinks, ...subjectLinks, ...microLinks] };
+    return { nodes: [root, ...domainNodes, ...subjectNodes, ...microNodes], links };
   }, [domains]);
 
   const nodeVisibility = useCallback((node: UniverseNode) => {
@@ -269,124 +135,53 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
   }, [expanded, selectedDomainId, selectedSubjectId]);
 
   const linkVisibility = useCallback((link: UniverseLink) => {
-    const sourceId = typeof link.source === "object" ? (link.source as unknown as UniverseNode).id : link.source;
     if (!showConnections || !expanded) return false;
     if (link.kind === "root") return true;
-    if (link.kind === "subject") return sourceId === selectedDomainId;
-    return sourceId === `${selectedDomainId}-${selectedSubjectId}`;
+    if (link.kind === "subject") return endpointId(link.source) === selectedDomainId;
+    return endpointId(link.source) === `${selectedDomainId}-${selectedSubjectId}`;
   }, [expanded, selectedDomainId, selectedSubjectId, showConnections]);
-
-  const configureScene = useCallback(() => {
-    const graph = graphRef.current;
-    if (!graph || initializedSceneRef.current) return;
-    initializedSceneRef.current = true;
-    const scene = graph.scene();
-    scene.background = new THREE.Color(IVORY);
-    scene.fog = null;
-    scene.add(new THREE.HemisphereLight("#FFFDF8", "#CFC4D0", 2.2));
-    const keyLight = new THREE.DirectionalLight("#FFFFFF", 1.15);
-    keyLight.position.set(180, 240, 320);
-    scene.add(keyLight);
-
-    const dustGeometry = new THREE.BufferGeometry();
-    const dustPositions = new Float32Array(180 * 3);
-    for (let index = 0; index < 180; index += 1) {
-      const point = spherePoint(index, 180, 680, 0.25);
-      dustPositions[index * 3] = point.x;
-      dustPositions[index * 3 + 1] = point.y;
-      dustPositions[index * 3 + 2] = point.z;
-    }
-    dustGeometry.setAttribute("position", new THREE.BufferAttribute(dustPositions, 3));
-    scene.add(new THREE.Points(dustGeometry, new THREE.PointsMaterial({ color: "#D2C4B4", size: 2.2, transparent: true, opacity: 0.28, depthWrite: false })));
-
-    const controls = graph.controls() as { enableDamping?: boolean; dampingFactor?: number; enablePan?: boolean; minDistance?: number; maxDistance?: number; rotateSpeed?: number; zoomSpeed?: number; dynamicDampingFactor?: number; staticMoving?: boolean; noPan?: boolean; noRotate?: boolean; noZoom?: boolean };
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.1;
-    controls.enablePan = false;
-    controls.noPan = true;
-    controls.noRotate = false;
-    controls.noZoom = false;
-    controls.rotateSpeed = 0.62;
-    controls.zoomSpeed = 0.86;
-    controls.staticMoving = false;
-    controls.dynamicDampingFactor = 0.16;
-    controls.minDistance = 120;
-    controls.maxDistance = 1500;
-    graph.cameraPosition({ x: 0, y: 90, z: 720 }, ORIGIN, 0);
-  }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    const frame = window.requestAnimationFrame(() => {
-      if (cancelled) return;
-      const graph = graphRef.current;
-      if (!graph) return;
-      try {
-        const collision = forceCollide((node: UniverseNode) => node.radius * (node.kind === "micro" ? 1.85 : 2.25) + 12).strength(0.96);
-        graph.d3Force("collision", collision);
-        graph.d3ReheatSimulation();
-        configureScene();
-      } catch (error) {
-        recordWebGLTelemetry("webgl-runtime-error", error);
-        fallbackTo2D(error);
-      }
-    });
-    return () => {
-      cancelled = true;
-      window.cancelAnimationFrame(frame);
-    };
-  }, [configureScene, fallbackTo2D, graphData.nodes]);
-
-  useEffect(() => {
-    if (!expanded || selectedDomainId) return;
-    const frame = window.requestAnimationFrame(() => {
-      graphRef.current?.cameraPosition({ x: 0, y: 90, z: 720 }, ORIGIN, 800);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [expanded, selectedDomainId]);
 
   useEffect(() => {
     const host = hostRef.current;
     if (!host) return;
-    const canvas = host.querySelector("canvas");
-    if (!canvas) return;
-    recordWebGLTelemetry("webgl-start");
-    const onContextLost = (event: Event) => {
-      event.preventDefault();
-      recordWebGLTelemetry("webgl-context-lost");
-      fallbackTo2D("webgl context lost");
-    };
-    const onContextRestored = () => recordWebGLTelemetry("webgl-context-restored");
-    const onWindowError = (event: ErrorEvent) => {
-      const detail = `${event.message} ${event.error?.stack ?? ""}`;
-      if (/force-graph|\.tick\b|webgl/i.test(detail)) {
-        recordWebGLTelemetry("webgl-runtime-error", detail);
-        fallbackTo2D(detail);
-      }
-    };
-    canvas.addEventListener("webglcontextlost", onContextLost, false);
-    canvas.addEventListener("webglcontextrestored", onContextRestored, false);
-    window.addEventListener("error", onWindowError);
-    return () => {
-      canvas.removeEventListener("webglcontextlost", onContextLost);
-      canvas.removeEventListener("webglcontextrestored", onContextRestored);
-      window.removeEventListener("error", onWindowError);
-    };
+    const timer = window.setTimeout(() => {
+      const canvas = host.querySelector("canvas");
+      if (!canvas) return;
+      recordWebGLTelemetry("webgl-start");
+      const onContextLost = (event: Event) => { event.preventDefault(); recordWebGLTelemetry("webgl-context-lost"); fallbackTo2D("webgl context lost"); };
+      const onContextRestored = () => recordWebGLTelemetry("webgl-context-restored");
+      const onWindowError = (event: ErrorEvent) => {
+        const detail = `${event.message} ${event.error?.stack ?? ""}`;
+        if (/force-graph|\.tick\b|threedigest|webgl/i.test(detail)) { recordWebGLTelemetry("webgl-runtime-error", detail); fallbackTo2D(detail); }
+      };
+      canvas.addEventListener("webglcontextlost", onContextLost, false);
+      canvas.addEventListener("webglcontextrestored", onContextRestored, false);
+      window.addEventListener("error", onWindowError);
+      host.dataset.webglListenersReady = "true";
+      return () => {
+        canvas.removeEventListener("webglcontextlost", onContextLost);
+        canvas.removeEventListener("webglcontextrestored", onContextRestored);
+        window.removeEventListener("error", onWindowError);
+      };
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [fallbackTo2D, hostRef]);
+
+  useEffect(() => {
+    if (!expanded || selectedDomainId) return;
+    const timer = window.setTimeout(() => graphRef.current?.cameraPosition({ x: 0, y: 90, z: 720 }, ORIGIN, 700), 0);
+    return () => window.clearTimeout(timer);
+  }, [expanded, selectedDomainId]);
 
   const onNodeClick = useCallback((node: UniverseNode) => {
     const graph = graphRef.current;
     if (graph && node.kind !== "origin") {
-      const target = new THREE.Vector3(node.x ?? 0, node.y ?? 0, node.z ?? 0);
-      const direction = target.lengthSq() > 1 ? target.clone().normalize() : new THREE.Vector3(0, 0, 1);
+      const target = { x: node.x ?? 0, y: node.y ?? 0, z: node.z ?? 0 };
+      const length = Math.max(1, Math.hypot(target.x, target.y, target.z));
       const distance = node.kind === "domain" ? 380 : node.kind === "subject" ? 250 : 155;
-      const cameraPosition = target.clone().add(direction.multiplyScalar(distance));
-      graph.cameraPosition(cameraPosition, target, 850);
+      graph.cameraPosition({ x: target.x + (target.x / length) * distance, y: target.y + (target.y / length) * distance, z: target.z + (target.z / length) * distance }, target, 800);
     }
-    if (node.kind === "origin") {
-      if (expanded) onReset(); else onOpen();
-      return;
-    }
+    if (node.kind === "origin") { if (expanded) onReset(); else onOpen(); return; }
     if (node.kind === "domain" && node.domainId) onExploreDomain(node.domainId);
     if ((node.kind === "subject" || node.kind === "micro") && node.domainId && node.subjectId) onExploreDomain(node.domainId, node.subjectId);
   }, [expanded, onExploreDomain, onOpen, onReset]);
@@ -402,27 +197,23 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
         backgroundColor={IVORY}
         showNavInfo={false}
         numDimensions={3}
-        warmupTicks={40}
-        cooldownTicks={motionEnabled ? 210 : 90}
-        d3AlphaDecay={motionEnabled ? 0.025 : 0.065}
-        d3VelocityDecay={0.32}
+        controlType="orbit"
+        warmupTicks={32}
+        cooldownTicks={motionEnabled ? 180 : 80}
+        d3AlphaDecay={motionEnabled ? 0.03 : 0.07}
+        d3VelocityDecay={0.34}
         nodeVal={(node) => Math.pow(Math.max(1.1, node.radius / 10), 3)}
         nodeColor={(node) => node.color}
         nodeResolution={20}
-        nodeOpacity={1}
         nodeVisibility={nodeVisibility}
-        nodeLabel={(node) => `<span>${node.label}</span>`}
-        linkColor={(link) => link.color}
+        nodeLabel={(node) => node.label}
         linkVisibility={linkVisibility}
-        linkOpacity={0.26}
+        linkColor={(link) => link.color}
+        linkOpacity={0.24}
         linkWidth={(link) => link.kind === "root" ? 0.56 : link.kind === "subject" ? 0.32 : 0.18}
-        linkCurvature={(link) => link.kind === "root" ? 0.08 : 0.035}
-        linkCurveRotation={(link) => link.kind === "root" ? 0.32 : -0.2}
-        linkResolution={4}
-        enableNodeDrag={!coarsePointer}
+        enableNodeDrag={false}
         enableNavigationControls
         onNodeClick={onNodeClick}
-        onEngineStop={configureScene}
       />
     </div>
   );

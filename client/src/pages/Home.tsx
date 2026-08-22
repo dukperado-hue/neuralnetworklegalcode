@@ -87,8 +87,8 @@ const legalDomains: LegalDomain[] = [
     abbreviation: "ป.อ.",
     color: "#7E3048",
     softColor: "#D99DAE",
-    x: 1055,
-    y: 244,
+    x: 1088,
+    y: 235,
     radius: 40,
     description: "เครือข่ายโครงสร้างความผิด ตั้งแต่กฎทั่วไป ฐานความผิดเฉพาะเรื่อง จนถึงลหุโทษ",
     children: [
@@ -153,8 +153,8 @@ const legalDomains: LegalDomain[] = [
     abbreviation: "ป.วิ.พ.",
     color: "#7771D8",
     softColor: "#B0ABF2",
-    x: 324,
-    y: 668,
+    x: 320,
+    y: 680,
     radius: 38,
     description: "แผนที่กระบวนพิจารณาคดีแพ่ง ตั้งแต่อำนาจฟ้องจนถึงการบังคับคดีตามลำดับเวลา",
     children: [
@@ -227,8 +227,8 @@ const legalDomains: LegalDomain[] = [
     abbreviation: "ป.วิ.อ.",
     color: "#A05AC8",
     softColor: "#D19BE6",
-    x: 1145,
-    y: 560,
+    x: 1092,
+    y: 525,
     radius: 40,
     description: "แผนที่กระบวนการคดีอาญา ตั้งแต่เริ่มคดี สอบสวน ศาลชั้นต้น จนถึงอภัยโทษ",
     children: [
@@ -337,8 +337,8 @@ const legalDomains: LegalDomain[] = [
     abbreviation: "มหาชน",
     color: "#D6A83F",
     softColor: "#EBCF82",
-    x: 720,
-    y: 752,
+    x: 950,
+    y: 748,
     radius: 37,
     description: "โครงสร้างอำนาจรัฐ สิทธิและเสรีภาพ กฎหมายปกครอง และกลไกตรวจสอบของรัฐ",
     children: [
@@ -369,28 +369,28 @@ const legalDomains: LegalDomain[] = [
           { id: "constitution-16", label: "หมวด 16 · ปฏิรูปประเทศ", dx: 197, dy: -9, radius: 12 },
         ],
       },
-      { id: "public-party", label: "พ.ร.ป. พรรคการเมือง", x: 853, y: 636, radius: 21, description: "กฎหมายประกอบรัฐธรรมนูญว่าด้วยพรรคการเมือง", references: ["พ.ร.ป.", "พรรคการเมือง"] },
-      { id: "public-admin-court", label: "พ.ร.บ. จัดตั้งศาลปกครอง", x: 842, y: 789, radius: 21, description: "โครงสร้างและอำนาจของศาลปกครอง", references: ["ศาลปกครอง", "พ.ร.บ. จัดตั้งศาลปกครอง"] },
-      { id: "public-admin-practice", label: "วิธีปฏิบัติราชการทางปกครอง", x: 651, y: 868, radius: 22, description: "หลักเกณฑ์การใช้อำนาจทางปกครองและการคุ้มครองสิทธิ", references: ["คำสั่งทางปกครอง", "วิธีปฏิบัติราชการ"] },
+      { id: "public-party", label: "พ.ร.ป. พรรคการเมือง", x: 1085, y: 633, radius: 21, description: "กฎหมายประกอบรัฐธรรมนูญว่าด้วยพรรคการเมือง", references: ["พ.ร.ป.", "พรรคการเมือง"] },
+      { id: "public-admin-court", label: "พ.ร.บ. จัดตั้งศาลปกครอง", x: 1108, y: 782, radius: 21, description: "โครงสร้างและอำนาจของศาลปกครอง", references: ["ศาลปกครอง", "พ.ร.บ. จัดตั้งศาลปกครอง"] },
+      { id: "public-admin-practice", label: "วิธีปฏิบัติราชการทางปกครอง", x: 862, y: 850, radius: 22, description: "หลักเกณฑ์การใช้อำนาจทางปกครองและการคุ้มครองสิทธิ", references: ["คำสั่งทางปกครอง", "วิธีปฏิบัติราชการ"] },
     ],
   },
   {
     id: "other",
-    shortLabel: "อื่นๆ",
-    title: "กฎหมายเฉพาะด้าน",
-    abbreviation: "เฉพาะด้าน",
+    shortLabel: "กฎหมายอื่นๆ",
+    title: "กฎหมายอื่นๆ",
+    abbreviation: "อื่นๆ",
     color: "#B38AD9",
     softColor: "#D6C0EB",
-    x: 1077,
-    y: 746,
+    x: 1245,
+    y: 742,
     radius: 34,
     description: "พื้นที่สำหรับกฎหมายเฉพาะด้านและกฎหมายที่มีความเชื่อมโยงข้ามประมวล",
     children: [
       {
         id: "intellectual-property",
         label: "ทรัพย์สินทางปัญญา",
-        x: 1009,
-        y: 675,
+        x: 1166,
+        y: 653,
         radius: 24,
         description: "กฎหมายเฉพาะด้านว่าด้วยการคุ้มครองผลงานสร้างสรรค์และนวัตกรรม",
         references: ["ทรัพย์สินทางปัญญา"],
@@ -429,7 +429,7 @@ export default function Home() {
   const [zoom, setZoom] = useState(1);
   const [showConnections, setShowConnections] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(false);
-  const [musicEnabled, setMusicEnabled] = useState(false);
+  const [musicEnabled, setMusicEnabled] = useState(true);
   const [musicVolume, setMusicVolume] = useState(0.16);
   const [motionEnabled, setMotionEnabled] = useState(true);
   const [is3D, setIs3D] = useState(false);
@@ -472,6 +472,14 @@ export default function Home() {
     if (backgroundMusicRef.current) backgroundMusicRef.current.volume = nextVolume;
   };
 
+  const activateBackgroundMusic = () => {
+    const track = backgroundMusicRef.current;
+    if (!track || !musicEnabled || !track.muted) return;
+    track.muted = false;
+    track.volume = musicVolume;
+    void track.play().catch(() => undefined);
+  };
+
   const handleMapPointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
     if (!is3D) return;
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -506,8 +514,8 @@ export default function Home() {
   };
 
   return (
-    <main className={`legal-universe ${motionEnabled ? "" : "motion-off"} ${is3D ? "is-3d" : ""} ${cameraEnabled && cameraTarget ? "camera-focus" : ""}`}>
-      <audio ref={backgroundMusicRef} src={`${MANUS_ASSET_ORIGIN}/manus-storage/alex-morgan-jazz-restaurant-music-556244_b7af9a94.mp3`} loop preload="metadata" />
+    <main className={`legal-universe ${motionEnabled ? "" : "motion-off"} ${is3D ? "is-3d" : ""} ${cameraEnabled && cameraTarget ? "camera-focus" : ""}`} onPointerDownCapture={activateBackgroundMusic}>
+      <audio ref={backgroundMusicRef} src={`${MANUS_ASSET_ORIGIN}/manus-storage/alex-morgan-jazz-restaurant-music-556244_b7af9a94.mp3`} loop autoPlay muted preload="metadata" onLoadedMetadata={(event) => { event.currentTarget.volume = musicVolume; }} />
       <div className="graph-atmosphere" aria-hidden="true" />
       <header className="universe-header">
         <div className="header-brand-row">
@@ -611,7 +619,7 @@ export default function Home() {
                   return <path key={`root-${domain.id}`} d={curvedPath(720, 450, domain.x, domain.y)} fill="none" stroke={domain.color} strokeWidth={selectedId === domain.id ? 2 : 1.1} opacity={isDimmed ? 0.11 : selectedId === domain.id ? 0.64 : 0.37} />;
                 })}
                 <path d={curvedPath(342, 277, 1055, 244)} fill="none" stroke="#B38AD9" strokeWidth="0.9" strokeDasharray="4 7" opacity={selectedId === "civil" || selectedId === "criminal" ? 0.43 : 0.13} />
-                <path d={curvedPath(720, 752, 1055, 244)} fill="none" stroke="#D6A83F" strokeWidth="0.8" strokeDasharray="3 9" opacity={selectedId === "public" || selectedId === "criminal" ? 0.38 : 0.1} />
+                <path d={curvedPath(950, 748, 1088, 235)} fill="none" stroke="#D6A83F" strokeWidth="0.8" strokeDasharray="3 9" opacity={selectedId === "public" || selectedId === "criminal" ? 0.38 : 0.1} />
                 {selectedDomain?.children.map((subject) => (
                   <path key={`subject-${subject.id}`} className="subject-connection" d={curvedPath(selectedDomain.x, selectedDomain.y, subject.x, subject.y)} fill="none" stroke={selectedDomain.color} strokeWidth={selectedSubjectId === subject.id ? 1.75 : 1.05} opacity={selectedSubjectId && selectedSubjectId !== subject.id ? 0.18 : 0.54} />
                 ))}
@@ -699,14 +707,6 @@ export default function Home() {
             <p>เริ่มจากจุดเดียว แล้วค่อยเห็นเครือข่ายกฎหมายไทยทีละชั้น</p>
           </aside>
         )}
-
-        {expanded && !selectedDomain && (
-          <aside className="map-instruction">
-            <span>เลือกวงกลมหนึ่งวง</span>
-            <strong>เพื่อขยายหมวดและจุดเชื่อมโยง</strong>
-          </aside>
-        )}
-
 
         {viewMode === "book" && (
           <section className="book-view" aria-label="สารบัญประมวลกฎหมาย">

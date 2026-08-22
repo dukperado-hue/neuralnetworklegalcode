@@ -1,17 +1,15 @@
 /**
- * ประมวลNN 3D — editorial neural field; รับข้อมูล node เดียวกับแผนที่ 2D
- * เพื่อให้สี ขนาด และโครงสร้างกฎหมายอัปเดตจากแหล่งข้อมูลเดียวกันเสมอ
+ * ประมวลNN 3D — Three.js/WebGL legal knowledge universe บนพื้น ivory
+ * ข้อมูล node, สี, ขนาด และลำดับชั้นใช้ชุดเดียวกับแผนที่ 2D เสมอ
  */
-import { forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, type SimulationLinkDatum, type SimulationNodeDatum } from "d3-force";
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import ForceGraph3D, { type ForceGraphMethods } from "react-force-graph-3d";
+import { forceCollide } from "d3-force-3d";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import * as THREE from "three";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 
-type Subject = {
-  id: string;
-  label: string;
-  radius: number;
-  color?: string;
-  microNodes?: { id: string; label: string; radius: number }[];
-};
+type MicroNode = { id: string; label: string; radius: number };
+type Subject = { id: string; label: string; radius: number; microNodes?: MicroNode[] };
 
 export type ForceNetworkDomain = {
   id: string;
@@ -24,24 +22,27 @@ export type ForceNetworkDomain = {
   children: Subject[];
 };
 
-type GraphNode = SimulationNodeDatum & {
+type UniverseKind = "origin" | "domain" | "subject" | "micro";
+
+type UniverseNode = {
   id: string;
   label: string;
   abbreviation?: string;
   color: string;
   softColor: string;
   radius: number;
-  depth: number;
-  kind: "origin" | "domain" | "subject" | "micro";
+  kind: UniverseKind;
   domainId?: string;
   subjectId?: string;
-  targetX?: number;
-  targetY?: number;
-  fx?: number | null;
-  fy?: number | null;
+  x?: number;
+  y?: number;
+  z?: number;
+  fx?: number;
+  fy?: number;
+  fz?: number;
 };
 
-type GraphLink = SimulationLinkDatum<GraphNode> & { source: string | GraphNode; target: string | GraphNode; color: string };
+type UniverseLink = { source: string; target: string; color: string; kind: "root" | "subject" | "micro" };
 
 type ForceNetwork3DProps = {
   domains: ForceNetworkDomain[];
@@ -55,242 +56,364 @@ type ForceNetwork3DProps = {
   onReset: () => void;
 };
 
-const VIEWBOX = { width: 1440, height: 900, centerX: 720, centerY: 450 };
+const IVORY = "#FAF9F6";
+const ORIGIN = { x: 0, y: 0, z: 0 };
 
-function nodeDepth(index: number, kind: GraphNode["kind"]) {
-  if (kind === "origin") return 90;
-  const seed = Math.sin((index + 1) * 2.19) * 130;
-  return kind === "domain" ? seed : seed * 0.68;
-}
-
-function project(node: GraphNode) {
-  const depthFactor = 820 / (820 - node.depth);
+function spherePoint(index: number, total: number, radius: number, tilt = 0) {
+  const phi = Math.acos(1 - 2 * ((index + 0.5) / Math.max(total, 1)));
+  const theta = Math.PI * (1 + Math.sqrt(5)) * (index + tilt);
   return {
-    x: VIEWBOX.centerX + ((node.x ?? VIEWBOX.centerX) - VIEWBOX.centerX) * depthFactor,
-    y: VIEWBOX.centerY + ((node.y ?? VIEWBOX.centerY) - VIEWBOX.centerY) * depthFactor,
-    scale: Math.max(0.78, Math.min(1.2, depthFactor)),
-    opacity: Math.max(0.3, Math.min(1, 0.72 + node.depth / 760)),
+    x: Math.cos(theta) * Math.sin(phi) * radius,
+    y: Math.cos(phi) * radius * 0.76,
+    z: Math.sin(theta) * Math.sin(phi) * radius,
   };
 }
 
+function labelTexture(text: string, color: string) {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  if (!context) return null;
+  const fontSize = 32;
+  context.font = `600 ${fontSize}px \"IBM Plex Sans Thai Looped\", sans-serif`;
+  const width = Math.ceil(context.measureText(text).width) + 36;
+  canvas.width = Math.max(width, 80);
+  canvas.height = 56;
+  context.font = `600 ${fontSize}px \"IBM Plex Sans Thai Looped\", sans-serif`;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillStyle = "rgba(250, 249, 246, 0.92)";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.fillStyle = color;
+  context.fillText(text, canvas.width / 2, canvas.height / 2 + 1);
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function createNodeObject(node: UniverseNode, includeLabel: boolean) {
+  const group = new THREE.Group();
+  const radius = node.radius;
+  const isOrigin = node.kind === "origin";
+  const geometry = new THREE.SphereGeometry(radius, 28, 22);
+  const material = new THREE.MeshStandardMaterial({
+    color: node.color,
+    emissive: new THREE.Color(node.color),
+    emissiveIntensity: isOrigin ? 2.8 : 2.1,
+    roughness: 0.34,
+    metalness: 0.08,
+    transparent: true,
+    opacity: node.kind === "micro" ? 0.88 : 0.96,
+  });
+  const sphere = new THREE.Mesh(geometry, material);
+  group.add(sphere);
+
+  const halo = new THREE.Mesh(
+    new THREE.SphereGeometry(radius * (isOrigin ? 1.52 : 1.32), 22, 18),
+    new THREE.MeshBasicMaterial({
+      color: node.softColor,
+      transparent: true,
+      opacity: isOrigin ? 0.14 : 0.08,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      side: THREE.BackSide,
+    }),
+  );
+  group.add(halo);
+
+  if (isOrigin) {
+    const core = new THREE.Mesh(
+      new THREE.SphereGeometry(radius * 0.4, 20, 16),
+      new THREE.MeshBasicMaterial({ color: "#FFFDF9", transparent: true, opacity: 0.22 }),
+    );
+    group.add(core);
+  }
+
+  if (includeLabel) {
+    const texture = labelTexture(node.label, "#33283A");
+    if (texture) {
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false }));
+      const scale = Math.max(46, Math.min(164, node.label.length * 7.1));
+      sprite.scale.set(scale, 15, 1);
+      sprite.position.set(0, -radius - 18, 0);
+      sprite.name = "legal-node-label";
+      group.add(sprite);
+      group.userData.labelSprite = sprite;
+    }
+  }
+
+  return group;
+}
+
+function useGraphDimensions() {
+  const hostRef = useRef<HTMLDivElement>(null);
+  const [dimensions, setDimensions] = useState({ width: 1, height: 1 });
+
+  useEffect(() => {
+    const host = hostRef.current;
+    if (!host) return;
+    const update = () => setDimensions({ width: Math.max(1, host.clientWidth), height: Math.max(1, host.clientHeight) });
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, []);
+
+  return { hostRef, dimensions };
+}
+
 export default function ForceNetwork3D({ domains, expanded, selectedDomainId, selectedSubjectId, showConnections, motionEnabled, onExploreDomain, onOpen, onReset }: ForceNetwork3DProps) {
+  const graphRef = useRef<ForceGraphMethods<UniverseNode, UniverseLink> | undefined>(undefined);
+  const bloomPassRef = useRef<UnrealBloomPass | null>(null);
+  const initializedSceneRef = useRef(false);
+  const nodeObjectCacheRef = useRef(new Map<string, THREE.Group>());
+  const { hostRef, dimensions } = useGraphDimensions();
   const activeDomain = domains.find((domain) => domain.id === selectedDomainId) ?? null;
   const activeSubject = activeDomain?.children.find((subject) => subject.id === selectedSubjectId) ?? null;
-  const simulationRef = useRef<ReturnType<typeof forceSimulation<GraphNode>> | null>(null);
-  const draggingRef = useRef<GraphNode | null>(null);
-  const animationFrameRef = useRef<number | null>(null);
-  const [nodes, setNodes] = useState<GraphNode[]>([]);
-  const [links, setLinks] = useState<GraphLink[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
+  const graphKey = `${expanded ? "open" : "closed"}:${selectedDomainId ?? "overview"}:${selectedSubjectId ?? "none"}`;
+  const previousGraphKeyRef = useRef(graphKey);
+  if (previousGraphKeyRef.current !== graphKey) {
+    previousGraphKeyRef.current = graphKey;
+    initializedSceneRef.current = false;
+    nodeObjectCacheRef.current.clear();
+  }
 
-  const graph = useMemo(() => {
-    const root: GraphNode = {
+  const graphData = useMemo(() => {
+    const root: UniverseNode = {
       id: "origin",
       label: "ประมวล.com",
       abbreviation: "NN",
       color: "#9D6EEA",
       softColor: "#CBA9FA",
-      radius: 46,
-      depth: nodeDepth(0, "origin"),
+      radius: 38,
       kind: "origin",
-      x: VIEWBOX.centerX,
-      y: VIEWBOX.centerY,
-      targetX: VIEWBOX.centerX,
-      targetY: VIEWBOX.centerY,
+      ...ORIGIN,
+      fx: 0,
+      fy: 0,
+      fz: 0,
     };
+    if (!expanded) return { nodes: [root], links: [] as UniverseLink[] };
 
-    if (!expanded) return { nodes: [root], links: [] as GraphLink[] };
-
-    const domainNodes = domains.map((domain, index): GraphNode => {
-      const angle = (index / domains.length) * Math.PI * 2 - Math.PI / 2;
-      const isActive = domain.id === activeDomain?.id;
-      const targetX = isActive ? 910 : VIEWBOX.centerX + Math.cos(angle) * 288;
-      const targetY = isActive ? VIEWBOX.centerY : VIEWBOX.centerY + Math.sin(angle) * 230;
-      return {
+    const domainNodes = domains.map((domain, index): UniverseNode => ({
       id: domain.id,
       label: domain.shortLabel,
       abbreviation: domain.abbreviation,
       color: domain.color,
       softColor: domain.softColor,
-      radius: domain.radius,
-      depth: nodeDepth(index + 1, "domain"),
+      radius: Math.max(24, domain.radius * 0.84),
       kind: "domain",
       domainId: domain.id,
-      x: targetX,
-      y: targetY,
-      targetX,
-      targetY,
-    };
-    });
+      ...spherePoint(index, domains.length, 250, 0.4),
+    }));
 
-    const activeDomainNode = domainNodes.find((node) => node.id === activeDomain?.id);
-
-    const subjectNodes = activeDomain
-      ? activeDomain.children.map((subject, index): GraphNode => {
-          const totalSubjects = Math.max(activeDomain.children.length, 1);
-          const angle = (index / totalSubjects) * Math.PI * 2 - Math.PI / 2;
-          const isSelectedSubject = subject.id === activeSubject?.id;
-          const targetX = isSelectedSubject ? 1122 : (activeDomainNode?.targetX ?? VIEWBOX.centerX) + Math.cos(angle) * 178;
-          const targetY = isSelectedSubject ? VIEWBOX.centerY : (activeDomainNode?.targetY ?? VIEWBOX.centerY) + Math.sin(angle) * 165;
+    const domainNode = domainNodes.find((node) => node.id === activeDomain?.id);
+    const subjectNodes = activeDomain && domainNode
+      ? activeDomain.children.map((subject, index): UniverseNode => {
+          const offset = spherePoint(index, activeDomain.children.length, 136, 1.2);
           return {
-          id: `${activeDomain.id}-${subject.id}`,
-          label: subject.label,
-          color: activeDomain.color,
-          softColor: activeDomain.softColor,
-          radius: subject.radius,
-          depth: nodeDepth(index + 12, "subject"),
-          kind: "subject",
-          domainId: activeDomain.id,
-          subjectId: subject.id,
-          x: targetX,
-          y: targetY,
-          targetX,
-          targetY,
-        };
+            id: `${activeDomain.id}-${subject.id}`,
+            label: subject.label,
+            color: activeDomain.color,
+            softColor: activeDomain.softColor,
+            radius: Math.max(12, subject.radius * 0.77),
+            kind: "subject",
+            domainId: activeDomain.id,
+            subjectId: subject.id,
+            x: (domainNode.x ?? 0) + offset.x,
+            y: (domainNode.y ?? 0) + offset.y,
+            z: (domainNode.z ?? 0) + offset.z,
+          };
         })
       : [];
 
-    const microNodes = activeDomain && activeSubject
-      ? (activeSubject.microNodes ?? []).map((micro, index): GraphNode => ({
-          id: `${activeDomain.id}-${activeSubject.id}-${micro.id}`,
-          label: micro.label,
-          color: activeDomain.color,
-          softColor: activeDomain.softColor,
-          radius: micro.radius,
-          depth: nodeDepth(index + 42, "micro"),
-          kind: "micro",
-          domainId: activeDomain.id,
-          subjectId: activeSubject.id,
-          x: 1122 + Math.cos((index / Math.max(activeSubject.microNodes?.length ?? 1, 1)) * Math.PI * 2 - Math.PI / 2) * 208,
-          y: VIEWBOX.centerY + Math.sin((index / Math.max(activeSubject.microNodes?.length ?? 1, 1)) * Math.PI * 2 - Math.PI / 2) * 208,
-          targetX: 1122 + Math.cos((index / Math.max(activeSubject.microNodes?.length ?? 1, 1)) * Math.PI * 2 - Math.PI / 2) * 208,
-          targetY: VIEWBOX.centerY + Math.sin((index / Math.max(activeSubject.microNodes?.length ?? 1, 1)) * Math.PI * 2 - Math.PI / 2) * 208,
-        }))
+    const subjectNode = subjectNodes.find((node) => node.subjectId === activeSubject?.id);
+    const microNodes = activeDomain && activeSubject && subjectNode
+      ? (activeSubject.microNodes ?? []).map((micro, index): UniverseNode => {
+          const offset = spherePoint(index, activeSubject.microNodes?.length ?? 1, 72, 0.7);
+          return {
+            id: `${activeDomain.id}-${activeSubject.id}-${micro.id}`,
+            label: micro.label,
+            color: activeDomain.color,
+            softColor: activeDomain.softColor,
+            radius: Math.max(7, micro.radius * 0.72),
+            kind: "micro",
+            domainId: activeDomain.id,
+            subjectId: activeSubject.id,
+            x: (subjectNode.x ?? 0) + offset.x,
+            y: (subjectNode.y ?? 0) + offset.y,
+            z: (subjectNode.z ?? 0) + offset.z,
+          };
+        })
       : [];
 
-    const domainLinks: GraphLink[] = domainNodes.map((node) => ({ source: root.id, target: node.id, color: node.color }));
-    const subjectLinks: GraphLink[] = subjectNodes.map((node) => ({ source: activeDomain!.id, target: node.id, color: activeDomain!.color }));
-    const microLinks: GraphLink[] = microNodes.map((node) => ({ source: `${activeDomain!.id}-${activeSubject!.id}`, target: node.id, color: activeDomain!.color }));
-    return { nodes: [root, ...domainNodes, ...subjectNodes, ...microNodes], links: [...domainLinks, ...subjectLinks, ...microLinks] };
+    const rootLinks: UniverseLink[] = domainNodes.map((node) => ({ source: root.id, target: node.id, color: node.color, kind: "root" }));
+    const subjectLinks: UniverseLink[] = subjectNodes.map((node) => ({ source: activeDomain!.id, target: node.id, color: activeDomain!.color, kind: "subject" }));
+    const microLinks: UniverseLink[] = microNodes.map((node) => ({ source: `${activeDomain!.id}-${activeSubject!.id}`, target: node.id, color: activeDomain!.color, kind: "micro" }));
+    return { nodes: [root, ...domainNodes, ...subjectNodes, ...microNodes], links: [...rootLinks, ...subjectLinks, ...microLinks] };
   }, [activeDomain, activeSubject, domains, expanded]);
 
+  const configureScene = useCallback(() => {
+    const graph = graphRef.current;
+    if (!graph || initializedSceneRef.current) return;
+    initializedSceneRef.current = true;
+    const scene = graph.scene();
+    scene.background = new THREE.Color(IVORY);
+    scene.fog = null;
+    scene.add(new THREE.HemisphereLight("#FFFDF8", "#CFC4D0", 2.2));
+    const keyLight = new THREE.DirectionalLight("#FFFFFF", 1.15);
+    keyLight.position.set(180, 240, 320);
+    scene.add(keyLight);
+
+    const dustGeometry = new THREE.BufferGeometry();
+    const dustPositions = new Float32Array(180 * 3);
+    for (let index = 0; index < 180; index += 1) {
+      const point = spherePoint(index, 180, 680, 0.25);
+      dustPositions[index * 3] = point.x;
+      dustPositions[index * 3 + 1] = point.y;
+      dustPositions[index * 3 + 2] = point.z;
+    }
+    dustGeometry.setAttribute("position", new THREE.BufferAttribute(dustPositions, 3));
+    scene.add(new THREE.Points(dustGeometry, new THREE.PointsMaterial({ color: "#D2C4B4", size: 2.2, transparent: true, opacity: 0.28, depthWrite: false })));
+
+    const controls = graph.controls() as { enableDamping?: boolean; dampingFactor?: number; enablePan?: boolean; minDistance?: number; maxDistance?: number };
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.enablePan = false;
+    controls.minDistance = 120;
+    controls.maxDistance = 1500;
+    graph.cameraPosition({ x: 0, y: 90, z: 720 }, ORIGIN, 0);
+  }, []);
+
   useEffect(() => {
-    const simulation = forceSimulation(graph.nodes)
-      .force("link", forceLink<GraphNode, GraphLink>(graph.links).id((node) => node.id).distance((link) => String(link.source) === "origin" ? 235 : (typeof link.target === "object" && link.target.kind === "micro") ? 178 : 148).strength(0.44))
-      .force("charge", forceManyBody<GraphNode>().strength((node) => node.kind === "origin" ? -940 : node.kind === "domain" ? -560 : node.kind === "subject" ? -365 : -225))
-      .force("collide", forceCollide<GraphNode>().radius((node) => node.radius + (node.kind === "micro" ? 29 : node.kind === "subject" ? 34 : 48)).strength(0.98))
-      .force("x", forceX<GraphNode>((node) => node.targetX ?? VIEWBOX.centerX).strength((node) => node.kind === "micro" ? 0.27 : node.kind === "subject" ? 0.16 : node.kind === "domain" ? 0.085 : 0.19))
-      .force("y", forceY<GraphNode>((node) => node.targetY ?? VIEWBOX.centerY).strength((node) => node.kind === "micro" ? 0.27 : node.kind === "subject" ? 0.16 : node.kind === "domain" ? 0.085 : 0.19))
-      .alpha(0.95)
-      .alphaDecay(motionEnabled ? 0.025 : 0.08);
-
-    if (!motionEnabled) simulation.stop();
-    simulationRef.current = simulation;
-
-    const renderTick = () => {
-      animationFrameRef.current = null;
-      setNodes([...graph.nodes]);
-      setLinks([...graph.links]);
-    };
-    simulation.on("tick", () => {
-      if (animationFrameRef.current === null) animationFrameRef.current = requestAnimationFrame(renderTick);
+    const frame = window.requestAnimationFrame(() => {
+      const graph = graphRef.current;
+      if (!graph) return;
+      const collision = forceCollide((node: UniverseNode) => node.radius * (node.kind === "micro" ? 1.85 : 2.25) + 12).strength(0.96);
+      graph.d3Force("collision", collision);
+      graph.d3ReheatSimulation();
+      configureScene();
     });
-    setNodes([...graph.nodes]);
-    setLinks([...graph.links]);
+    return () => window.cancelAnimationFrame(frame);
+  }, [configureScene, graphData.nodes]);
 
+  useEffect(() => {
+    if (!expanded || selectedDomainId) return;
+    const frame = window.requestAnimationFrame(() => {
+      graphRef.current?.cameraPosition({ x: 0, y: 90, z: 720 }, ORIGIN, 800);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [expanded, selectedDomainId]);
+
+  useEffect(() => {
+    if (dimensions.width < 4 || dimensions.height < 4) return;
+    let bloomPass: UnrealBloomPass | null = null;
+    const frame = window.requestAnimationFrame(() => {
+      const graph = graphRef.current;
+      if (!graph) return;
+      const composer = graph.postProcessingComposer();
+      composer.setSize(dimensions.width, dimensions.height);
+      bloomPass = new UnrealBloomPass(new THREE.Vector2(dimensions.width, dimensions.height), 0.08, 0.24, 1.32);
+      bloomPass.threshold = 1.32;
+      bloomPass.strength = 0.08;
+      bloomPass.radius = 0.24;
+      bloomPass.setSize(dimensions.width, dimensions.height);
+      composer.addPass(bloomPass);
+      bloomPassRef.current = bloomPass;
+    });
     return () => {
-      simulation.stop();
-      if (animationFrameRef.current !== null) cancelAnimationFrame(animationFrameRef.current);
+      window.cancelAnimationFrame(frame);
+      const graph = graphRef.current;
+      if (graph && bloomPass) graph.postProcessingComposer().removePass(bloomPass);
+      bloomPass?.dispose();
+      if (bloomPassRef.current === bloomPass) bloomPassRef.current = null;
     };
-  }, [graph, motionEnabled]);
+  }, [dimensions.height, dimensions.width]);
 
-  const getPointerPosition = (event: ReactPointerEvent<SVGSVGElement | SVGGElement>) => {
-    const bounds = event.currentTarget.ownerSVGElement?.getBoundingClientRect() ?? event.currentTarget.getBoundingClientRect();
-    return {
-      x: ((event.clientX - bounds.left) / bounds.width) * VIEWBOX.width,
-      y: ((event.clientY - bounds.top) / bounds.height) * VIEWBOX.height,
+  useEffect(() => {
+    let frame = 0;
+    const render = () => {
+      const graph = graphRef.current;
+      if (graph) {
+        const controls = graph.controls() as { update?: () => void };
+        controls.update?.();
+        if (bloomPassRef.current) graph.postProcessingComposer().render();
+        else graph.renderer().render(graph.scene(), graph.camera());
+      }
+      frame = window.requestAnimationFrame(render);
     };
-  };
+    frame = window.requestAnimationFrame(render);
+    return () => window.cancelAnimationFrame(frame);
+  }, [dimensions.height, dimensions.width]);
 
-  const handleNodePointerDown = (event: ReactPointerEvent<SVGGElement>, node: GraphNode) => {
-    event.stopPropagation();
-    if (node.kind === "origin") return;
-    const position = getPointerPosition(event);
-    draggingRef.current = node;
-    node.fx = position.x;
-    node.fy = position.y;
-    simulationRef.current?.alphaTarget(0.22).restart();
-    setIsDragging(true);
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-
-  const handlePointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
-    const node = draggingRef.current;
-    if (!node) return;
-    const position = getPointerPosition(event);
-    node.fx = position.x;
-    node.fy = position.y;
-    simulationRef.current?.alpha(0.28).restart();
-  };
-
-  const releaseNode = (event: ReactPointerEvent<SVGSVGElement | SVGGElement>) => {
-    const node = draggingRef.current;
-    if (!node) return;
-    node.fx = null;
-    node.fy = null;
-    simulationRef.current?.alphaTarget(0);
-    draggingRef.current = null;
-    setIsDragging(false);
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
-  };
-
-  const handleNodeClick = (node: GraphNode) => {
-    if (isDragging || node.kind === "origin") return;
+  const onNodeClick = useCallback((node: UniverseNode) => {
+    const graph = graphRef.current;
+    if (graph && node.kind !== "origin") {
+      const target = new THREE.Vector3(node.x ?? 0, node.y ?? 0, node.z ?? 0);
+      const direction = target.lengthSq() > 1 ? target.clone().normalize() : new THREE.Vector3(0, 0, 1);
+      const distance = node.kind === "domain" ? 380 : node.kind === "subject" ? 250 : 155;
+      const cameraPosition = target.clone().add(direction.multiplyScalar(distance));
+      graph.cameraPosition(cameraPosition, target, 850);
+    }
+    if (node.kind === "origin") {
+      if (expanded) onReset(); else onOpen();
+      return;
+    }
     if (node.kind === "domain" && node.domainId) onExploreDomain(node.domainId);
     if ((node.kind === "subject" || node.kind === "micro") && node.domainId && node.subjectId) onExploreDomain(node.domainId, node.subjectId);
-  };
+  }, [expanded, onExploreDomain, onOpen, onReset]);
 
-  const nodeById = new Map(nodes.map((node) => [node.id, node]));
+  const onEngineTick = useCallback(() => {
+    const graph = graphRef.current;
+    if (!graph) return;
+    const cameraPosition = graph.camera().position;
+    graphData.nodes.forEach((node) => {
+      const label = nodeObjectCacheRef.current.get(node.id)?.userData.labelSprite as THREE.Sprite | undefined;
+      if (!label) return;
+      const distance = cameraPosition.distanceTo(new THREE.Vector3(node.x ?? 0, node.y ?? 0, node.z ?? 0));
+      label.visible = node.kind === "origin" || node.kind === "domain" || (node.kind === "subject" && distance < 620) || (node.kind === "micro" && distance < 300);
+    });
+  }, [graphData.nodes]);
+
+  const nodeThreeObject = useCallback((node: UniverseNode) => {
+    const cached = nodeObjectCacheRef.current.get(node.id);
+    if (cached) return cached;
+    const showLabel = node.kind === "origin" || node.kind === "domain" || node.kind === "subject";
+    const object = createNodeObject(node, showLabel);
+    nodeObjectCacheRef.current.set(node.id, object);
+    return object;
+  }, []);
 
   return (
-    <div className={`force-network-3d ${isDragging ? "is-dragging" : ""}`}>
-      <div className="force-network-3d__status"><span className="force-network-3d__pulse" /> 3D NEURAL FIELD · ลาก node เพื่อจัดจังหวะเครือข่าย</div>
-      <svg viewBox={`0 0 ${VIEWBOX.width} ${VIEWBOX.height}`} preserveAspectRatio="xMidYMid slice" role="img" aria-label="มุมมอง 3 มิติของโครงข่ายกฎหมาย" onPointerMove={handlePointerMove} onPointerUp={releaseNode} onPointerCancel={releaseNode}>
-        <defs>
-          <filter id="forceGlow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="9" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-          <filter id="forceShadow" x="-70%" y="-70%" width="240%" height="240%"><feDropShadow dx="0" dy="12" stdDeviation="10" floodColor="#382842" floodOpacity="0.18" /></filter>
-        </defs>
-        <g className="force-network-3d__stars" aria-hidden="true">
-          {Array.from({ length: 42 }, (_, index) => <circle key={index} cx={(index * 149 + 61) % 1440} cy={(index * 97 + 43) % 900} r={index % 6 === 0 ? 2.3 : 1.1} opacity={0.16 + (index % 4) * 0.05} />)}
-        </g>
-        {showConnections && <g className="force-network-3d__links" aria-hidden="true">
-          {links.map((link, index) => {
-            const source = typeof link.source === "string" ? nodeById.get(link.source) : link.source;
-            const target = typeof link.target === "string" ? nodeById.get(link.target) : link.target;
-            if (!source || !target) return null;
-            const a = project(source);
-            const b = project(target);
-            return <path key={`${index}-${source.id}-${target.id}`} d={`M ${a.x} ${a.y} Q ${(a.x + b.x) / 2 + (b.y - a.y) * 0.1} ${(a.y + b.y) / 2 - (b.x - a.x) * 0.1} ${b.x} ${b.y}`} stroke={link.color} strokeWidth={target.kind === "subject" ? 0.9 : 1.45} opacity={0.24 + Math.min(a.opacity, b.opacity) * 0.34} fill="none" />;
-          })}
-        </g>}
-        <g className="force-network-3d__nodes">
-          {nodes.sort((a, b) => a.depth - b.depth).map((node) => {
-            const point = project(node);
-            const radius = node.radius * point.scale;
-            const isSelected = node.domainId === selectedDomainId && (node.kind === "domain" || node.subjectId === selectedSubjectId);
-            return (
-              <g key={node.id} className={`force-node force-node--${node.kind} ${isSelected ? "is-selected" : ""}`} transform={`translate(${point.x} ${point.y})`} opacity={point.opacity} role="button" tabIndex={0} aria-label={node.kind === "origin" ? (expanded ? "กลับสู่ภาพรวม" : "เปิดเครือข่ายกฎหมาย") : `เปิด ${node.label}`} onPointerDown={(event) => handleNodePointerDown(event, node)} onPointerUp={releaseNode} onClick={() => node.kind === "origin" ? (expanded ? onReset() : onOpen()) : handleNodeClick(node)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); node.kind === "origin" ? (expanded ? onReset() : onOpen()) : handleNodeClick(node); } }}>
-                <circle r={radius + 18} fill={node.color} opacity="0.13" filter="url(#forceGlow)" />
-                <circle r={radius + 6} fill="none" stroke={node.color} strokeWidth="1.1" opacity="0.52" />
-                <circle r={radius} fill={node.color} filter="url(#forceShadow)" />
-                <circle r={Math.max(7, radius * 0.38)} fill="#FFFFFF" opacity="0.17" />
-                {node.abbreviation && <text y="3" textAnchor="middle" className="force-node__abbr">{node.abbreviation}</text>}
-                <text y={radius + 23} textAnchor="middle" className="force-node__label">{node.label}</text>
-              </g>
-            );
-          })}
-        </g>
-      </svg>
+    <div ref={hostRef} className="force-network-webgl" aria-label="จักรวาลความรู้กฎหมายสามมิติ">
+      <div className="force-network-webgl__status"><span className="force-network-webgl__pulse" /> WEBGL LEGAL UNIVERSE · ลากเพื่อหมุน · scroll หรือ pinch เพื่อซูม</div>
+      <ForceGraph3D<UniverseNode, UniverseLink>
+        key={graphKey}
+        ref={graphRef}
+        width={dimensions.width}
+        height={dimensions.height}
+        graphData={graphData}
+        backgroundColor={IVORY}
+        showNavInfo={false}
+        numDimensions={3}
+        warmupTicks={40}
+        cooldownTicks={motionEnabled ? 210 : 90}
+        d3AlphaDecay={motionEnabled ? 0.025 : 0.065}
+        d3VelocityDecay={0.32}
+        nodeThreeObject={nodeThreeObject}
+        nodeOpacity={1}
+        nodeLabel={(node) => `<span>${node.label}</span>`}
+        linkColor={(link) => link.color}
+        linkOpacity={showConnections ? 0.26 : 0}
+        linkWidth={(link) => link.kind === "root" ? 0.56 : link.kind === "subject" ? 0.32 : 0.18}
+        linkCurvature={(link) => link.kind === "root" ? 0.08 : 0.035}
+        linkCurveRotation={(link) => link.kind === "root" ? 0.32 : -0.2}
+        linkResolution={4}
+        enableNodeDrag
+        enableNavigationControls
+        onNodeClick={onNodeClick}
+        onEngineTick={onEngineTick}
+        onEngineStop={configureScene}
+      />
     </div>
   );
 }

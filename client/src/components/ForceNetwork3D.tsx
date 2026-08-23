@@ -11,10 +11,11 @@ import type { CaseGraphData, CaseLawRef } from "@/data/caseGraphs";
 
 // radius is optional: the auto-generated civil/criminal hierarchy (Home.tsx
 // legalHierarchy.generated.ts) doesn't carry hand-placed radii the way the
-// legacy hand-authored micro-nodes do, and may also carry a `children` field
-// this 3D view doesn't recurse into (it renders one level below subject,
-// same as before - going deeper here is a separate, larger task).
-type MicroNode = { id: string; label: string; radius?: number };
+// legacy hand-authored micro-nodes do. MicroNode is recursive (mirrors
+// LegalNode in Home.tsx) - the graph now drills to full depth (ลักษณะ ->
+// หมวด -> ส่วน -> มาตรา), matching the 2D map, not just one level below
+// subject.
+type MicroNode = { id: string; label: string; radius?: number; book?: string; number?: string; children?: MicroNode[] };
 type Subject = { id: string; label: string; radius: number; children?: MicroNode[] };
 
 export type ForceNetworkDomain = {
@@ -39,6 +40,14 @@ type UniverseNode = {
   subjectId?: string;
   issueId?: string;
   law?: CaseLawRef;
+  /** Full selectedPath chain (domain id -> ... -> this node's id) needed to
+   * drill the shared 2D/3D selection state to this exact node. */
+  path?: string[];
+  /** Immediate parent's label, passed to onSelectArticle as the group label
+   * (mirrors LegalNodeRing's groupLabel prop in the 2D map). */
+  groupLabel?: string;
+  book?: string;
+  number?: string;
   x?: number;
   y?: number;
   z?: number;
@@ -58,10 +67,12 @@ type ForceNetwork3DProps = {
   expanded: boolean;
   selectedDomainId: string | null;
   selectedSubjectId: string | null;
+  selectedPath: string[];
   showConnections: boolean;
   motionEnabled: boolean;
   caseOverlay: CaseGraphData | null;
-  onExploreDomain: (domainId: string, subjectId?: string | null) => void;
+  onSelectPath: (path: string[]) => void;
+  onSelectArticle: (book: string, node: { id: string; label: string; number?: string }, groupLabel: string) => void;
   onOpen: () => void;
   onReset: () => void;
   onFallbackTo2D: () => void;
@@ -136,7 +147,7 @@ function createGlowTexture() {
   return texture;
 }
 
-export default function ForceNetwork3D({ domains, expanded, selectedDomainId, selectedSubjectId, showConnections, motionEnabled, caseOverlay, onExploreDomain, onOpen, onReset, onFallbackTo2D, onSelectLaw }: ForceNetwork3DProps) {
+export default function ForceNetwork3D({ domains, expanded, selectedDomainId, selectedSubjectId, selectedPath, showConnections, motionEnabled, caseOverlay, onSelectPath, onSelectArticle, onOpen, onReset, onFallbackTo2D, onSelectLaw }: ForceNetwork3DProps) {
   const graphRef = useRef<ForceGraphMethods<UniverseNode, UniverseLink> | undefined>(undefined);
   const fallbackTriggeredRef = useRef(false);
   const adornmentsRef = useRef(new Map<string, NodeAdornment>());
@@ -166,19 +177,46 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
         const offset = spherePoint(index, domain.children.length, 136, 1.2);
         const subjectNode: UniverseNode = {
           id: `${domain.id}-${subject.id}`, label: subject.label, color: domain.color, radius: Math.max(12, subject.radius * 0.77), kind: "subject", domainId: domain.id, subjectId: subject.id,
+          path: [domain.id, subject.id],
           x: (domainNode.x ?? 0) + offset.x, y: (domainNode.y ?? 0) + offset.y, z: (domainNode.z ?? 0) + offset.z,
         };
         subjectNodes.push(subjectNode);
         links.push({ source: domain.id, target: subjectNode.id, color: domain.color, kind: "subject" });
-        (subject.children ?? []).forEach((micro, microIndex) => {
-          const microOffset = spherePoint(microIndex, subject.children?.length ?? 1, 72, 0.7);
-          const microNode: UniverseNode = {
-            id: `${domain.id}-${subject.id}-${micro.id}`, label: micro.label, color: domain.color, radius: Math.max(7, (micro.radius ?? 16) * 0.72), kind: "micro", domainId: domain.id, subjectId: subject.id,
-            x: (subjectNode.x ?? 0) + microOffset.x, y: (subjectNode.y ?? 0) + microOffset.y, z: (subjectNode.z ?? 0) + microOffset.z,
+
+        // Only the currently active subject gets its descendant tree
+        // materialized, and only as deep as selectedPath has already been
+        // drilled - mirrors the 2D map's LegalNodeRing, which recurses into
+        // a node's children only once that node is selected. Keeps
+        // graphData bounded even for subjects with hundreds of มาตรา.
+        const isActiveSubject = domain.id === selectedDomainId && subject.id === selectedSubjectId;
+        if (isActiveSubject && subject.children) {
+          const addLevel = (nodes: MicroNode[], parent: UniverseNode, baseRadius: number, depth: number) => {
+            const parentPos = { x: parent.x ?? 0, y: parent.y ?? 0, z: parent.z ?? 0 };
+            nodes.forEach((micro, microIndex) => {
+              const microOffset = spherePoint(microIndex, nodes.length, baseRadius, 0.7 + depth * 0.31);
+              const isLeaf = !micro.children;
+              const microNode: UniverseNode = {
+                id: `${domain.id}-${subject.id}-${micro.id}`, label: micro.label, color: domain.color,
+                radius: Math.max(isLeaf ? 5 : 7, (micro.radius ?? 16) * 0.72) / (1 + depth * 0.4),
+                kind: "micro", domainId: domain.id, subjectId: subject.id,
+                path: [...(parent.path ?? []), micro.id], groupLabel: parent.label,
+                book: micro.book, number: micro.number,
+                x: parentPos.x + microOffset.x, y: parentPos.y + microOffset.y, z: parentPos.z + microOffset.z,
+              };
+              microNodes.push(microNode);
+              links.push({ source: parent.id, target: microNode.id, color: domain.color, kind: "micro" });
+              // Reveal the next ring only once this node is itself the
+              // deepest step already selected - same progressive-drill rule
+              // as the 2D map, so clicking a node is what exposes its own
+              // children rather than the whole subtree appearing at once.
+              const isNodeActive = selectedPath[selectedPath.length - 1] === micro.id;
+              if (micro.children && isNodeActive) {
+                addLevel(micro.children, microNode, Math.max(30, baseRadius * 0.62), depth + 1);
+              }
+            });
           };
-          microNodes.push(microNode);
-          links.push({ source: subjectNode.id, target: microNode.id, color: domain.color, kind: "micro" });
-        });
+          addLevel(subject.children, subjectNode, 72, 0);
+        }
       });
     });
 
@@ -229,7 +267,7 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
     }
 
     return { nodes: [root, ...domainNodes, ...subjectNodes, ...microNodes, ...overlayNodes], links: [...links, ...overlayLinks] };
-  }, [domains, caseOverlay]);
+  }, [domains, caseOverlay, selectedDomainId, selectedSubjectId, selectedPath]);
 
   const nodeVisibility = useCallback((node: UniverseNode) => {
     if (node.kind === "origin") return true;
@@ -248,7 +286,10 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
     if (!showConnections || !expanded) return false;
     if (link.kind === "root") return true;
     if (link.kind === "subject") return endpointId(link.source) === selectedDomainId;
-    return endpointId(link.source) === `${selectedDomainId}-${selectedSubjectId}`;
+    // "micro" links at any depth are only ever constructed for the active
+    // subject's own (possibly partially-drilled) subtree, so once the
+    // showConnections/expanded gate above passes they're always relevant.
+    return true;
   }, [caseOverlay, expanded, selectedDomainId, selectedSubjectId, showConnections]);
 
   const applyLod = useCallback(() => {
@@ -341,10 +382,17 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
       graph.cameraPosition({ x: target.x + (target.x / length) * distance, y: target.y + (target.y / length) * distance, z: target.z + (target.z / length) * distance }, target, 800);
     }
     if (node.kind === "origin") { if (expanded) onReset(); else onOpen(); return; }
-    if (node.kind === "domain" && node.domainId) onExploreDomain(node.domainId);
-    if ((node.kind === "subject" || node.kind === "micro") && node.domainId && node.subjectId) onExploreDomain(node.domainId, node.subjectId);
+    if (node.kind === "domain" && node.domainId) onSelectPath([node.domainId]);
+    if (node.kind === "subject" && node.path) onSelectPath(node.path);
+    if (node.kind === "micro" && node.path) {
+      // มาตรา leaves (book+number set) open the side panel instead of
+      // drilling further, matching the 2D map's handleActivate (leaves are
+      // terminal - selectedPath stays at the leaf's parent group).
+      if (node.number && node.domainId) onSelectArticle(node.domainId, { id: node.id, label: node.label, number: node.number }, node.groupLabel ?? "");
+      else onSelectPath(node.path);
+    }
     if (node.kind === "law" && node.law && node.issueId) onSelectLaw(node.law, node.issueId);
-  }, [expanded, onExploreDomain, onOpen, onReset, onSelectLaw]);
+  }, [expanded, onSelectPath, onSelectArticle, onOpen, onReset, onSelectLaw]);
 
   const nodeThreeObject = useCallback((node: UniverseNode) => {
     const cached = adornmentsRef.current.get(node.id);

@@ -162,6 +162,8 @@ function build(bookId, idPrefix) {
 
 const civil = build("civil", "civil");
 const criminal = build("criminal", "criminal");
+const civpro = build("civpro", "civpro");
+const crimpro = build("crimpro", "crimpro");
 
 function countNodes(nodes) {
   let n = 0;
@@ -173,11 +175,13 @@ function countNodes(nodes) {
 }
 console.error("civil top-level (บรรพ):", civil.length, "total nodes:", countNodes(civil));
 console.error("criminal top-level (ภาค):", criminal.length, "total nodes:", countNodes(criminal));
+console.error("civpro top-level (ภาค):", civpro.length, "total nodes:", countNodes(civpro));
+console.error("crimpro top-level (ภาค):", crimpro.length, "total nodes:", countNodes(crimpro));
 
 const header = `/**
  * Auto-generated from codex-data.json's real บรรพ/ภาค -> ลักษณะ -> หมวด -> ส่วน -> มาตรา
  * classification metadata (the same taxonomy codex-search.html uses).
- * Regenerate via scratchpad gen_hierarchy.js if the source data changes; do not hand-edit.
+ * Regenerate via scripts/gen-legal-hierarchy.js if the source data changes; do not hand-edit.
  */
 import type { LegalNode } from "@/pages/Home";
 
@@ -185,7 +189,9 @@ import type { LegalNode } from "@/pages/Home";
 
 const body =
   `export const civilHierarchy: LegalNode[] = ${JSON.stringify(civil, null, 2)};\n\n` +
-  `export const criminalHierarchy: LegalNode[] = ${JSON.stringify(criminal, null, 2)};\n`;
+  `export const criminalHierarchy: LegalNode[] = ${JSON.stringify(criminal, null, 2)};\n\n` +
+  `export const civproHierarchy: LegalNode[] = ${JSON.stringify(civpro, null, 2)};\n\n` +
+  `export const crimproHierarchy: LegalNode[] = ${JSON.stringify(crimpro, null, 2)};\n`;
 
 fs.writeFileSync(OUT_PATH, header + body, "utf8");
 console.error("wrote", OUT_PATH);

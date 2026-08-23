@@ -8,7 +8,7 @@ import ForceNetwork3D from "@/components/ForceNetwork3D";
 import WebGLBoundary from "@/components/WebGLBoundary";
 import LawSidePanel from "@/components/LawSidePanel";
 import { caseGraphs, DEFAULT_CASE_ID, type CaseLawRef } from "@/data/caseGraphs";
-import { civilHierarchy, criminalHierarchy } from "@/data/legalHierarchy.generated";
+import { civilHierarchy, criminalHierarchy, civproHierarchy, crimproHierarchy } from "@/data/legalHierarchy.generated";
 import {
   ArrowUpRight,
   ChevronRight,
@@ -126,8 +126,8 @@ const legalDomains: LegalDomain[] = [
     shortLabel: "แพ่ง",
     title: "ประมวลกฎหมายแพ่งและพาณิชย์",
     abbreviation: "ป.พ.พ.",
-    color: "#5FD4E8",
-    softColor: "#A4EAF1",
+    color: "#1A2C79",
+    softColor: "#A8AFCC",
     x: 342,
     y: 277,
     radius: 52,
@@ -139,8 +139,8 @@ const legalDomains: LegalDomain[] = [
     shortLabel: "อาญา",
     title: "ประมวลกฎหมายอาญา",
     abbreviation: "ป.อ.",
-    color: "#7E3048",
-    softColor: "#D99DAE",
+    color: "#E80566",
+    softColor: "#F58FBA",
     x: 1088,
     y: 235,
     radius: 40,
@@ -159,8 +159,8 @@ const legalDomains: LegalDomain[] = [
       {
         id: "criminal-part-2",
         label: "ภาค 2 · ภาคความผิด",
-        x: 1205,
-        y: 181,
+        x: 1345,
+        y: 120,
         radius: 31,
         description: "ฐานความผิดเฉพาะเรื่อง จัดตามสิ่งที่กฎหมายมุ่งคุ้มครอง",
         references: ["มาตรา 107–366/4", "ภาคความผิด"],
@@ -183,8 +183,8 @@ const legalDomains: LegalDomain[] = [
     shortLabel: "วิแพ่ง",
     title: "ประมวลกฎหมายวิธีพิจารณาความแพ่ง",
     abbreviation: "ป.วิ.พ.",
-    color: "#7771D8",
-    softColor: "#B0ABF2",
+    color: "#6370A4",
+    softColor: "#B9BFD6",
     x: 320,
     y: 680,
     radius: 38,
@@ -198,14 +198,7 @@ const legalDomains: LegalDomain[] = [
         radius: 26,
         description: "กติกาพื้นฐานก่อนเริ่มคดี ใช้ร่วมกันในทุกขั้นตอนของคดีแพ่ง",
         references: ["บททั่วไป", "อำนาจฟ้อง", "พยานหลักฐาน"],
-        children: [
-          { id: "civil-right-to-sue", label: "อำนาจฟ้อง 55–56", dx: -94, dy: -67, radius: 13 },
-          { id: "civil-venue", label: "เขตอำนาจ 4–7", dx: -12, dy: -108, radius: 14 },
-          { id: "civil-parties", label: "คู่ความ/ร้องสอด 57–59", dx: 91, dy: -76, radius: 14 },
-          { id: "civil-service", label: "ยื่น/ส่งหมาย 67–83", dx: 124, dy: 10, radius: 14 },
-          { id: "civil-judgment", label: "คำพิพากษา 144–148", dx: 80, dy: 91, radius: 14 },
-          { id: "civil-evidence", label: "พยาน 84/1 · 93–117", dx: -33, dy: 113, radius: 15 },
-        ],
+        children: civproHierarchy[0]?.children,
       },
       {
         id: "civil-procedure-part-2",
@@ -215,14 +208,7 @@ const legalDomains: LegalDomain[] = [
         radius: 30,
         description: "ขั้นตอนสู้คดีตั้งแต่ยื่นฟ้องจนศาลชั้นต้นมีคำพิพากษา",
         references: ["คำฟ้อง", "คำให้การ", "เตรียมคดี"],
-        children: [
-          { id: "civil-ordinary", label: "วิธีสามัญ", dx: -126, dy: -48, radius: 16 },
-          { id: "civil-pleading", label: "คำฟ้อง/คำให้การ 177", dx: -51, dy: -116, radius: 14 },
-          { id: "civil-ending", label: "ทิ้ง/ถอนฟ้อง 174–175", dx: 62, dy: -109, radius: 14 },
-          { id: "civil-pretrial", label: "เตรียมคดี 19 · 183", dx: 132, dy: -20, radius: 15 },
-          { id: "civil-special", label: "วิธีวิสามัญ 189–196", dx: 102, dy: 83, radius: 15 },
-          { id: "civil-default", label: "ขาดนัด 197–207", dx: -12, dy: 122, radius: 15 },
-        ],
+        children: civproHierarchy[1]?.children,
       },
       {
         id: "civil-procedure-part-3",
@@ -232,10 +218,7 @@ const legalDomains: LegalDomain[] = [
         radius: 23,
         description: "การโต้แย้งคำตัดสินของศาลชั้นต้นในชั้นอุทธรณ์และฎีกา",
         references: ["อุทธรณ์", "ฎีกาอนุญาต"],
-        children: [
-          { id: "civil-appeal", label: "อุทธรณ์ 223–228", dx: -87, dy: -68, radius: 15 },
-          { id: "civil-supreme", label: "ฎีกาอนุญาต 244/1 · 247", dx: 78, dy: -52, radius: 15 },
-        ],
+        children: civproHierarchy[2]?.children,
       },
       {
         id: "civil-procedure-part-4",
@@ -245,10 +228,7 @@ const legalDomains: LegalDomain[] = [
         radius: 27,
         description: "การคุ้มครองสิทธิชั่วคราวก่อนพิพากษา และการนำคำพิพากษาไปบังคับจริง",
         references: ["วิธีการชั่วคราว", "บังคับคดี"],
-        children: [
-          { id: "civil-provisional", label: "คุ้มครองชั่วคราว 254", dx: -88, dy: -71, radius: 15 },
-          { id: "civil-execution", label: "บังคับคดี 271+", dx: 86, dy: -69, radius: 16 },
-        ],
+        children: civproHierarchy[3]?.children,
       },
     ],
   },
@@ -257,8 +237,8 @@ const legalDomains: LegalDomain[] = [
     shortLabel: "วิอาญา",
     title: "ประมวลกฎหมายวิธีพิจารณาความอาญา",
     abbreviation: "ป.วิ.อ.",
-    color: "#A05AC8",
-    softColor: "#D19BE6",
+    color: "#811970",
+    softColor: "#C698BF",
     x: 1092,
     y: 525,
     radius: 40,
@@ -272,11 +252,7 @@ const legalDomains: LegalDomain[] = [
         radius: 22,
         description: "สถานะบุคคลและกติกาพื้นฐานก่อนเริ่มกระบวนการคดีอาญา",
         references: ["มาตรา 1–119 ทวิ", "ข้อความทั่วไป"],
-        children: [
-          { id: "crim-proc-status", label: "สถานะบุคคล ม.2", dx: -91, dy: -55, radius: 14 },
-          { id: "crim-proc-victim", label: "ผู้เสียหาย/โจทก์ร่วม 4–6 · 30–31", dx: 5, dy: -111, radius: 14 },
-          { id: "crim-proc-extinguish", label: "สิทธินำคดีระงับ ม.39", dx: 104, dy: -52, radius: 14 },
-        ],
+        children: crimproHierarchy[0]?.children,
       },
       {
         id: "criminal-procedure-part-2",
@@ -286,12 +262,7 @@ const legalDomains: LegalDomain[] = [
         radius: 25,
         description: "ชั้นเจ้าพนักงาน ตั้งแต่สืบสวน สอบสวน หมายอาญา จนถึงชันสูตร",
         references: ["มาตรา 120–156", "สอบสวน"],
-        children: [
-          { id: "crim-proc-investigation", label: "สืบสวน/สอบสวน", dx: -112, dy: -56, radius: 16 },
-          { id: "crim-proc-warrants", label: "หมาย/ปล่อยชั่วคราว 52–105", dx: -11, dy: -120, radius: 15 },
-          { id: "crim-proc-suspect-rights", label: "สิทธิผู้ต้องหา", dx: 104, dy: -63, radius: 14 },
-          { id: "crim-proc-autopsy", label: "ชันสูตร 148–156", dx: 118, dy: 47, radius: 15 },
-        ],
+        children: crimproHierarchy[1]?.children,
       },
       {
         id: "criminal-procedure-part-3",
@@ -301,14 +272,7 @@ const legalDomains: LegalDomain[] = [
         radius: 29,
         description: "การยื่นฟ้อง ไต่สวน พิจารณา และคำพิพากษาในศาลชั้นต้น",
         references: ["มาตรา 157–192", "ศาลชั้นต้น"],
-        children: [
-          { id: "crim-proc-charge", label: "คำฟ้อง ม.158", dx: -109, dy: -75, radius: 15 },
-          { id: "crim-proc-civil-related", label: "แพ่งเกี่ยวเนื่อง 43 · 44/1", dx: -22, dy: -126, radius: 14 },
-          { id: "crim-proc-inquiry", label: "ไต่สวนมูลฟ้อง", dx: 92, dy: -86, radius: 14 },
-          { id: "crim-proc-hearing", label: "พิจารณา 172–173", dx: 126, dy: 14, radius: 15 },
-          { id: "crim-proc-guilty", label: "รับสารภาพ ม.176", dx: 75, dy: 104, radius: 14 },
-          { id: "crim-proc-judgment", label: "พิพากษา 185–192", dx: -50, dy: 117, radius: 15 },
-        ],
+        children: crimproHierarchy[2]?.children,
       },
       {
         id: "criminal-procedure-part-4",
@@ -318,9 +282,7 @@ const legalDomains: LegalDomain[] = [
         radius: 21,
         description: "การโต้แย้งคำสั่งหรือคำพิพากษาไปยังศาลสูง",
         references: ["มาตรา 193–225", "อุทธรณ์และฎีกา"],
-        children: [
-          { id: "crim-proc-appeal", label: "อุทธรณ์/ฎีกา 193–225", dx: -81, dy: 4, radius: 16 },
-        ],
+        children: crimproHierarchy[3]?.children,
       },
       {
         id: "criminal-procedure-part-5",
@@ -329,11 +291,8 @@ const legalDomains: LegalDomain[] = [
         y: 810,
         radius: 20,
         description: "หลักเกณฑ์การรับฟังพยานหลักฐานในคดีอาญา",
-        references: ["มาตรา 226–244", "พยานหลักฐาน"],
-        children: [
-          { id: "crim-proc-evidence", label: "รับฟังพยาน 226–244", dx: -47, dy: 93, radius: 16 },
-          { id: "crim-proc-expert", label: "พยานผู้เชี่ยวชาญ", dx: 74, dy: 60, radius: 14 },
-        ],
+        references: ["มาตรา 226–267", "พยานหลักฐาน"],
+        children: crimproHierarchy[4]?.children,
       },
       {
         id: "criminal-procedure-part-6",
@@ -343,10 +302,7 @@ const legalDomains: LegalDomain[] = [
         radius: 21,
         description: "การนำคำพิพากษาไปบังคับโทษและการจัดการค่าธรรมเนียม",
         references: ["มาตรา 245–258", "บังคับตามคำพิพากษา"],
-        children: [
-          { id: "crim-proc-execution", label: "บังคับโทษ 245–258", dx: -93, dy: 27, radius: 16 },
-          { id: "crim-proc-fine", label: "กักขังแทนค่าปรับ", dx: -31, dy: -90, radius: 14 },
-        ],
+        children: crimproHierarchy[5]?.children,
       },
       {
         id: "criminal-procedure-part-7",
@@ -356,9 +312,7 @@ const legalDomains: LegalDomain[] = [
         radius: 19,
         description: "ขั้นตอนอภัยโทษ เปลี่ยนโทษหนักเป็นเบา และลดโทษ",
         references: ["มาตรา 259–267", "อภัยโทษ"],
-        children: [
-          { id: "crim-proc-pardon", label: "อภัย/ลดโทษ 259–267", dx: -102, dy: 8, radius: 16 },
-        ],
+        children: crimproHierarchy[6]?.children,
       },
     ],
   },
@@ -367,8 +321,8 @@ const legalDomains: LegalDomain[] = [
     shortLabel: "มหาชน",
     title: "กฎหมายมหาชน",
     abbreviation: "มหาชน",
-    color: "#D6A83F",
-    softColor: "#EBCF82",
+    color: "#FF8D68",
+    softColor: "#FFC6B4",
     x: 950,
     y: 748,
     radius: 37,
@@ -422,8 +376,8 @@ const legalDomains: LegalDomain[] = [
     shortLabel: "กฎหมายอื่นๆ",
     title: "กฎหมายอื่นๆ",
     abbreviation: "อื่นๆ",
-    color: "#B38AD9",
-    softColor: "#D6C0EB",
+    color: "#BAA45D",
+    softColor: "#F4EABC",
     x: 1245,
     y: 742,
     radius: 34,
@@ -453,7 +407,7 @@ const particles = Array.from({ length: 46 }, (_, index) => ({
   x: (index * 137 + 57) % 1440,
   y: (index * 89 + 31) % 900,
   r: index % 7 === 0 ? 4 : index % 3 === 0 ? 2.5 : 1.5,
-  color: index % 3 === 0 ? "#B38AD9" : index % 3 === 1 ? "#5FD4E8" : "#D6A83F",
+  color: index % 3 === 0 ? "#811970" : index % 3 === 1 ? "#1A2C79" : "#FF8D68",
   delay: `${(index % 11) * -1.2}s`,
 }));
 
@@ -469,6 +423,30 @@ function curvedPath(fromX: number, fromY: number, toX: number, toY: number) {
 // 5 = มาตรา leaves, 6+ = fallback for anything deeper). Indices 0/1 are
 // unused since domain/subject already carry their own absolute x/y.
 const LEVEL_RING_RADIUS = [0, 0, 150, 95, 68, 52, 44];
+
+// Finds the selectedPath chain (domain id -> subject id -> ... -> leaf id)
+// to a real มาตรา leaf inside one domain's tree, by book+number. Used to
+// make the case-nexus overlay's law references actually navigate the
+// background map to their real article, instead of only opening the side
+// panel with no connection back to the ประมวล node.
+function findArticlePathInNodes(nodes: LegalNode[], book: string, number: string, prefix: string[]): string[] | null {
+  for (const node of nodes) {
+    if (node.book === book && node.number === number) return [...prefix, node.id];
+    if (node.children) {
+      const found = findArticlePathInNodes(node.children, book, number, [...prefix, node.id]);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+function findArticlePath(domain: LegalDomain, book: string, number: string): string[] | null {
+  for (const subject of domain.children) {
+    const found = findArticlePathInNodes(subject.children ?? [], book, number, [domain.id, subject.id]);
+    if (found) return found;
+  }
+  return null;
+}
 
 type PathStep = { id: string; label: string; x: number; y: number };
 
@@ -545,7 +523,7 @@ function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, 
       {showConnections && (
         <g className="micro-connections-layer" aria-hidden="true">
           {placed.map(({ node, pos }) => (
-            <path key={`ring-link-${node.id}`} d={curvedPath(centerX, centerY, pos.x, pos.y)} fill="none" stroke={domainColor} strokeWidth="0.8" opacity={activeId && activeId !== node.id ? 0.16 : 0.48} />
+            <path key={`ring-link-${node.id}`} d={curvedPath(centerX, centerY, pos.x, pos.y)} fill="none" stroke={domainColor} strokeWidth="0.8" opacity={activeId && activeId !== node.id ? 0.07 : 0.48} />
           ))}
         </g>
       )}
@@ -559,7 +537,7 @@ function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, 
           <g key={node.id} className="micro-node-wrap" style={{ "--micro-delay": `${index * staggerStep}ms`, "--micro-drift-delay": `${(index % 5) * -1.1}s` } as CSSProperties}>
             <g className="micro-node-drift">
               <g
-                className={`graph-node ${isLeaf ? "graph-node--article" : "graph-node--micro is-expandable"} ${isActive ? "is-selected" : ""}`}
+                className={`graph-node ${isLeaf ? "graph-node--article" : "graph-node--micro is-expandable"} ${isActive ? "is-selected" : ""} ${activeId && !isActive ? "is-sibling-dimmed" : ""}`}
                 role="button"
                 tabIndex={0}
                 aria-label={isLeaf ? `มาตรา ${node.number} ${node.label}` : node.label}
@@ -852,6 +830,19 @@ export default function Home() {
 
   const handleSelectOverlayLaw = (law: CaseLawRef, issueId: string) => {
     const issue = activeCaseData.issues.find((item) => item.id === issueId);
+    // Navigate the real background map to this law's actual มาตรา (closing
+    // the nexus overlay, which would otherwise sit on top of the same
+    // viewport spot) instead of only opening the side panel with no
+    // connection back to the ประมวล node.
+    const domain = legalDomains.find((item) => item.id === activeCaseData.domainId);
+    const path = domain ? findArticlePath(domain, law.book, law.number) : null;
+    if (path) {
+      setCaseOverlayOpen(false);
+      setExpanded(true);
+      setSelectedPath(path);
+      setZoom(1);
+      setPan({ x: 0, y: 0 });
+    }
     setLawSelection({ law, issueTitle: issue?.title ?? "" });
   };
 
@@ -969,10 +960,10 @@ export default function Home() {
         {selectedDomain && <button className={`return-overview-chip ${caseMenuOpen ? "is-veiled" : ""}`} onClick={returnToAllDomains}><RotateCcw size={14} /> กลับภาพรวม</button>}
         {is3D && viewMode === "network" ? (
           <WebGLBoundary onFallback={() => setIs3D(false)}>
-            <ForceNetwork3D domains={legalDomains} expanded={expanded} selectedDomainId={selectedId} selectedSubjectId={selectedSubjectId} showConnections={showConnections} motionEnabled={motionEnabled} caseOverlay={caseOverlayOpen ? activeCaseData : null} onExploreDomain={exploreDomain} onOpen={() => { playSoftTone(); setExpanded(true); }} onReset={resetExplorer} onFallbackTo2D={() => setIs3D(false)} onSelectLaw={handleSelectOverlayLaw} />
+            <ForceNetwork3D domains={legalDomains} expanded={expanded} selectedDomainId={selectedId} selectedSubjectId={selectedSubjectId} selectedPath={selectedPath} showConnections={showConnections} motionEnabled={motionEnabled} caseOverlay={caseOverlayOpen ? activeCaseData : null} onSelectPath={selectPath} onSelectArticle={handleSelectArticle} onOpen={() => { playSoftTone(); setExpanded(true); }} onReset={resetExplorer} onFallbackTo2D={() => setIs3D(false)} onSelectLaw={handleSelectOverlayLaw} />
           </WebGLBoundary>
         ) : (
-        <svg className={`law-map ${isPanning ? "is-panning" : ""} ${lawSelection ? "law-focus" : ""}`} viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" onPointerDown={handleMapPointerDown} onPointerMove={handleMapPointerMove} onPointerUp={handleMapPointerUp} onPointerCancel={handleMapPointerUp} onPointerLeave={() => { if (panGestureRef.current.pointerId === -1) setIsPanning(false); }} onWheel={handleMapWheel}>
+        <svg className={`law-map ${isPanning ? "is-panning" : ""} ${lawSelection ? "law-focus" : ""}`} viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" onPointerDown={handleMapPointerDown} onPointerMove={handleMapPointerMove} onPointerUp={handleMapPointerUp} onPointerCancel={handleMapPointerUp} onPointerLeave={() => { if (panGestureRef.current.pointerId === -1) setIsPanning(false); }} onWheel={handleMapWheel} onClick={(event) => { if (event.target === event.currentTarget && !didDragRef.current) setLawSelection(null); }}>
           <defs>
             <filter id="softBlur"><feGaussianBlur stdDeviation="16" /></filter>
             <filter id="nodeShadow" x="-70%" y="-70%" width="240%" height="240%"><feDropShadow dx="0" dy="9" stdDeviation="8" floodColor="#3C3651" floodOpacity="0.16" /></filter>
@@ -1000,8 +991,8 @@ export default function Home() {
                   const isDimmed = Boolean(selectedId && selectedId !== domain.id);
                   return <path key={`root-${domain.id}`} d={curvedPath(720, 450, domain.x, domain.y)} fill="none" stroke={domain.color} strokeWidth={selectedId === domain.id ? 2 : 1.1} opacity={isDimmed ? 0.11 : selectedId === domain.id ? 0.64 : 0.37} />;
                 })}
-                <path d={curvedPath(342, 277, 1055, 244)} fill="none" stroke="#B38AD9" strokeWidth="0.9" strokeDasharray="4 7" opacity={selectedId === "civil" || selectedId === "criminal" ? 0.43 : 0.13} />
-                <path d={curvedPath(950, 748, 1088, 235)} fill="none" stroke="#D6A83F" strokeWidth="0.8" strokeDasharray="3 9" opacity={selectedId === "public" || selectedId === "criminal" ? 0.38 : 0.1} />
+                <path d={curvedPath(342, 277, 1055, 244)} fill="none" stroke="#1A2C79" strokeWidth="0.9" strokeDasharray="4 7" opacity={selectedId === "civil" || selectedId === "criminal" ? 0.43 : 0.13} />
+                <path d={curvedPath(950, 748, 1088, 235)} fill="none" stroke="#FF8D68" strokeWidth="0.8" strokeDasharray="3 9" opacity={selectedId === "public" || selectedId === "criminal" ? 0.38 : 0.1} />
                 {selectedDomain?.children.map((subject) => (
                   <path key={`subject-${subject.id}`} className="subject-connection" d={curvedPath(selectedDomain.x, selectedDomain.y, subject.x, subject.y)} fill="none" stroke={selectedDomain.color} strokeWidth={selectedSubjectId === subject.id ? 1.75 : 1.05} opacity={selectedSubjectId && selectedSubjectId !== subject.id ? 0.18 : 0.54} />
                 ))}
@@ -1019,14 +1010,19 @@ export default function Home() {
                 <text x="720" y="548" textAnchor="middle" className="explore-prompt">เข้าสู่ ประมวลNN</text>
                 <text x="720" y="574" textAnchor="middle" className="explore-caption">เลือกเพื่อเปิดแผนที่เครือข่ายกฎหมาย</text>
               </g>
-            ) : (
+            ) : !caseOverlayOpen ? (
+              // Suppressed while the case nexus overlay is open: the nexus
+              // hub renders its own diagram centered on this exact same
+              // (720,450) viewport point, so both together used to overlap
+              // into an unreadable double-circle. The corner "กลับภาพรวม"
+              // chip still covers the return-to-overview affordance.
               <g className="origin-node origin-node--expanded" role="button" tabIndex={0} aria-label="กลับสู่ภาพรวมกฎหมายทั้งหมด" onPointerDown={(event) => event.stopPropagation()} onClick={() => { if (!didDragRef.current) resetExplorer(); }} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); resetExplorer(); } }}>
                 <circle cx="720" cy="450" r="39" fill="#9D6EEA" opacity="0.12" filter="url(#softBlur)" />
                 <circle cx="720" cy="450" r="16" fill="#9D6EEA" />
                 <circle cx="720" cy="450" r="24" fill="none" stroke="#9D6EEA" strokeOpacity="0.45" strokeWidth="1" />
                 <text x="720" y="454" textAnchor="middle" className="origin-return">ประมวลNN · กลับ</text>
               </g>
-            )}
+            ) : null}
 
             {expanded && legalDomains.map((domain, index) => {
               const isSelected = selectedId === domain.id;
@@ -1051,7 +1047,7 @@ export default function Home() {
                     return (
                       <g key={subject.id} className="subject-node-wrap" style={{ "--subject-delay": `${subjectIndex * 55}ms`, "--drift-delay": `${(subjectIndex % 7) * -0.9}s` } as CSSProperties}>
                         <g className="subject-node-drift">
-                          <g className={`graph-node graph-node--subject ${isSubjectSelected ? "is-selected" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => selectPath([domain.id, subject.id])} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectPath([domain.id, subject.id]); } }}>
+                          <g className={`graph-node graph-node--subject ${isSubjectSelected ? "is-selected" : ""} ${selectedSubjectId && !isSubjectSelected ? "is-sibling-dimmed" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => selectPath([domain.id, subject.id])} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectPath([domain.id, subject.id]); } }}>
                             <circle cx={subject.x} cy={subject.y} r={subject.radius + 10} fill={domain.color} opacity={isSubjectSelected ? 0.19 : 0.075} filter="url(#softBlur)" />
                             <circle cx={subject.x} cy={subject.y} r={subject.radius} fill={domain.softColor} stroke={domain.color} strokeWidth={isSubjectSelected ? 2.1 : 1.15} filter="url(#nodeShadow)" />
                             <circle cx={subject.x} cy={subject.y} r={Math.max(4, subject.radius * 0.3)} fill="#FFFFFF" opacity="0.38" />

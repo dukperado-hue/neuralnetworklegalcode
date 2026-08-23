@@ -103,8 +103,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid #9d6eea; outline-
 .network-connections path { transition: opacity 250ms ease, stroke-width 250ms ease; }
 .domain-cluster { animation: cluster-arrive 720ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) both; animation-delay: var(--delay); transition: opacity 260ms ease; }
 .domain-cluster.is-dimmed { opacity: 0.3; }
-.graph-node { cursor: pointer; outline: none; }
+.graph-node { cursor: pointer; outline: none; transition: opacity 260ms ease, filter 260ms ease; }
 .graph-node circle { transition: opacity 220ms ease, stroke-width 220ms ease; }
+.graph-node.is-sibling-dimmed { opacity: 0.2; filter: blur(1.6px) saturate(0.3); }
+.graph-node.is-sibling-dimmed text { opacity: 0; transition: opacity 180ms ease; }
+.graph-node.is-sibling-dimmed:hover, .graph-node.is-sibling-dimmed:focus { opacity: 0.7; filter: blur(0) saturate(0.85); }
+.graph-node.is-sibling-dimmed:hover text, .graph-node.is-sibling-dimmed:focus text { opacity: 1; }
 .graph-node--domain { transform-box: fill-box; transform-origin: center; transition: transform 220ms cubic-bezier(0.23, 1, 0.32, 1); }
 .graph-node--domain:hover, .graph-node--domain:focus { transform: scale(1.09); }
 .graph-node--domain.is-selected { transform: scale(1.08); }

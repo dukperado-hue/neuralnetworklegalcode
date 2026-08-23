@@ -585,17 +585,29 @@ type LegalNodeRingProps = {
   onSelectArticle: (book: string, node: LegalNode, groupLabel: string) => void;
   showConnections: boolean;
   legacyScale: number;
+  // Node ids that should reveal their children regardless of selectedPath -
+  // used by the case-nexus overlay to keep multiple branches open at once
+  // (e.g. two different ลักษณะ under the same ภาค, each holding a cited
+  // มาตรา), which a single linear selectedPath can't represent.
+  pinnedPathIds?: Set<string>;
 };
 
 // Recursively renders one ring of sibling nodes around a parent position,
-// and - if one of them is the next step in selectedPath - recurses into its
-// children centered on its own computed position. Handles both hand-placed
-// legacy nodes (explicit dx/dy) and auto-generated ones (radial layout) via
-// the same code path, and terminates at มาตรา leaves (book+number set),
-// which open the side panel instead of drilling further.
-function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, domainSoftColor, groupLabel, selectedPath, pathPrefix, onSelectPath, onSelectArticle, showConnections, legacyScale }: LegalNodeRingProps) {
+// and - if one of them is the next step in selectedPath (or pinned open by
+// the case overlay) - recurses into its children centered on its own
+// computed position. Handles both hand-placed legacy nodes (explicit
+// dx/dy) and auto-generated ones (radial layout) via the same code path,
+// and terminates at มาตรา leaves (book+number set), which open the side
+// panel instead of drilling further.
+function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, domainSoftColor, groupLabel, selectedPath, pathPrefix, onSelectPath, onSelectArticle, showConnections, legacyScale, pinnedPathIds }: LegalNodeRingProps) {
   const baseRadius = LEVEL_RING_RADIUS[Math.min(depth, LEVEL_RING_RADIUS.length - 1)];
   const activeId = selectedPath[depth];
+  // A case's pinned branches can be the only thing "focused" at this ring
+  // (e.g. the subject itself is selected but none of its direct children
+  // is individually drilled via activeId) - still dim the rest so the
+  // pinned branches read as the point of the ring, not just two more
+  // siblings among many.
+  const hasFocus = Boolean(activeId) || nodes.some((node) => pinnedPathIds?.has(node.id));
   const placed = nodes.map((node, index) => {
     const pos = node.dx !== undefined && node.dy !== undefined
       ? { x: centerX + node.dx * legacyScale, y: centerY + node.dy * legacyScale }
@@ -609,13 +621,14 @@ function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, 
       {showConnections && (
         <g className="micro-connections-layer" aria-hidden="true">
           {placed.map(({ node, pos }) => (
-            <path key={`ring-link-${node.id}`} d={curvedPath(centerX, centerY, pos.x, pos.y)} fill="none" stroke={domainColor} strokeWidth="0.8" opacity={activeId && activeId !== node.id ? 0.07 : 0.48} />
+            <path key={`ring-link-${node.id}`} d={curvedPath(centerX, centerY, pos.x, pos.y)} fill="none" stroke={domainColor} strokeWidth="0.8" opacity={hasFocus && activeId !== node.id && !pinnedPathIds?.has(node.id) ? 0.07 : 0.48} />
           ))}
         </g>
       )}
       {placed.map(({ node, pos }, index) => {
         const isLeaf = !node.children;
         const isActive = activeId === node.id;
+        const isPinned = pinnedPathIds?.has(node.id) ?? false;
         const radius = node.radius ?? Math.max(6, 15 - depth * 1.4);
         const nodePath = [...pathPrefix, node.id];
         const handleActivate = () => (isLeaf ? onSelectArticle(domainId, node, groupLabel) : onSelectPath(nodePath));
@@ -623,7 +636,7 @@ function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, 
           <g key={node.id} className="micro-node-wrap" style={{ "--micro-delay": `${index * staggerStep}ms`, "--micro-drift-delay": `${(index % 5) * -1.1}s` } as CSSProperties}>
             <g className="micro-node-drift">
               <g
-                className={`graph-node ${isLeaf ? "graph-node--article" : "graph-node--micro is-expandable"} ${isActive ? "is-selected" : ""} ${activeId && !isActive ? "is-sibling-dimmed" : ""}`}
+                className={`graph-node ${isLeaf ? "graph-node--article" : "graph-node--micro is-expandable"} ${isActive || isPinned ? "is-selected" : ""} ${hasFocus && !isActive && !isPinned ? "is-sibling-dimmed" : ""}`}
                 role="button"
                 tabIndex={0}
                 aria-label={isLeaf ? `มาตรา ${node.number} ${node.label}` : node.label}
@@ -645,7 +658,7 @@ function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, 
                 </text>
               </g>
             </g>
-            {isActive && node.children && (
+            {(isActive || isPinned) && node.children && (
               <LegalNodeRing
                 nodes={node.children}
                 centerX={pos.x}
@@ -661,6 +674,7 @@ function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, 
                 onSelectArticle={onSelectArticle}
                 showConnections={showConnections}
                 legacyScale={legacyScale}
+                pinnedPathIds={pinnedPathIds}
               />
             )}
           </g>
@@ -874,36 +888,65 @@ export default function Home() {
   };
 
   const activeCaseData = caseGraphs[activeCaseId];
+  const caseDomain = legalDomains.find((item) => item.id === activeCaseData.domainId) ?? null;
 
-  // Nexus overlay: a self-contained radial diagram (hub -> issues -> laws)
-  // centered on the viewport, independent of the background map's selection
-  // or camera state. Earlier versions anchored these nodes to background
-  // micro-node positions, but that made the nexus fragile (it broke whenever
-  // the underlying map data changed) and let corner UI chrome cover the hub
-  // whenever its computed position happened to land near a menu. Being
-  // self-positioned guarantees it's always fully visible.
+  // Resolves every law cited by the active case to its real place in the
+  // ประมวล tree (full id-chain + raw x/y), so the nexus's issue nodes can
+  // point straight at the actual มาตรา node instead of drawing a duplicate
+  // one of their own - "ปลายสุดคือมาตราซึ่งเป็นอันเดียวกับปลายสุดของประมวล".
+  // Skips (rather than fabricates a position for) any law not yet modeled
+  // in legalHierarchy.generated.ts.
+  const caseLawTargets = useMemo(() => {
+    if (!caseOverlayOpen || !caseDomain) return [];
+    return activeCaseData.issues.flatMap((issue) =>
+      issue.laws.map((law) => {
+        const path = findArticlePath(caseDomain, law.book, law.number);
+        if (!path) return null;
+        const steps = resolveSelectedPath(caseDomain, path);
+        const leaf = steps[steps.length - 1];
+        return leaf ? { issueId: issue.id, law, path, x: leaf.x, y: leaf.y } : null;
+      }),
+    ).filter((entry): entry is { issueId: string; law: CaseLawRef; path: string[]; x: number; y: number } => entry !== null);
+  }, [caseOverlayOpen, activeCaseData, caseDomain]);
+
+  // Every non-leaf id along any resolved law's path - passed down as
+  // pinnedPathIds so LegalNodeRing keeps all of them open simultaneously
+  // (a case's laws routinely span more than one ลักษณะ under the same
+  // ภาค, which a single selectedPath can't represent on its own).
+  const casePinnedIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const target of caseLawTargets) {
+      for (const id of target.path.slice(1, -1)) ids.add(id);
+    }
+    return ids;
+  }, [caseLawTargets]);
+
+  // Nexus overlay: hub + issue nodes positioned in the map's own raw
+  // coordinate space (not a fixed viewport point), pushed outward from the
+  // domain along the domain->subject direction so it reads as a satellite
+  // next to the real subject it's citing rather than sitting on top of it.
+  // This lets it share the exact same camera transform as the background
+  // map, so a line from an issue straight to a real มาตรา node's resolved
+  // position just works, no separate screen-space conversion needed.
   const caseOverlay2D = useMemo(() => {
-    if (!caseOverlayOpen) return null;
+    if (!caseOverlayOpen || !caseDomain) return null;
     const caseData = activeCaseData;
-    const hubX = 720;
-    const hubY = 450;
+    const primarySubjectId = caseLawTargets[0]?.path[1];
+    const subject = caseDomain.children.find((item) => item.id === primarySubjectId) ?? caseDomain.children[0];
+    if (!subject) return null;
+    const dx = subject.x - caseDomain.x;
+    const dy = subject.y - caseDomain.y;
+    const dist = Math.max(1, Math.hypot(dx, dy));
+    const hubX = subject.x + (dx / dist) * 150;
+    const hubY = subject.y + (dy / dist) * 150;
     const issueCount = Math.max(1, caseData.issues.length);
     const issues = caseData.issues.map((issue, issueIndex) => {
       const issueAngle = (issueIndex / issueCount) * Math.PI * 2 - Math.PI / 2;
-      const issueRadius = 130 + issueCount * 6;
-      const issueX = hubX + Math.cos(issueAngle) * issueRadius;
-      const issueY = hubY + Math.sin(issueAngle) * issueRadius;
-      const lawCount = Math.max(1, issue.laws.length);
-      const laws = issue.laws.map((law, lawIndex) => {
-        const spread = issue.laws.length > 1 ? Math.PI / 3.4 : 0;
-        const lawAngle = issueAngle + (lawIndex / Math.max(1, lawCount - 1) - 0.5) * spread;
-        const lawRadius = issueRadius + 88;
-        return { ...law, issueId: issue.id, x: hubX + Math.cos(lawAngle) * lawRadius, y: hubY + Math.sin(lawAngle) * lawRadius };
-      });
-      return { id: issue.id, title: issue.title, x: issueX, y: issueY, laws };
+      const issueRadius = 78 + issueCount * 4;
+      return { id: issue.id, title: issue.title, x: hubX + Math.cos(issueAngle) * issueRadius, y: hubY + Math.sin(issueAngle) * issueRadius };
     });
     return { title: caseData.title, x: hubX, y: hubY, issues };
-  }, [caseOverlayOpen, activeCaseData]);
+  }, [caseOverlayOpen, activeCaseData, caseDomain, caseLawTargets]);
 
   const toggleCaseOverlay = (caseId: string) => {
     if (caseOverlayOpen && activeCaseId === caseId) {
@@ -911,31 +954,30 @@ export default function Home() {
       setLawSelection(null);
       return;
     }
+    const caseData = caseGraphs[caseId];
+    const domain = legalDomains.find((item) => item.id === caseData.domainId) ?? null;
+    const firstLaw = caseData.issues[0]?.laws[0];
+    const path = domain && firstLaw ? findArticlePath(domain, firstLaw.book, firstLaw.number) : null;
     setActiveCaseId(caseId);
     setCaseOverlayOpen(true);
     setLawSelection(null);
     setExpanded(true);
     setPan({ x: 0, y: 0 });
-    setSelectedPath([]);
+    // Focus the camera on the case's domain+subject (rather than resetting
+    // to the top-level overview) so the auto-revealed real มาตรา branches
+    // land centered in view alongside the nexus, not off in a corner.
+    setSelectedPath(path ? [path[0], path[1]] : domain ? [domain.id] : []);
     setZoom(1);
     setViewMode("network");
   };
 
+  // Only used by the 3D nexus (ForceNetwork3D still renders its own law
+  // nodes rather than pointing at real มาตรา positions - see the
+  // project's memory notes on this being 3D-only follow-up work). The 2D
+  // map instead lets the now-auto-revealed real มาตรา node itself open
+  // this panel via the normal onSelectArticle click path.
   const handleSelectOverlayLaw = (law: CaseLawRef, issueId: string) => {
     const issue = activeCaseData.issues.find((item) => item.id === issueId);
-    // Navigate the real background map to this law's actual มาตรา (closing
-    // the nexus overlay, which would otherwise sit on top of the same
-    // viewport spot) instead of only opening the side panel with no
-    // connection back to the ประมวล node.
-    const domain = legalDomains.find((item) => item.id === activeCaseData.domainId);
-    const path = domain ? findArticlePath(domain, law.book, law.number) : null;
-    if (path) {
-      setCaseOverlayOpen(false);
-      setExpanded(true);
-      setSelectedPath(path);
-      setZoom(1);
-      setPan({ x: 0, y: 0 });
-    }
     setLawSelection({ law, issueTitle: issue?.title ?? "" });
   };
 
@@ -1146,10 +1188,11 @@ export default function Home() {
                   </g>
                   {isSelected && domain.children.map((subject, subjectIndex) => {
                     const isSubjectSelected = selectedSubjectId === subject.id;
+                    const isSubjectPinned = casePinnedIds.has(subject.id);
                     return (
                       <g key={subject.id} className="subject-node-wrap" style={{ "--subject-delay": `${subjectIndex * 55}ms`, "--drift-delay": `${(subjectIndex % 7) * -0.9}s` } as CSSProperties}>
                         <g className="subject-node-drift">
-                          <g className={`graph-node graph-node--subject ${isSubjectSelected ? "is-selected" : ""} ${selectedSubjectId && !isSubjectSelected ? "is-sibling-dimmed" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => selectPath([domain.id, subject.id])} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectPath([domain.id, subject.id]); } }}>
+                          <g className={`graph-node graph-node--subject ${isSubjectSelected || isSubjectPinned ? "is-selected" : ""} ${selectedSubjectId && !isSubjectSelected && !isSubjectPinned ? "is-sibling-dimmed" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => selectPath([domain.id, subject.id])} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectPath([domain.id, subject.id]); } }}>
                             <circle cx={subject.x} cy={subject.y} r={subject.radius + 10} fill={domain.color} opacity={isSubjectSelected ? 0.19 : 0.075} filter="url(#softBlur)" />
                             <circle cx={subject.x} cy={subject.y} r={subject.radius} fill={domain.softColor} stroke={domain.color} strokeWidth={isSubjectSelected ? 2.1 : 1.15} filter="url(#nodeShadow)" />
                             <circle cx={subject.x} cy={subject.y} r={Math.max(4, subject.radius * 0.3)} fill="#FFFFFF" opacity="0.38" />
@@ -1159,7 +1202,7 @@ export default function Home() {
                             </text>
                           </g>
                         </g>
-                        {isSubjectSelected && subject.children && (
+                        {(isSubjectSelected || isSubjectPinned) && subject.children && (
                           <LegalNodeRing
                             nodes={subject.children}
                             centerX={subject.x}
@@ -1174,6 +1217,7 @@ export default function Home() {
                             onSelectPath={selectPath}
                             onSelectArticle={handleSelectArticle}
                             showConnections={showConnections}
+                            pinnedPathIds={casePinnedIds}
                             legacyScale={legacyScale}
                           />
                         )}
@@ -1190,20 +1234,25 @@ export default function Home() {
                   {caseOverlay2D.issues.map((issue) => (
                     <path key={`nexus-link-${issue.id}`} d={curvedPath(caseOverlay2D.x, caseOverlay2D.y, issue.x, issue.y)} fill="none" stroke="#D64545" strokeWidth="1.4" opacity="0.4" />
                   ))}
-                  {caseOverlay2D.issues.flatMap((issue) => issue.laws.map((law, lawIndex) => (
-                    // First law under each issue reads as the primary basis (thicker,
-                    // more opaque); the rest are secondary grounds (thinner, fainter) -
-                    // gives the fan-out a sense of which มาตรา actually carries the issue.
-                    <path
-                      key={`law-link-${issue.id}-${law.book}-${law.number}`}
-                      d={curvedPath(issue.x, issue.y, law.x, law.y)}
-                      fill="none"
-                      stroke="#3E7BD6"
-                      strokeWidth={lawIndex === 0 ? 1.6 : 1}
-                      strokeDasharray={lawIndex === 0 ? undefined : "1 4"}
-                      opacity={lawIndex === 0 ? 0.5 : 0.32}
-                    />
-                  )))}
+                  {/* Straight to the real มาตรา node's own resolved position - no
+                      duplicate law node in the nexus itself; the real node IS the
+                      endpoint. Draws in as the real node's own arrival animation
+                      plays, so the line reads as part of the same reveal. */}
+                  {caseLawTargets.map((target) => {
+                    const issue = caseOverlay2D.issues.find((item) => item.id === target.issueId);
+                    if (!issue) return null;
+                    return (
+                      <path
+                        key={`nexus-real-link-${target.issueId}-${target.law.book}-${target.law.number}`}
+                        className="nexus-real-link"
+                        d={curvedPath(issue.x, issue.y, target.x, target.y)}
+                        fill="none"
+                        stroke="#1B4F91"
+                        strokeWidth="1.6"
+                        pathLength={1}
+                      />
+                    );
+                  })}
                 </g>
 
                 {caseOverlay2D.issues.map((issue) => (
@@ -1211,13 +1260,6 @@ export default function Home() {
                     <circle cx={issue.x} cy={issue.y} r="19" fill="#E8933A" opacity="0.14" filter="url(#softBlur)" />
                     <circle cx={issue.x} cy={issue.y} r="11" fill="#E8933A" filter="url(#nodeShadow)" />
                     <text x={issue.x} y={issue.y + 25} textAnchor="middle" className="overlay-label overlay-label--issue">{issue.title}</text>
-                    {issue.laws.map((law) => (
-                      <g key={`law-${issue.id}-${law.book}-${law.number}`} className="overlay-node overlay-node--law" role="button" tabIndex={0} aria-label={`มาตรา ${law.number} ${law.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => handleSelectOverlayLaw(law, issue.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); handleSelectOverlayLaw(law, issue.id); } }}>
-                        <circle cx={law.x} cy={law.y} r="12" fill="#3E7BD6" opacity="0.14" filter="url(#softBlur)" />
-                        <circle cx={law.x} cy={law.y} r="7" fill="#3E7BD6" filter="url(#nodeShadow)" />
-                        <text x={law.x} y={law.y + 19} textAnchor="middle" className="overlay-label overlay-label--law">ม.{law.number}</text>
-                      </g>
-                    ))}
                   </g>
                 ))}
 

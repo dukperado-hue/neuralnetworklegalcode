@@ -136,13 +136,16 @@ button:focus-visible, input:focus-visible { outline: 2px solid #9d6eea; outline-
 
 .case-overlay-2d__links path, .case-overlay-2d__links line { pointer-events: none; }
 .overlay-node { outline: none; }
-.overlay-node--law, .overlay-node--nexus { cursor: pointer; transform-box: fill-box; transform-origin: center; transition: transform 190ms cubic-bezier(0.23, 1, 0.32, 1); }
-.overlay-node--law:hover, .overlay-node--law:focus { transform: scale(1.25); }
+.overlay-node--nexus { cursor: pointer; transform-box: fill-box; transform-origin: center; transition: transform 190ms cubic-bezier(0.23, 1, 0.32, 1); }
 .overlay-node--nexus:hover, .overlay-node--nexus:focus { transform: scale(1.05); }
 .overlay-label { font-family: "IBM Plex Sans Thai Looped", sans-serif; pointer-events: none; }
 .overlay-label--issue { fill: #b9601f; font-size: 10px; font-weight: 600; }
-.overlay-label--law { fill: #2a5299; font-size: 9px; font-weight: 700; font-family: "DM Mono", monospace; }
 .overlay-label--nexus { fill: #8f2c2c; font-family: "Noto Serif Thai", serif; font-size: 12px; font-weight: 700; }
+/* Line from a nexus issue straight to the real มาตรา node it cites - draws
+   in (not just fades) so it reads as reaching toward the real node as that
+   node's own arrival animation plays. */
+.nexus-real-link { stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; animation: nexus-link-draw 680ms cubic-bezier(0.23, 1, 0.32, 1) 160ms both; }
+@keyframes nexus-link-draw { from { stroke-dashoffset: 1; opacity: 0; } to { stroke-dashoffset: 0; opacity: 0.6; } }
 .origin-node { cursor: pointer; outline: none; }
 .origin-node--initial { animation: origin-breathe 4.2s ease-in-out infinite; }
 .origin-node--expanded { animation: origin-settle 700ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) both; }

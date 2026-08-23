@@ -30,7 +30,7 @@ import {
   ZoomOut,
 } from "lucide-react";
 
-const BACKGROUND_MUSIC_SRC = "/music/alex-morgan-jazz-restaurant-music-556244.mp3";
+const BACKGROUND_MUSIC_SRC = `${import.meta.env.BASE_URL}music/alex-morgan-jazz-restaurant-music-556244.mp3`;
 
 type LegalArticleNode = { id: string; number: string; label: string };
 

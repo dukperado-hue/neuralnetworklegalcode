@@ -6,6 +6,8 @@ import { useRef, useState, type CSSProperties, type PointerEvent as ReactPointer
 import { Link } from "wouter";
 import ForceNetwork3D from "@/components/ForceNetwork3D";
 import WebGLBoundary from "@/components/WebGLBoundary";
+import LawSidePanel from "@/components/LawSidePanel";
+import { caseGraphs, DEFAULT_CASE_ID, type CaseLawRef } from "@/data/caseGraphs";
 import {
   ArrowUpRight,
   ChevronRight,
@@ -18,6 +20,7 @@ import {
   Orbit,
   Network,
   RotateCcw,
+  Scale,
   Settings2,
   Sparkles,
   Volume2,
@@ -452,6 +455,10 @@ export default function Home() {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
+  const [caseMenuOpen, setCaseMenuOpen] = useState(false);
+  const [caseOverlayOpen, setCaseOverlayOpen] = useState(false);
+  const [activeCaseId, setActiveCaseId] = useState(DEFAULT_CASE_ID);
+  const [lawSelection, setLawSelection] = useState<{ law: CaseLawRef; issueTitle: string } | null>(null);
   const backgroundMusicRef = useRef<HTMLAudioElement>(null);
   const panGestureRef = useRef({ pointerId: -1, startX: 0, startY: 0, startPanX: 0, startPanY: 0 });
   const didDragRef = useRef(false);
@@ -559,6 +566,41 @@ export default function Home() {
     setViewMode("network");
   };
 
+  const activeCaseData = caseGraphs[activeCaseId];
+
+  const findSubjectIdForMicroNode = (microNodeId: string) => {
+    for (const domain of legalDomains) {
+      for (const subject of domain.children) {
+        if (subject.microNodes?.some((micro) => micro.id === microNodeId)) return subject.id;
+      }
+    }
+    return null;
+  };
+
+  const toggleCaseOverlay = (caseId: string) => {
+    if (caseOverlayOpen && activeCaseId === caseId) {
+      setCaseOverlayOpen(false);
+      setLawSelection(null);
+      return;
+    }
+    const caseData = caseGraphs[caseId];
+    const firstAnchorSubjectId = findSubjectIdForMicroNode(caseData.issues[0]?.laws[0]?.anchorMicroNodeId ?? "");
+    setActiveCaseId(caseId);
+    setCaseOverlayOpen(true);
+    setLawSelection(null);
+    setIs3D(true);
+    setExpanded(true);
+    setPan({ x: 0, y: 0 });
+    setSelectedId(caseData.domainId);
+    setSelectedSubjectId(firstAnchorSubjectId);
+    setViewMode("network");
+  };
+
+  const handleSelectOverlayLaw = (law: CaseLawRef, issueId: string) => {
+    const issue = activeCaseData.issues.find((item) => item.id === issueId);
+    setLawSelection({ law, issueTitle: issue?.title ?? "" });
+  };
+
   const returnToAllDomains = () => {
     setSelectedId(null);
     setSelectedSubjectId(null);
@@ -639,6 +681,20 @@ export default function Home() {
           </div>
         </div>
 
+        <div className={`atlas-controls atlas-controls--right ${caseMenuOpen ? "is-open" : ""}`} aria-label="เปิด-ปิดคดีตัวอย่างบนแผนที่">
+          <button className="atlas-controls__trigger" onClick={() => setCaseMenuOpen((value) => !value)} aria-expanded={caseMenuOpen}><span>คดี</span><Scale size={16} /></button>
+          <div className="atlas-controls__content">
+            {Object.values(caseGraphs).map((caseItem) => {
+              const isActive = caseOverlayOpen && activeCaseId === caseItem.id;
+              return (
+                <button key={caseItem.id} className={isActive ? "is-active" : ""} aria-pressed={isActive} onClick={() => toggleCaseOverlay(caseItem.id)} title={caseItem.subtitle}>
+                  <span>{caseItem.title}</span><GitBranch size={14} />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
         <div className="zoom-controls" aria-label="ควบคุมการซูม">
           <button onClick={() => setZoom((value) => Math.max(0.78, Number((value - 0.12).toFixed(2))))} aria-label="ซูมออก"><ZoomOut size={18} /></button>
           <span>{Math.round(zoom * 100)}%</span>
@@ -654,7 +710,7 @@ export default function Home() {
         {selectedDomain && <button className="return-overview-chip" onClick={returnToAllDomains}><RotateCcw size={14} /> กลับภาพรวม</button>}
         {is3D && viewMode === "network" ? (
           <WebGLBoundary onFallback={() => setIs3D(false)}>
-            <ForceNetwork3D domains={legalDomains} expanded={expanded} selectedDomainId={selectedId} selectedSubjectId={selectedSubjectId} showConnections={showConnections} motionEnabled={motionEnabled} onExploreDomain={exploreDomain} onOpen={() => { playSoftTone(); setExpanded(true); }} onReset={resetExplorer} onFallbackTo2D={() => setIs3D(false)} />
+            <ForceNetwork3D domains={legalDomains} expanded={expanded} selectedDomainId={selectedId} selectedSubjectId={selectedSubjectId} showConnections={showConnections} motionEnabled={motionEnabled} caseOverlay={caseOverlayOpen ? activeCaseData : null} onExploreDomain={exploreDomain} onOpen={() => { playSoftTone(); setExpanded(true); }} onReset={resetExplorer} onFallbackTo2D={() => setIs3D(false)} onSelectLaw={handleSelectOverlayLaw} />
           </WebGLBoundary>
         ) : (
         <svg className={`law-map ${isPanning ? "is-panning" : ""}`} viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" onPointerDown={handleMapPointerDown} onPointerMove={handleMapPointerMove} onPointerUp={handleMapPointerUp} onPointerCancel={handleMapPointerUp} onPointerLeave={() => { if (panGestureRef.current.pointerId === -1) setIsPanning(false); }}>
@@ -794,6 +850,8 @@ export default function Home() {
             </div>
           </section>
         )}
+
+        <LawSidePanel selection={lawSelection} onClose={() => setLawSelection(null)} />
       </section>
     </main>
   );

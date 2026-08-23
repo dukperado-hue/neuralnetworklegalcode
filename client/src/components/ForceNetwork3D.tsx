@@ -7,6 +7,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import SpriteText from "three-spritetext";
 import * as THREE from "three";
 import { recordWebGLTelemetry } from "@/lib/webglTelemetry";
+import type { CaseGraphData, CaseLawRef } from "@/data/caseGraphs";
 
 type MicroNode = { id: string; label: string; radius: number };
 type Subject = { id: string; label: string; radius: number; microNodes?: MicroNode[] };
@@ -22,7 +23,7 @@ export type ForceNetworkDomain = {
   children: Subject[];
 };
 
-type UniverseKind = "origin" | "domain" | "subject" | "micro";
+type UniverseKind = "origin" | "domain" | "subject" | "micro" | "nexus" | "issue" | "law";
 type UniverseNode = {
   id: string;
   label: string;
@@ -31,6 +32,8 @@ type UniverseNode = {
   kind: UniverseKind;
   domainId?: string;
   subjectId?: string;
+  issueId?: string;
+  law?: CaseLawRef;
   x?: number;
   y?: number;
   z?: number;
@@ -42,7 +45,7 @@ type UniverseLink = {
   source: string | UniverseNode;
   target: string | UniverseNode;
   color: string;
-  kind: "root" | "subject" | "micro";
+  kind: "root" | "subject" | "micro" | "nexus" | "issue" | "law" | "law-anchor";
 };
 
 type ForceNetwork3DProps = {
@@ -52,11 +55,17 @@ type ForceNetwork3DProps = {
   selectedSubjectId: string | null;
   showConnections: boolean;
   motionEnabled: boolean;
+  caseOverlay: CaseGraphData | null;
   onExploreDomain: (domainId: string, subjectId?: string | null) => void;
   onOpen: () => void;
   onReset: () => void;
   onFallbackTo2D: () => void;
+  onSelectLaw: (law: CaseLawRef, issueId: string) => void;
 };
+
+const NEXUS_COLOR = "#D64545";
+const ISSUE_COLOR = "#E8933A";
+const LAW_COLOR = "#3E7BD6";
 
 const IVORY = "#FAF9F6";
 const ORIGIN = { x: 0, y: 0, z: 0 };
@@ -97,6 +106,7 @@ function labelIsVisible(node: UniverseNode, tier: number) {
   if (node.kind === "origin") return true;
   if (node.kind === "domain") return tier >= 1;
   if (node.kind === "subject") return tier >= 2;
+  if (node.kind === "nexus" || node.kind === "issue" || node.kind === "law") return true;
   return tier >= 3;
 }
 
@@ -117,7 +127,7 @@ function createGlowTexture() {
   return texture;
 }
 
-export default function ForceNetwork3D({ domains, expanded, selectedDomainId, selectedSubjectId, showConnections, motionEnabled, onExploreDomain, onOpen, onReset, onFallbackTo2D }: ForceNetwork3DProps) {
+export default function ForceNetwork3D({ domains, expanded, selectedDomainId, selectedSubjectId, showConnections, motionEnabled, caseOverlay, onExploreDomain, onOpen, onReset, onFallbackTo2D, onSelectLaw }: ForceNetwork3DProps) {
   const graphRef = useRef<ForceGraphMethods<UniverseNode, UniverseLink> | undefined>(undefined);
   const fallbackTriggeredRef = useRef(false);
   const adornmentsRef = useRef(new Map<string, NodeAdornment>());
@@ -162,22 +172,65 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
         });
       });
     });
-    return { nodes: [root, ...domainNodes, ...subjectNodes, ...microNodes], links };
-  }, [domains]);
+
+    const overlayNodes: UniverseNode[] = [];
+    const overlayLinks: UniverseLink[] = [];
+    if (caseOverlay) {
+      const anchorDomain = domainNodes.find((node) => node.id === caseOverlay.domainId);
+      if (anchorDomain) {
+        const nexusOffset = spherePoint(0, 1, 96, 0.9);
+        const nexusPos = { x: (anchorDomain.x ?? 0) + nexusOffset.x, y: (anchorDomain.y ?? 0) + nexusOffset.y - 40, z: (anchorDomain.z ?? 0) + nexusOffset.z };
+        const nexusNode: UniverseNode = { id: `nexus-${caseOverlay.id}`, label: caseOverlay.title, color: NEXUS_COLOR, radius: 22, kind: "nexus", ...nexusPos };
+        overlayNodes.push(nexusNode);
+        overlayLinks.push({ source: anchorDomain.id, target: nexusNode.id, color: NEXUS_COLOR, kind: "nexus" });
+
+        caseOverlay.issues.forEach((issue, issueIndex) => {
+          const issueOffset = spherePoint(issueIndex, caseOverlay.issues.length, 62, 0.5);
+          const issueNode: UniverseNode = {
+            id: `issue-${issue.id}`, label: issue.title, color: ISSUE_COLOR, radius: 14, kind: "issue", issueId: issue.id,
+            x: nexusPos.x + issueOffset.x, y: nexusPos.y + issueOffset.y, z: nexusPos.z + issueOffset.z,
+          };
+          overlayNodes.push(issueNode);
+          overlayLinks.push({ source: nexusNode.id, target: issueNode.id, color: ISSUE_COLOR, kind: "issue" });
+
+          issue.laws.forEach((law, lawIndex) => {
+            const anchorMicro = microNodes.find((node) => node.id === law.anchorMicroNodeId);
+            const base = anchorMicro ?? issueNode;
+            const lawOffset = spherePoint(lawIndex, issue.laws.length, 30, 1.0);
+            const lawNode: UniverseNode = {
+              id: `law-${issue.id}-${law.book}-${law.number}`, label: `ม.${law.number}`, color: LAW_COLOR, radius: 9, kind: "law", issueId: issue.id, law,
+              x: (base.x ?? 0) + lawOffset.x, y: (base.y ?? 0) + lawOffset.y, z: (base.z ?? 0) + lawOffset.z,
+            };
+            overlayNodes.push(lawNode);
+            overlayLinks.push({ source: issueNode.id, target: lawNode.id, color: LAW_COLOR, kind: "law" });
+            if (anchorMicro) overlayLinks.push({ source: anchorMicro.id, target: lawNode.id, color: LAW_COLOR, kind: "law-anchor" });
+          });
+        });
+      }
+    }
+
+    return { nodes: [root, ...domainNodes, ...subjectNodes, ...microNodes, ...overlayNodes], links: [...links, ...overlayLinks] };
+  }, [domains, caseOverlay]);
 
   const nodeVisibility = useCallback((node: UniverseNode) => {
     if (node.kind === "origin") return true;
+    if (node.kind === "nexus" || node.kind === "issue" || node.kind === "law") return Boolean(caseOverlay);
     if (node.kind === "domain") return expanded;
     if (node.kind === "subject") return expanded && node.domainId === selectedDomainId;
     return expanded && node.domainId === selectedDomainId && node.subjectId === selectedSubjectId;
-  }, [expanded, selectedDomainId, selectedSubjectId]);
+  }, [caseOverlay, expanded, selectedDomainId, selectedSubjectId]);
 
   const linkVisibility = useCallback((link: UniverseLink) => {
+    if (link.kind === "nexus" || link.kind === "issue" || link.kind === "law") return Boolean(caseOverlay);
+    if (link.kind === "law-anchor") {
+      const source = typeof link.source === "string" ? undefined : link.source;
+      return Boolean(caseOverlay) && source?.kind === "micro" && expanded && source.domainId === selectedDomainId && source.subjectId === selectedSubjectId;
+    }
     if (!showConnections || !expanded) return false;
     if (link.kind === "root") return true;
     if (link.kind === "subject") return endpointId(link.source) === selectedDomainId;
     return endpointId(link.source) === `${selectedDomainId}-${selectedSubjectId}`;
-  }, [expanded, selectedDomainId, selectedSubjectId, showConnections]);
+  }, [caseOverlay, expanded, selectedDomainId, selectedSubjectId, showConnections]);
 
   const applyLod = useCallback(() => {
     const camera = graphRef.current?.camera();
@@ -254,7 +307,8 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
     if (node.kind === "origin") { if (expanded) onReset(); else onOpen(); return; }
     if (node.kind === "domain" && node.domainId) onExploreDomain(node.domainId);
     if ((node.kind === "subject" || node.kind === "micro") && node.domainId && node.subjectId) onExploreDomain(node.domainId, node.subjectId);
-  }, [expanded, onExploreDomain, onOpen, onReset]);
+    if (node.kind === "law" && node.law && node.issueId) onSelectLaw(node.law, node.issueId);
+  }, [expanded, onExploreDomain, onOpen, onReset, onSelectLaw]);
 
   const nodeThreeObject = useCallback((node: UniverseNode) => {
     const cached = adornmentsRef.current.get(node.id);
@@ -264,27 +318,30 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
     const glowTexture = glowTextureRef.current ?? createGlowTexture();
     glowTextureRef.current = glowTexture;
     if (glowTexture) {
+      const isOverlay = node.kind === "nexus" || node.kind === "issue" || node.kind === "law";
       const halo = new THREE.Sprite(new THREE.SpriteMaterial({
         map: glowTexture,
         color: node.color,
         transparent: true,
-        opacity: node.kind === "origin" ? 0.16 : node.kind === "domain" ? 0.1 : 0.06,
+        opacity: node.kind === "origin" ? 0.16 : node.kind === "domain" ? 0.1 : isOverlay ? 0.14 : 0.06,
         depthWrite: false,
         blending: THREE.NormalBlending,
       }));
-      const haloSize = node.radius * (node.kind === "origin" ? 3.8 : 3.1);
+      const haloSize = node.radius * (node.kind === "origin" ? 3.8 : isOverlay ? 2.4 : 3.1);
       halo.scale.set(haloSize, haloSize, 1);
+      halo.raycast = () => {}; // decorative only — must not steal clicks meant for neighboring nodes
       group.add(halo);
     }
 
     const label = new SpriteText(node.label);
     label.color = "#34283A";
-    label.textHeight = node.kind === "origin" ? 9 : node.kind === "domain" ? 7 : node.kind === "subject" ? 5.4 : 4.2;
+    label.textHeight = node.kind === "origin" ? 9 : node.kind === "domain" ? 7 : node.kind === "subject" ? 5.4 : node.kind === "nexus" ? 6.4 : node.kind === "issue" ? 5 : node.kind === "law" ? 4 : 4.2;
     label.backgroundColor = "rgba(250,249,246,0.84)";
     label.padding = 1.8;
     label.borderRadius = 2;
     label.position.set(0, -node.radius - (node.kind === "micro" ? 10 : 16), 0);
     label.visible = labelIsVisible(node, lodTierRef.current);
+    label.raycast = () => {};
     group.add(label);
     adornmentsRef.current.set(node.id, { label, node });
     return group;

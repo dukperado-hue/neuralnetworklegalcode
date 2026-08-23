@@ -173,40 +173,50 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
       });
     });
 
+    // Nexus overlay: a free-floating hub, NOT a child of any domain node. Its own
+    // position emerges from the centroid of what it connects to (like a hub node
+    // in a general network graph — e.g. a "Google" node — rather than a branch of
+    // the ภาค/หมวด tree). มาตรา nodes stay anchored to their real micro-node
+    // neighbor; Issue nodes float at the centroid of their มาตรา; Nexus floats at
+    // the centroid of its Issues.
     const overlayNodes: UniverseNode[] = [];
     const overlayLinks: UniverseLink[] = [];
     if (caseOverlay) {
-      const anchorDomain = domainNodes.find((node) => node.id === caseOverlay.domainId);
-      if (anchorDomain) {
-        const nexusOffset = spherePoint(0, 1, 96, 0.9);
-        const nexusPos = { x: (anchorDomain.x ?? 0) + nexusOffset.x, y: (anchorDomain.y ?? 0) + nexusOffset.y - 40, z: (anchorDomain.z ?? 0) + nexusOffset.z };
-        const nexusNode: UniverseNode = { id: `nexus-${caseOverlay.id}`, label: caseOverlay.title, color: NEXUS_COLOR, radius: 22, kind: "nexus", ...nexusPos };
-        overlayNodes.push(nexusNode);
-        overlayLinks.push({ source: anchorDomain.id, target: nexusNode.id, color: NEXUS_COLOR, kind: "nexus" });
+      const issueNodes: UniverseNode[] = [];
 
-        caseOverlay.issues.forEach((issue, issueIndex) => {
-          const issueOffset = spherePoint(issueIndex, caseOverlay.issues.length, 62, 0.5);
-          const issueNode: UniverseNode = {
-            id: `issue-${issue.id}`, label: issue.title, color: ISSUE_COLOR, radius: 14, kind: "issue", issueId: issue.id,
-            x: nexusPos.x + issueOffset.x, y: nexusPos.y + issueOffset.y, z: nexusPos.z + issueOffset.z,
+      caseOverlay.issues.forEach((issue) => {
+        const anchors = issue.laws
+          .map((law) => microNodes.find((node) => node.id === law.anchorMicroNodeId))
+          .filter((node): node is UniverseNode => Boolean(node));
+        const centroid = anchors.length
+          ? { x: anchors.reduce((sum, n) => sum + (n.x ?? 0), 0) / anchors.length, y: anchors.reduce((sum, n) => sum + (n.y ?? 0), 0) / anchors.length, z: anchors.reduce((sum, n) => sum + (n.z ?? 0), 0) / anchors.length }
+          : ORIGIN;
+        const issuePos = { x: centroid.x + 34, y: centroid.y + 46, z: centroid.z + 34 };
+        const issueNode: UniverseNode = { id: `issue-${issue.id}`, label: issue.title, color: ISSUE_COLOR, radius: 14, kind: "issue", issueId: issue.id, ...issuePos };
+        issueNodes.push(issueNode);
+        overlayNodes.push(issueNode);
+
+        issue.laws.forEach((law, lawIndex) => {
+          const anchorMicro = microNodes.find((node) => node.id === law.anchorMicroNodeId);
+          const base = anchorMicro ?? issueNode;
+          const lawOffset = spherePoint(lawIndex, issue.laws.length, anchorMicro ? 24 : 30, 1.0);
+          const lawNode: UniverseNode = {
+            id: `law-${issue.id}-${law.book}-${law.number}`, label: `ม.${law.number}`, color: LAW_COLOR, radius: 9, kind: "law", issueId: issue.id, law,
+            x: (base.x ?? 0) + lawOffset.x, y: (base.y ?? 0) + lawOffset.y, z: (base.z ?? 0) + lawOffset.z,
           };
-          overlayNodes.push(issueNode);
-          overlayLinks.push({ source: nexusNode.id, target: issueNode.id, color: ISSUE_COLOR, kind: "issue" });
-
-          issue.laws.forEach((law, lawIndex) => {
-            const anchorMicro = microNodes.find((node) => node.id === law.anchorMicroNodeId);
-            const base = anchorMicro ?? issueNode;
-            const lawOffset = spherePoint(lawIndex, issue.laws.length, 30, 1.0);
-            const lawNode: UniverseNode = {
-              id: `law-${issue.id}-${law.book}-${law.number}`, label: `ม.${law.number}`, color: LAW_COLOR, radius: 9, kind: "law", issueId: issue.id, law,
-              x: (base.x ?? 0) + lawOffset.x, y: (base.y ?? 0) + lawOffset.y, z: (base.z ?? 0) + lawOffset.z,
-            };
-            overlayNodes.push(lawNode);
-            overlayLinks.push({ source: issueNode.id, target: lawNode.id, color: LAW_COLOR, kind: "law" });
-            if (anchorMicro) overlayLinks.push({ source: anchorMicro.id, target: lawNode.id, color: LAW_COLOR, kind: "law-anchor" });
-          });
+          overlayNodes.push(lawNode);
+          overlayLinks.push({ source: issueNode.id, target: lawNode.id, color: LAW_COLOR, kind: "law" });
+          if (anchorMicro) overlayLinks.push({ source: anchorMicro.id, target: lawNode.id, color: LAW_COLOR, kind: "law-anchor" });
         });
-      }
+      });
+
+      const issueCentroid = issueNodes.length
+        ? { x: issueNodes.reduce((sum, n) => sum + (n.x ?? 0), 0) / issueNodes.length, y: issueNodes.reduce((sum, n) => sum + (n.y ?? 0), 0) / issueNodes.length, z: issueNodes.reduce((sum, n) => sum + (n.z ?? 0), 0) / issueNodes.length }
+        : ORIGIN;
+      const nexusPos = { x: issueCentroid.x, y: issueCentroid.y + 74, z: issueCentroid.z };
+      const nexusNode: UniverseNode = { id: `nexus-${caseOverlay.id}`, label: caseOverlay.title, color: NEXUS_COLOR, radius: 26, kind: "nexus", ...nexusPos };
+      overlayNodes.push(nexusNode);
+      issueNodes.forEach((issueNode) => overlayLinks.push({ source: nexusNode.id, target: issueNode.id, color: NEXUS_COLOR, kind: "nexus" }));
     }
 
     return { nodes: [root, ...domainNodes, ...subjectNodes, ...microNodes, ...overlayNodes], links: [...links, ...overlayLinks] };
@@ -331,6 +341,16 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
       halo.scale.set(haloSize, haloSize, 1);
       halo.raycast = () => {}; // decorative only — must not steal clicks meant for neighboring nodes
       group.add(halo);
+
+      if (node.kind === "nexus") {
+        // extra outer ring — makes the free-floating hub read as visually important, like a
+        // high-degree hub node (à la Google/Facebook nodes in a general network graph)
+        const outerHalo = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTexture, color: node.color, transparent: true, opacity: 0.07, depthWrite: false, blending: THREE.NormalBlending }));
+        const outerSize = node.radius * 5.2;
+        outerHalo.scale.set(outerSize, outerSize, 1);
+        outerHalo.raycast = () => {};
+        group.add(outerHalo);
+      }
     }
 
     const label = new SpriteText(node.label);
@@ -373,7 +393,8 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
         linkVisibility={linkVisibility}
         linkColor={(link) => link.color}
         linkOpacity={0.24}
-        linkWidth={(link) => link.kind === "root" ? 0.56 : link.kind === "subject" ? 0.32 : 0.18}
+        linkWidth={(link) => link.kind === "root" ? 0.56 : link.kind === "subject" ? 0.32 : link.kind === "nexus" ? 0.5 : link.kind === "law" ? 0.34 : 0.18}
+        linkCurvature={(link) => link.kind === "nexus" || link.kind === "issue" || link.kind === "law" ? 0.28 : link.kind === "law-anchor" ? 0.15 : 0}
         enableNodeDrag={false}
         enableNavigationControls
         onNodeClick={onNodeClick}

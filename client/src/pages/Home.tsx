@@ -2,7 +2,7 @@
  * รัศมีนิติธรรม — แผนที่ความรู้กฎหมายแบบ organic radial constellation
  * จังหวะภาพ: ivory editorial canvas + color-family nodes + restrained orbital motion.
  */
-import { useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { Link } from "wouter";
 import ForceNetwork3D from "@/components/ForceNetwork3D";
 import WebGLBoundary from "@/components/WebGLBoundary";
@@ -439,6 +439,19 @@ function curvedPath(fromX: number, fromY: number, toX: number, toY: number) {
   return `M ${fromX} ${fromY} Q ${midpointX - bend} ${midpointY - bend} ${toX} ${toY}`;
 }
 
+function getMicroAbsolutePosition2D(microNodeId: string): { x: number; y: number } | null {
+  for (const domain of legalDomains) {
+    for (const subject of domain.children) {
+      const micro = subject.microNodes?.find((item) => item.id === microNodeId);
+      if (micro) {
+        const scale = domain.id === "criminal" ? 1.82 : 1.58;
+        return { x: subject.x + micro.dx * scale, y: subject.y + micro.dy * scale };
+      }
+    }
+  }
+  return null;
+}
+
 export default function Home() {
   const [expanded, setExpanded] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -538,6 +551,12 @@ export default function Home() {
     window.setTimeout(() => { didDragRef.current = false; }, 0);
   };
 
+  const handleMapWheel = (event: ReactWheelEvent<SVGSVGElement>) => {
+    event.preventDefault();
+    const delta = event.deltaY > 0 ? -0.06 : 0.06;
+    setZoom((value) => Math.max(0.78, Math.min(1.32, Number((value + delta).toFixed(2)))));
+  };
+
   const selectedDomain = legalDomains.find((domain) => domain.id === selectedId) ?? null;
   const selectedSubject = selectedDomain?.children.find((subject) => subject.id === selectedSubjectId) ?? null;
   const cameraTarget = selectedSubject ?? selectedDomain;
@@ -568,6 +587,34 @@ export default function Home() {
 
   const activeCaseData = caseGraphs[activeCaseId];
 
+  // Nexus overlay for the 2D map: a free-floating hub (not a child of the domain
+  // node) whose position is the centroid of its Issue nodes, which in turn float
+  // at the centroid of their มาตรา — mirrors the same floating-hub logic used in
+  // the 3D graph (ForceNetwork3D), just computed in 2D SVG coordinates.
+  const caseOverlay2D = useMemo(() => {
+    if (!caseOverlayOpen) return null;
+    const caseData = activeCaseData;
+    const issues = caseData.issues.map((issue) => {
+      const lawAnchors = issue.laws.map((law) => ({ law, anchor: getMicroAbsolutePosition2D(law.anchorMicroNodeId) }));
+      const validAnchors = lawAnchors.map((item) => item.anchor).filter((point): point is { x: number; y: number } => Boolean(point));
+      const centroid = validAnchors.length
+        ? { x: validAnchors.reduce((sum, point) => sum + point.x, 0) / validAnchors.length, y: validAnchors.reduce((sum, point) => sum + point.y, 0) / validAnchors.length }
+        : { x: 720, y: 450 };
+      const issuePos = { x: centroid.x + 40, y: centroid.y + 46 };
+      const laws = lawAnchors.map((item, index) => {
+        const anchor = item.anchor ?? issuePos;
+        const angle = (index / Math.max(1, lawAnchors.length)) * Math.PI * 2;
+        const spread = lawAnchors.length > 1 ? 26 : 0;
+        return { ...item.law, issueId: issue.id, x: anchor.x + Math.cos(angle) * spread, y: anchor.y + Math.sin(angle) * spread, anchorX: anchor.x, anchorY: anchor.y };
+      });
+      return { id: issue.id, title: issue.title, x: issuePos.x, y: issuePos.y, laws };
+    });
+    const issueCentroid = issues.length
+      ? { x: issues.reduce((sum, item) => sum + item.x, 0) / issues.length, y: issues.reduce((sum, item) => sum + item.y, 0) / issues.length }
+      : { x: 720, y: 450 };
+    return { title: caseData.title, x: issueCentroid.x, y: issueCentroid.y - 74, issues };
+  }, [caseOverlayOpen, activeCaseData]);
+
   const findSubjectIdForMicroNode = (microNodeId: string) => {
     for (const domain of legalDomains) {
       for (const subject of domain.children) {
@@ -588,7 +635,6 @@ export default function Home() {
     setActiveCaseId(caseId);
     setCaseOverlayOpen(true);
     setLawSelection(null);
-    setIs3D(true);
     setExpanded(true);
     setPan({ x: 0, y: 0 });
     setSelectedId(caseData.domainId);
@@ -713,7 +759,7 @@ export default function Home() {
             <ForceNetwork3D domains={legalDomains} expanded={expanded} selectedDomainId={selectedId} selectedSubjectId={selectedSubjectId} showConnections={showConnections} motionEnabled={motionEnabled} caseOverlay={caseOverlayOpen ? activeCaseData : null} onExploreDomain={exploreDomain} onOpen={() => { playSoftTone(); setExpanded(true); }} onReset={resetExplorer} onFallbackTo2D={() => setIs3D(false)} onSelectLaw={handleSelectOverlayLaw} />
           </WebGLBoundary>
         ) : (
-        <svg className={`law-map ${isPanning ? "is-panning" : ""}`} viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" onPointerDown={handleMapPointerDown} onPointerMove={handleMapPointerMove} onPointerUp={handleMapPointerUp} onPointerCancel={handleMapPointerUp} onPointerLeave={() => { if (panGestureRef.current.pointerId === -1) setIsPanning(false); }}>
+        <svg className={`law-map ${isPanning ? "is-panning" : ""}`} viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" onPointerDown={handleMapPointerDown} onPointerMove={handleMapPointerMove} onPointerUp={handleMapPointerUp} onPointerCancel={handleMapPointerUp} onPointerLeave={() => { if (panGestureRef.current.pointerId === -1) setIsPanning(false); }} onWheel={handleMapWheel}>
           <defs>
             <filter id="softBlur"><feGaussianBlur stdDeviation="16" /></filter>
             <filter id="nodeShadow" x="-70%" y="-70%" width="240%" height="240%"><feDropShadow dx="0" dy="9" stdDeviation="8" floodColor="#3C3651" floodOpacity="0.16" /></filter>
@@ -821,6 +867,47 @@ export default function Home() {
                 </g>
               );
             })}
+
+            {caseOverlay2D && (
+              <g className="case-overlay-2d" aria-label={`ภาพรวมคดี ${caseOverlay2D.title}`}>
+                <g className="case-overlay-2d__links" aria-hidden="true">
+                  {caseOverlay2D.issues.map((issue) => (
+                    <path key={`nexus-link-${issue.id}`} d={curvedPath(caseOverlay2D.x, caseOverlay2D.y, issue.x, issue.y)} fill="none" stroke="#D64545" strokeWidth="1.4" opacity="0.4" />
+                  ))}
+                  {caseOverlay2D.issues.flatMap((issue) => issue.laws.map((law) => (
+                    <g key={`law-link-${issue.id}-${law.book}-${law.number}`}>
+                      <path d={curvedPath(issue.x, issue.y, law.x, law.y)} fill="none" stroke="#3E7BD6" strokeWidth="1.1" opacity="0.42" />
+                      {(law.anchorX !== law.x || law.anchorY !== law.y) && (
+                        <line x1={law.anchorX} y1={law.anchorY} x2={law.x} y2={law.y} stroke="#3E7BD6" strokeWidth="0.7" strokeDasharray="2 4" opacity="0.3" />
+                      )}
+                    </g>
+                  )))}
+                </g>
+
+                {caseOverlay2D.issues.map((issue) => (
+                  <g key={`issue-${issue.id}`} className="overlay-node overlay-node--issue">
+                    <circle cx={issue.x} cy={issue.y} r="19" fill="#E8933A" opacity="0.14" filter="url(#softBlur)" />
+                    <circle cx={issue.x} cy={issue.y} r="11" fill="#E8933A" filter="url(#nodeShadow)" />
+                    <text x={issue.x} y={issue.y + 25} textAnchor="middle" className="overlay-label overlay-label--issue">{issue.title}</text>
+                    {issue.laws.map((law) => (
+                      <g key={`law-${issue.id}-${law.book}-${law.number}`} className="overlay-node overlay-node--law" role="button" tabIndex={0} aria-label={`มาตรา ${law.number} ${law.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => handleSelectOverlayLaw(law, issue.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); handleSelectOverlayLaw(law, issue.id); } }}>
+                        <circle cx={law.x} cy={law.y} r="12" fill="#3E7BD6" opacity="0.14" filter="url(#softBlur)" />
+                        <circle cx={law.x} cy={law.y} r="7" fill="#3E7BD6" filter="url(#nodeShadow)" />
+                        <text x={law.x} y={law.y + 19} textAnchor="middle" className="overlay-label overlay-label--law">ม.{law.number}</text>
+                      </g>
+                    ))}
+                  </g>
+                ))}
+
+                <g className="overlay-node overlay-node--nexus" role="button" tabIndex={0} aria-label={caseOverlay2D.title} onPointerDown={(event) => event.stopPropagation()} onClick={() => setCaseOverlayOpen(false)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setCaseOverlayOpen(false); } }}>
+                  <circle cx={caseOverlay2D.x} cy={caseOverlay2D.y} r="52" fill="#D64545" opacity="0.08" filter="url(#softBlur)" />
+                  <circle cx={caseOverlay2D.x} cy={caseOverlay2D.y} r="30" fill="#D64545" opacity="0.14" filter="url(#softBlur)" />
+                  <circle cx={caseOverlay2D.x} cy={caseOverlay2D.y} r="17" fill="#D64545" filter="url(#nodeShadow)" />
+                  <circle cx={caseOverlay2D.x} cy={caseOverlay2D.y} r="21" fill="none" stroke="#D64545" strokeOpacity="0.5" strokeWidth="1.2" />
+                  <text x={caseOverlay2D.x} y={caseOverlay2D.y + 33} textAnchor="middle" className="overlay-label overlay-label--nexus">{caseOverlay2D.title}</text>
+                </g>
+              </g>
+            )}
           </g>
         </svg>
         )}

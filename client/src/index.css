@@ -121,7 +121,8 @@ button:focus-visible, input:focus-visible { outline: 2px solid #9d6eea; outline-
 .origin-brand { fill: #fffdfa; font-family: "Noto Serif Thai", serif; font-size: 13px; font-weight: 700; letter-spacing: -0.04em; pointer-events: none; }
 .origin-return { fill: #fffdfa; font-family: "IBM Plex Sans Thai Looped", sans-serif; font-size: 5.4px; font-weight: 600; pointer-events: none; }
 .micro-label { fill: #5f5268; font-family: "IBM Plex Sans Thai Looped", sans-serif; font-size: 10px; font-weight: 600; pointer-events: none; }
-.graph-node--micro.is-expandable { cursor: pointer; }
+.node-label__range { fill: #8a7f91; font-family: "DM Mono", monospace; font-size: 8.5px; font-weight: 500; }
+.graph-node--micro.is-expandable { cursor: pointer; transform-box: fill-box; transform-origin: center; transition: transform 190ms cubic-bezier(0.23, 1, 0.32, 1); }
 .graph-node--micro.is-expandable:hover, .graph-node--micro.is-expandable:focus { transform: scale(1.1); }
 .graph-node--micro.is-selected circle:nth-child(2) { stroke-width: 2px; }
 .article-leaf-layer { pointer-events: auto; }

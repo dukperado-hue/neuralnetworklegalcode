@@ -8,11 +8,13 @@ import type { LegalNode } from "@/pages/Home";
 export const civilHierarchy: LegalNode[] = [
   {
     "id": "civil-บรรพ-1",
-    "label": "บรรพ 1 · หลักทั่วไป 4–193/35",
+    "label": "บรรพ 1 · หลักทั่วไป",
+    "range": "4–193/35",
     "children": [
       {
         "id": "civil-บรรพ-1-ลักษณะ-1",
-        "label": "ลักษณะ 1 · บทเบ็ดเสร็จทั่วไป 4–14",
+        "label": "ลักษณะ 1 · บทเบ็ดเสร็จทั่วไป",
+        "range": "4–14",
         "children": [
           {
             "id": "civil-art-4",
@@ -84,15 +86,18 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-1-ลักษณะ-2",
-        "label": "ลักษณะ 2 · บุคคล 15–136",
+        "label": "ลักษณะ 2 · บุคคล",
+        "range": "15–136",
         "children": [
           {
             "id": "civil-บรรพ-1-ลักษณะ-2-หมวด-1",
-            "label": "หมวด 1 · บุคคลธรรมดา 15–64",
+            "label": "หมวด 1 · บุคคลธรรมดา",
+            "range": "15–64",
             "children": [
               {
                 "id": "civil-บรรพ-1-ลักษณะ-2-หมวด-1-ส่วนที่-1",
-                "label": "ส่วนที่ 1 · สภาพบุคคล 15–18",
+                "label": "ส่วนที่ 1 · สภาพบุคคล",
+                "range": "15–18",
                 "children": [
                   {
                     "id": "civil-art-15",
@@ -122,7 +127,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-1-ลักษณะ-2-หมวด-1-ส่วนที่-2",
-                "label": "ส่วนที่ 2 · ความสามารถ 19–36",
+                "label": "ส่วนที่ 2 · ความสามารถ",
+                "range": "19–36",
                 "children": [
                   {
                     "id": "civil-art-19",
@@ -236,7 +242,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-1-ลักษณะ-2-หมวด-1-ส่วนที่-3",
-                "label": "ส่วนที่ 3 · ภูมิลำเนา 37–47",
+                "label": "ส่วนที่ 3 · ภูมิลำเนา",
+                "range": "37–47",
                 "children": [
                   {
                     "id": "civil-art-37",
@@ -308,7 +315,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-1-ลักษณะ-2-หมวด-1-ส่วนที่-4",
-                "label": "ส่วนที่ 4 · สาบสูญ 48–64",
+                "label": "ส่วนที่ 4 · สาบสูญ",
+                "range": "48–64",
                 "children": [
                   {
                     "id": "civil-art-48",
@@ -418,11 +426,13 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-1-ลักษณะ-2-หมวด-2",
-            "label": "หมวด 2 · นิติบุคคล 65–136",
+            "label": "หมวด 2 · นิติบุคคล",
+            "range": "65–136",
             "children": [
               {
                 "id": "civil-บรรพ-1-ลักษณะ-2-หมวด-2-ส่วนที่-1",
-                "label": "ส่วนที่ 1 · บทเบ็ดเสร็จทั่วไป 65–77",
+                "label": "ส่วนที่ 1 · บทเบ็ดเสร็จทั่วไป",
+                "range": "65–77",
                 "children": [
                   {
                     "id": "civil-art-65",
@@ -506,7 +516,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-1-ลักษณะ-2-หมวด-2-ส่วนที่-2",
-                "label": "ส่วนที่ 2 · สมาคม 78–109",
+                "label": "ส่วนที่ 2 · สมาคม",
+                "range": "78–109",
                 "children": [
                   {
                     "id": "civil-art-78",
@@ -704,7 +715,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-1-ลักษณะ-2-หมวด-2-ส่วนที่-3",
-                "label": "ส่วนที่ 3 · มูลนิธิ 110–136",
+                "label": "ส่วนที่ 3 · มูลนิธิ",
+                "range": "110–136",
                 "children": [
                   {
                     "id": "civil-art-110",
@@ -876,7 +888,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-1-ลักษณะ-3",
-        "label": "ลักษณะ 3 · ทรัพย์ 137–148",
+        "label": "ลักษณะ 3 · ทรัพย์",
+        "range": "137–148",
         "children": [
           {
             "id": "civil-art-137",
@@ -954,11 +967,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-1-ลักษณะ-4",
-        "label": "ลักษณะ 4 · นิติกรรม 149–193",
+        "label": "ลักษณะ 4 · นิติกรรม",
+        "range": "149–193",
         "children": [
           {
             "id": "civil-บรรพ-1-ลักษณะ-4-หมวด-1",
-            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป 149–153",
+            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป",
+            "range": "149–153",
             "children": [
               {
                 "id": "civil-art-149",
@@ -994,7 +1009,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-1-ลักษณะ-4-หมวด-2",
-            "label": "หมวด 2 · การแสดงเจตนา 154–171",
+            "label": "หมวด 2 · การแสดงเจตนา",
+            "range": "154–171",
             "children": [
               {
                 "id": "civil-art-154",
@@ -1108,7 +1124,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-1-ลักษณะ-4-หมวด-3",
-            "label": "หมวด 3 · โมฆะกรรมและโมฆียะกรรม 172–181",
+            "label": "หมวด 3 · โมฆะกรรมและโมฆียะกรรม",
+            "range": "172–181",
             "children": [
               {
                 "id": "civil-art-172",
@@ -1174,7 +1191,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-1-ลักษณะ-4-หมวด-4",
-            "label": "หมวด 4 · เงื่อนไขและเงื่อนเวลา 182–193",
+            "label": "หมวด 4 · เงื่อนไขและเงื่อนเวลา",
+            "range": "182–193",
             "children": [
               {
                 "id": "civil-art-182",
@@ -1254,7 +1272,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-1-ลักษณะ-5",
-        "label": "ลักษณะ 5 · ระยะเวลา 193/1–193/8",
+        "label": "ลักษณะ 5 · ระยะเวลา",
+        "range": "193/1–193/8",
         "children": [
           {
             "id": "civil-art-193-1",
@@ -1308,11 +1327,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-1-ลักษณะ-6",
-        "label": "ลักษณะ 6 · อายุความ 193/9–193/35",
+        "label": "ลักษณะ 6 · อายุความ",
+        "range": "193/9–193/35",
         "children": [
           {
             "id": "civil-บรรพ-1-ลักษณะ-6-หมวด-1",
-            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป 193/9–193/29",
+            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป",
+            "range": "193/9–193/29",
             "children": [
               {
                 "id": "civil-art-193-9",
@@ -1444,7 +1465,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-1-ลักษณะ-6-หมวด-2",
-            "label": "หมวด 2 · กำหนดอายุความ 193/30–193/35",
+            "label": "หมวด 2 · กำหนดอายุความ",
+            "range": "193/30–193/35",
             "children": [
               {
                 "id": "civil-art-193-30",
@@ -1490,15 +1512,18 @@ export const civilHierarchy: LegalNode[] = [
   },
   {
     "id": "civil-บรรพ-2",
-    "label": "บรรพ 2 · หนี้ 194–452",
+    "label": "บรรพ 2 · หนี้",
+    "range": "194–452",
     "children": [
       {
         "id": "civil-บรรพ-2-ลักษณะ-1",
-        "label": "ลักษณะ 1 · บทเบ็ดเสร็จทั่วไป 194–353",
+        "label": "ลักษณะ 1 · บทเบ็ดเสร็จทั่วไป",
+        "range": "194–353",
         "children": [
           {
             "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-1",
-            "label": "หมวด 1 · วัตถุแห่งหนี้ 194–202",
+            "label": "หมวด 1 · วัตถุแห่งหนี้",
+            "range": "194–202",
             "children": [
               {
                 "id": "civil-art-194",
@@ -1558,11 +1583,13 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-2",
-            "label": "หมวด 2 · ผลแห่งหนี้ 203–289",
+            "label": "หมวด 2 · ผลแห่งหนี้",
+            "range": "203–289",
             "children": [
               {
                 "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-2-ส่วนที่-1",
-                "label": "ส่วนที่ 1 · การไม่ชำระหนี้ 203–225",
+                "label": "ส่วนที่ 1 · การไม่ชำระหนี้",
+                "range": "203–225",
                 "children": [
                   {
                     "id": "civil-art-203",
@@ -1706,7 +1733,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-2-ส่วนที่-2",
-                "label": "ส่วนที่ 2 · รับช่วงสิทธิ 226–232",
+                "label": "ส่วนที่ 2 · รับช่วงสิทธิ",
+                "range": "226–232",
                 "children": [
                   {
                     "id": "civil-art-226",
@@ -1754,7 +1782,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-2-ส่วนที่-3",
-                "label": "ส่วนที่ 3 · การใช้สิทธิเรียกร้องของลูกหนี้ 233–236",
+                "label": "ส่วนที่ 3 · การใช้สิทธิเรียกร้องของลูกหนี้",
+                "range": "233–236",
                 "children": [
                   {
                     "id": "civil-art-233",
@@ -1784,7 +1813,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-2-ส่วนที่-4",
-                "label": "ส่วนที่ 4 · เพิกถอนการฉ้อฉล 237–240",
+                "label": "ส่วนที่ 4 · เพิกถอนการฉ้อฉล",
+                "range": "237–240",
                 "children": [
                   {
                     "id": "civil-art-237",
@@ -1814,7 +1844,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-2-ส่วนที่-5",
-                "label": "ส่วนที่ 5 · สิทธิยึดหน่วง 241–250",
+                "label": "ส่วนที่ 5 · สิทธิยึดหน่วง",
+                "range": "241–250",
                 "children": [
                   {
                     "id": "civil-art-241",
@@ -1880,7 +1911,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-2-ส่วนที่-6",
-                "label": "ส่วนที่ 6 · บุริมสิทธิ 251–289",
+                "label": "ส่วนที่ 6 · บุริมสิทธิ",
+                "range": "251–289",
                 "children": [
                   {
                     "id": "civil-art-251",
@@ -2122,7 +2154,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-3",
-            "label": "หมวด 3 · ลูกหนี้และเจ้าหนี้หลายคน 290–302",
+            "label": "หมวด 3 · ลูกหนี้และเจ้าหนี้หลายคน",
+            "range": "290–302",
             "children": [
               {
                 "id": "civil-art-290",
@@ -2206,7 +2239,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-4",
-            "label": "หมวด 4 · โอนสิทธิเรียกร้อง 303–313",
+            "label": "หมวด 4 · โอนสิทธิเรียกร้อง",
+            "range": "303–313",
             "children": [
               {
                 "id": "civil-art-303",
@@ -2278,11 +2312,13 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-5",
-            "label": "หมวด 5 · ความระงับหนี้ 314–353",
+            "label": "หมวด 5 · ความระงับหนี้",
+            "range": "314–353",
             "children": [
               {
                 "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-5-ส่วนที่-1",
-                "label": "ส่วนที่ 1 · การชำระหนี้ 314–339",
+                "label": "ส่วนที่ 1 · การชำระหนี้",
+                "range": "314–339",
                 "children": [
                   {
                     "id": "civil-art-314",
@@ -2444,7 +2480,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-5-ส่วนที่-2",
-                "label": "ส่วนที่ 2 · ปลดหนี้ 340",
+                "label": "ส่วนที่ 2 · ปลดหนี้",
+                "range": "340",
                 "children": [
                   {
                     "id": "civil-art-340",
@@ -2456,7 +2493,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-5-ส่วนที่-3",
-                "label": "ส่วนที่ 3 · หักกลบลบหนี้ 341–348",
+                "label": "ส่วนที่ 3 · หักกลบลบหนี้",
+                "range": "341–348",
                 "children": [
                   {
                     "id": "civil-art-341",
@@ -2510,7 +2548,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-5-ส่วนที่-4",
-                "label": "ส่วนที่ 4 · แปลงหนี้ใหม่ 349–352",
+                "label": "ส่วนที่ 4 · แปลงหนี้ใหม่",
+                "range": "349–352",
                 "children": [
                   {
                     "id": "civil-art-349",
@@ -2540,7 +2579,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-2-ลักษณะ-1-หมวด-5-ส่วนที่-5",
-                "label": "ส่วนที่ 5 · หนี้เกลื่อนกลืนกัน 353",
+                "label": "ส่วนที่ 5 · หนี้เกลื่อนกลืนกัน",
+                "range": "353",
                 "children": [
                   {
                     "id": "civil-art-353",
@@ -2556,11 +2596,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-2-ลักษณะ-2",
-        "label": "ลักษณะ 2 · สัญญา 354–394",
+        "label": "ลักษณะ 2 · สัญญา",
+        "range": "354–394",
         "children": [
           {
             "id": "civil-บรรพ-2-ลักษณะ-2-หมวด-1",
-            "label": "หมวด 1 · ก่อให้เกิดสัญญา 354–368",
+            "label": "หมวด 1 · ก่อให้เกิดสัญญา",
+            "range": "354–368",
             "children": [
               {
                 "id": "civil-art-354",
@@ -2656,7 +2698,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-2-ลักษณะ-2-หมวด-2",
-            "label": "หมวด 2 · ผลแห่งสัญญา 369–376",
+            "label": "หมวด 2 · ผลแห่งสัญญา",
+            "range": "369–376",
             "children": [
               {
                 "id": "civil-art-369",
@@ -2710,7 +2753,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-2-ลักษณะ-2-หมวด-3",
-            "label": "หมวด 3 · มัดจำและกำหนดเบี้ยปรับ 377–385",
+            "label": "หมวด 3 · มัดจำและกำหนดเบี้ยปรับ",
+            "range": "377–385",
             "children": [
               {
                 "id": "civil-art-377",
@@ -2770,7 +2814,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-2-ลักษณะ-2-หมวด-4",
-            "label": "หมวด 4 · เลิกสัญญา 386–394",
+            "label": "หมวด 4 · เลิกสัญญา",
+            "range": "386–394",
             "children": [
               {
                 "id": "civil-art-386",
@@ -2832,7 +2877,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-2-ลักษณะ-3",
-        "label": "ลักษณะ 3 · จัดการงานนอกสั่ง 395–405",
+        "label": "ลักษณะ 3 · จัดการงานนอกสั่ง",
+        "range": "395–405",
         "children": [
           {
             "id": "civil-art-395",
@@ -2904,7 +2950,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-2-ลักษณะ-4",
-        "label": "ลักษณะ 4 · ลาภมิควรได้ 406–419",
+        "label": "ลักษณะ 4 · ลาภมิควรได้",
+        "range": "406–419",
         "children": [
           {
             "id": "civil-art-406",
@@ -2994,11 +3041,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-2-ลักษณะ-5",
-        "label": "ลักษณะ 5 · ละเมิด 420–452",
+        "label": "ลักษณะ 5 · ละเมิด",
+        "range": "420–452",
         "children": [
           {
             "id": "civil-บรรพ-2-ลักษณะ-5-หมวด-1",
-            "label": "หมวด 1 · ความรับผิดเพื่อละเมิด 420–437",
+            "label": "หมวด 1 · ความรับผิดเพื่อละเมิด",
+            "range": "420–437",
             "children": [
               {
                 "id": "civil-art-420",
@@ -3112,7 +3161,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-2-ลักษณะ-5-หมวด-2",
-            "label": "หมวด 2 · ค่าสินไหมทดแทนเพื่อละเมิด 438–448",
+            "label": "หมวด 2 · ค่าสินไหมทดแทนเพื่อละเมิด",
+            "range": "438–448",
             "children": [
               {
                 "id": "civil-art-438",
@@ -3184,7 +3234,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-2-ลักษณะ-5-หมวด-3",
-            "label": "หมวด 3 · นิรโทษกรรม 449–452",
+            "label": "หมวด 3 · นิรโทษกรรม",
+            "range": "449–452",
             "children": [
               {
                 "id": "civil-art-449",
@@ -3218,19 +3269,23 @@ export const civilHierarchy: LegalNode[] = [
   },
   {
     "id": "civil-บรรพ-3",
-    "label": "บรรพ 3 · เอกเทศสัญญา 453–1274",
+    "label": "บรรพ 3 · เอกเทศสัญญา",
+    "range": "453–1274",
     "children": [
       {
         "id": "civil-บรรพ-3-ลักษณะ-1",
-        "label": "ลักษณะ 1 · ซื้อขาย 453–517",
+        "label": "ลักษณะ 1 · ซื้อขาย",
+        "range": "453–517",
         "children": [
           {
             "id": "civil-บรรพ-3-ลักษณะ-1-หมวด-1",
-            "label": "หมวด 1 · สภาพและหลักสำคัญของสัญญาซื้อขาย 453–460",
+            "label": "หมวด 1 · สภาพและหลักสำคัญของสัญญาซื้อขาย",
+            "range": "453–460",
             "children": [
               {
                 "id": "civil-บรรพ-3-ลักษณะ-1-หมวด-1-ส่วนที่-1",
-                "label": "ส่วนที่ 1 · บทเบ็ดเสร็จทั่วไป 453–457",
+                "label": "ส่วนที่ 1 · บทเบ็ดเสร็จทั่วไป",
+                "range": "453–457",
                 "children": [
                   {
                     "id": "civil-art-453",
@@ -3266,7 +3321,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-1-หมวด-1-ส่วนที่-2",
-                "label": "ส่วนที่ 2 · การโอนกรรมสิทธิ์ 458–460",
+                "label": "ส่วนที่ 2 · การโอนกรรมสิทธิ์",
+                "range": "458–460",
                 "children": [
                   {
                     "id": "civil-art-458",
@@ -3292,11 +3348,13 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-1-หมวด-2",
-            "label": "หมวด 2 · หน้าที่และความรับผิดของผู้ขาย 461–485",
+            "label": "หมวด 2 · หน้าที่และความรับผิดของผู้ขาย",
+            "range": "461–485",
             "children": [
               {
                 "id": "civil-บรรพ-3-ลักษณะ-1-หมวด-2-ส่วนที่-1",
-                "label": "ส่วนที่ 1 · การส่งมอบ 461–471",
+                "label": "ส่วนที่ 1 · การส่งมอบ",
+                "range": "461–471",
                 "children": [
                   {
                     "id": "civil-art-461",
@@ -3368,7 +3426,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-1-หมวด-2-ส่วนที่-2",
-                "label": "ส่วนที่ 2 · ความรับผิดเพื่อชำรุดบกพร่อง 472–474",
+                "label": "ส่วนที่ 2 · ความรับผิดเพื่อชำรุดบกพร่อง",
+                "range": "472–474",
                 "children": [
                   {
                     "id": "civil-art-472",
@@ -3392,7 +3451,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-1-หมวด-2-ส่วนที่-3",
-                "label": "ส่วนที่ 3 · ความรับผิดในการรอนสิทธิ 475–482",
+                "label": "ส่วนที่ 3 · ความรับผิดในการรอนสิทธิ",
+                "range": "475–482",
                 "children": [
                   {
                     "id": "civil-art-475",
@@ -3446,7 +3506,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-1-หมวด-2-ส่วนที่-4",
-                "label": "ส่วนที่ 4 · ข้อสัญญาว่าจะไม่ต้องรับผิด 483–485",
+                "label": "ส่วนที่ 4 · ข้อสัญญาว่าจะไม่ต้องรับผิด",
+                "range": "483–485",
                 "children": [
                   {
                     "id": "civil-art-483",
@@ -3472,7 +3533,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-1-หมวด-3",
-            "label": "หมวด 3 · หน้าที่ของผู้ซื้อ 486–490",
+            "label": "หมวด 3 · หน้าที่ของผู้ซื้อ",
+            "range": "486–490",
             "children": [
               {
                 "id": "civil-art-486",
@@ -3508,11 +3570,13 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-1-หมวด-4",
-            "label": "หมวด 4 · การซื้อขายเฉพาะบางอย่าง 491–517",
+            "label": "หมวด 4 · การซื้อขายเฉพาะบางอย่าง",
+            "range": "491–517",
             "children": [
               {
                 "id": "civil-บรรพ-3-ลักษณะ-1-หมวด-4-ส่วนที่-1",
-                "label": "ส่วนที่ 1 · ขายฝาก 491–502",
+                "label": "ส่วนที่ 1 · ขายฝาก",
+                "range": "491–502",
                 "children": [
                   {
                     "id": "civil-art-491",
@@ -3590,7 +3654,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-1-หมวด-4-ส่วนที่-2",
-                "label": "ส่วนที่ 2 · ขายตามตัวอย่าง ขายตามคำพรรณนา ขายเผื่อชอบ 503–508",
+                "label": "ส่วนที่ 2 · ขายตามตัวอย่าง ขายตามคำพรรณนา ขายเผื่อชอบ",
+                "range": "503–508",
                 "children": [
                   {
                     "id": "civil-art-503",
@@ -3632,7 +3697,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-1-หมวด-4-ส่วนที่-3",
-                "label": "ส่วนที่ 3 · ขายทอดตลาด 509–517",
+                "label": "ส่วนที่ 3 · ขายทอดตลาด",
+                "range": "509–517",
                 "children": [
                   {
                     "id": "civil-art-509",
@@ -3696,7 +3762,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-2",
-        "label": "ลักษณะ 2 · แลกเปลี่ยน 518–520",
+        "label": "ลักษณะ 2 · แลกเปลี่ยน",
+        "range": "518–520",
         "children": [
           {
             "id": "civil-art-518",
@@ -3720,7 +3787,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-3",
-        "label": "ลักษณะ 3 · ให้ 521–536",
+        "label": "ลักษณะ 3 · ให้",
+        "range": "521–536",
         "children": [
           {
             "id": "civil-art-521",
@@ -3822,11 +3890,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-4",
-        "label": "ลักษณะ 4 · เช่าทรัพย์ 537–571",
+        "label": "ลักษณะ 4 · เช่าทรัพย์",
+        "range": "537–571",
         "children": [
           {
             "id": "civil-บรรพ-3-ลักษณะ-4-หมวด-1",
-            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป 537–545",
+            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป",
+            "range": "537–545",
             "children": [
               {
                 "id": "civil-art-537",
@@ -3886,7 +3956,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-4-หมวด-2",
-            "label": "หมวด 2 · หน้าที่และความรับผิดของผู้ให้เช่า 546–551",
+            "label": "หมวด 2 · หน้าที่และความรับผิดของผู้ให้เช่า",
+            "range": "546–551",
             "children": [
               {
                 "id": "civil-art-546",
@@ -3928,7 +3999,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-4-หมวด-3",
-            "label": "หมวด 3 · หน้าที่และความรับผิดของผู้เช่า 552–563",
+            "label": "หมวด 3 · หน้าที่และความรับผิดของผู้เช่า",
+            "range": "552–563",
             "children": [
               {
                 "id": "civil-art-552",
@@ -4006,7 +4078,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-4-หมวด-4",
-            "label": "หมวด 4 · ความระงับแห่งสัญญาเช่า 564–571",
+            "label": "หมวด 4 · ความระงับแห่งสัญญาเช่า",
+            "range": "564–571",
             "children": [
               {
                 "id": "civil-art-564",
@@ -4062,7 +4135,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-5",
-        "label": "ลักษณะ 5 · เช่าซื้อ 572–574",
+        "label": "ลักษณะ 5 · เช่าซื้อ",
+        "range": "572–574",
         "children": [
           {
             "id": "civil-art-572",
@@ -4086,7 +4160,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-6",
-        "label": "ลักษณะ 6 · จ้างแรงงาน 575–586",
+        "label": "ลักษณะ 6 · จ้างแรงงาน",
+        "range": "575–586",
         "children": [
           {
             "id": "civil-art-575",
@@ -4164,7 +4239,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-7",
-        "label": "ลักษณะ 7 · จ้างทำของ 587–607",
+        "label": "ลักษณะ 7 · จ้างทำของ",
+        "range": "587–607",
         "children": [
           {
             "id": "civil-art-587",
@@ -4296,11 +4372,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-8",
-        "label": "ลักษณะ 8 · รับขน 608–639",
+        "label": "ลักษณะ 8 · รับขน",
+        "range": "608–639",
         "children": [
           {
             "id": "civil-บรรพ-3-ลักษณะ-8-หมวด-1",
-            "label": "หมวด 1 · รับขนของ 610–633",
+            "label": "หมวด 1 · รับขนของ",
+            "range": "610–633",
             "children": [
               {
                 "id": "civil-art-610",
@@ -4450,7 +4528,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-8-หมวด-2",
-            "label": "หมวด 2 · รับขนคนโดยสาร 634–639",
+            "label": "หมวด 2 · รับขนคนโดยสาร",
+            "range": "634–639",
             "children": [
               {
                 "id": "civil-art-634",
@@ -4506,11 +4585,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-9",
-        "label": "ลักษณะ 9 · ยืม 640–656",
+        "label": "ลักษณะ 9 · ยืม",
+        "range": "640–656",
         "children": [
           {
             "id": "civil-บรรพ-3-ลักษณะ-9-หมวด-1",
-            "label": "หมวด 1 · ยืมใช้คงรูป 640–649",
+            "label": "หมวด 1 · ยืมใช้คงรูป",
+            "range": "640–649",
             "children": [
               {
                 "id": "civil-art-640",
@@ -4576,7 +4657,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-9-หมวด-2",
-            "label": "หมวด 2 · ยืมใช้สิ้นเปลือง 650–656",
+            "label": "หมวด 2 · ยืมใช้สิ้นเปลือง",
+            "range": "650–656",
             "children": [
               {
                 "id": "civil-art-650",
@@ -4626,11 +4708,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-10",
-        "label": "ลักษณะ 10 · ฝากทรัพย์ 657–679",
+        "label": "ลักษณะ 10 · ฝากทรัพย์",
+        "range": "657–679",
         "children": [
           {
             "id": "civil-บรรพ-3-ลักษณะ-10-หมวด-1",
-            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป 657–671",
+            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป",
+            "range": "657–671",
             "children": [
               {
                 "id": "civil-art-657",
@@ -4726,7 +4810,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-10-หมวด-2",
-            "label": "หมวด 2 · วิธีเฉพาะการฝากเงิน 672–673",
+            "label": "หมวด 2 · วิธีเฉพาะการฝากเงิน",
+            "range": "672–673",
             "children": [
               {
                 "id": "civil-art-672",
@@ -4744,7 +4829,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-10-หมวด-3",
-            "label": "หมวด 3 · วิธีเฉพาะสำหรับเจ้าสำนักโรงแรม 674–679",
+            "label": "หมวด 3 · วิธีเฉพาะสำหรับเจ้าสำนักโรงแรม",
+            "range": "674–679",
             "children": [
               {
                 "id": "civil-art-674",
@@ -4788,11 +4874,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-11",
-        "label": "ลักษณะ 11 · ค้ำประกัน 680–701",
+        "label": "ลักษณะ 11 · ค้ำประกัน",
+        "range": "680–701",
         "children": [
           {
             "id": "civil-บรรพ-3-ลักษณะ-11-หมวด-1",
-            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป 680–685/1",
+            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป",
+            "range": "680–685/1",
             "children": [
               {
                 "id": "civil-art-680",
@@ -4846,7 +4934,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-11-หมวด-2",
-            "label": "หมวด 2 · ผลก่อนชำระหนี้ 686–692",
+            "label": "หมวด 2 · ผลก่อนชำระหนี้",
+            "range": "686–692",
             "children": [
               {
                 "id": "civil-art-686",
@@ -4894,7 +4983,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-11-หมวด-3",
-            "label": "หมวด 3 · ผลภายหลังชำระหนี้ 693–697",
+            "label": "หมวด 3 · ผลภายหลังชำระหนี้",
+            "range": "693–697",
             "children": [
               {
                 "id": "civil-art-693",
@@ -4930,7 +5020,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-11-หมวด-4",
-            "label": "หมวด 4 · ความระงับสิ้นไปแห่งการค้ำประกัน 698–701",
+            "label": "หมวด 4 · ความระงับสิ้นไปแห่งการค้ำประกัน",
+            "range": "698–701",
             "children": [
               {
                 "id": "civil-art-698",
@@ -4962,11 +5053,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-12",
-        "label": "ลักษณะ 12 · จำนอง 702–746",
+        "label": "ลักษณะ 12 · จำนอง",
+        "range": "702–746",
         "children": [
           {
             "id": "civil-บรรพ-3-ลักษณะ-12-หมวด-1",
-            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป 702–714/1",
+            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป",
+            "range": "702–714/1",
             "children": [
               {
                 "id": "civil-art-702",
@@ -5056,7 +5149,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-12-หมวด-2",
-            "label": "หมวด 2 · สิทธิจำนองครอบเพียงใด 715–721",
+            "label": "หมวด 2 · สิทธิจำนองครอบเพียงใด",
+            "range": "715–721",
             "children": [
               {
                 "id": "civil-art-715",
@@ -5104,7 +5198,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-12-หมวด-3",
-            "label": "หมวด 3 · สิทธิและหน้าที่ของผู้รับจำนองและผู้จำนอง 722–727/1",
+            "label": "หมวด 3 · สิทธิและหน้าที่ของผู้รับจำนองและผู้จำนอง",
+            "range": "722–727/1",
             "children": [
               {
                 "id": "civil-art-722",
@@ -5152,7 +5247,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-12-หมวด-4",
-            "label": "หมวด 4 · การบังคับจำนอง 728–735",
+            "label": "หมวด 4 · การบังคับจำนอง",
+            "range": "728–735",
             "children": [
               {
                 "id": "civil-art-728",
@@ -5212,7 +5308,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-12-หมวด-5",
-            "label": "หมวด 5 · สิทธิและหน้าที่ของผู้รับโอนทรัพย์สินซึ่งจำนอง 736–743",
+            "label": "หมวด 5 · สิทธิและหน้าที่ของผู้รับโอนทรัพย์สินซึ่งจำนอง",
+            "range": "736–743",
             "children": [
               {
                 "id": "civil-art-736",
@@ -5266,7 +5363,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-12-หมวด-6",
-            "label": "หมวด 6 · ความระงับสิ้นไปแห่งสัญญาจำนอง 744–746",
+            "label": "หมวด 6 · ความระงับสิ้นไปแห่งสัญญาจำนอง",
+            "range": "744–746",
             "children": [
               {
                 "id": "civil-art-744",
@@ -5292,11 +5390,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-13",
-        "label": "ลักษณะ 13 · จำนำ 747–769",
+        "label": "ลักษณะ 13 · จำนำ",
+        "range": "747–769",
         "children": [
           {
             "id": "civil-บรรพ-3-ลักษณะ-13-หมวด-1",
-            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป 747–757",
+            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป",
+            "range": "747–757",
             "children": [
               {
                 "id": "civil-art-747",
@@ -5368,7 +5468,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-13-หมวด-2",
-            "label": "หมวด 2 · สิทธิและหน้าที่ของผู้จำนำและผู้รับจำนำ 758–763",
+            "label": "หมวด 2 · สิทธิและหน้าที่ของผู้จำนำและผู้รับจำนำ",
+            "range": "758–763",
             "children": [
               {
                 "id": "civil-art-758",
@@ -5410,7 +5511,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-13-หมวด-3",
-            "label": "หมวด 3 · การบังคับจำนำ 764–768",
+            "label": "หมวด 3 · การบังคับจำนำ",
+            "range": "764–768",
             "children": [
               {
                 "id": "civil-art-764",
@@ -5446,7 +5548,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-13-หมวด-4",
-            "label": "หมวด 4 · ความระงับสิ้นไปแห่งการจำนำ 769",
+            "label": "หมวด 4 · ความระงับสิ้นไปแห่งการจำนำ",
+            "range": "769",
             "children": [
               {
                 "id": "civil-art-769",
@@ -5460,11 +5563,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-14",
-        "label": "ลักษณะ 14 · เก็บของในคลังสินค้า 770–796",
+        "label": "ลักษณะ 14 · เก็บของในคลังสินค้า",
+        "range": "770–796",
         "children": [
           {
             "id": "civil-บรรพ-3-ลักษณะ-14-หมวด-1",
-            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป 770–774",
+            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป",
+            "range": "770–774",
             "children": [
               {
                 "id": "civil-art-770",
@@ -5500,7 +5605,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-14-หมวด-2",
-            "label": "หมวด 2 · ใบรับของคลังสินค้าและประทวนสินค้า 775–796",
+            "label": "หมวด 2 · ใบรับของคลังสินค้าและประทวนสินค้า",
+            "range": "775–796",
             "children": [
               {
                 "id": "civil-art-775",
@@ -5640,11 +5746,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-15",
-        "label": "ลักษณะ 15 · ตัวแทน 797–844",
+        "label": "ลักษณะ 15 · ตัวแทน",
+        "range": "797–844",
         "children": [
           {
             "id": "civil-บรรพ-3-ลักษณะ-15-หมวด-1",
-            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป 797–806",
+            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป",
+            "range": "797–806",
             "children": [
               {
                 "id": "civil-art-797",
@@ -5710,7 +5818,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-15-หมวด-2",
-            "label": "หมวด 2 · หน้าที่และความรับผิดของตัวแทนต่อตัวการ 807–814",
+            "label": "หมวด 2 · หน้าที่และความรับผิดของตัวแทนต่อตัวการ",
+            "range": "807–814",
             "children": [
               {
                 "id": "civil-art-807",
@@ -5764,7 +5873,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-15-หมวด-3",
-            "label": "หมวด 3 · หน้าที่และความรับผิดของตัวการต่อตัวแทน 815–819",
+            "label": "หมวด 3 · หน้าที่และความรับผิดของตัวการต่อตัวแทน",
+            "range": "815–819",
             "children": [
               {
                 "id": "civil-art-815",
@@ -5800,7 +5910,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-15-หมวด-4",
-            "label": "หมวด 4 · ความรับผิดของตัวการและตัวแทนต่อบุคคลภายนอก 820–825",
+            "label": "หมวด 4 · ความรับผิดของตัวการและตัวแทนต่อบุคคลภายนอก",
+            "range": "820–825",
             "children": [
               {
                 "id": "civil-art-820",
@@ -5842,7 +5953,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-15-หมวด-5",
-            "label": "หมวด 5 · ความระงับสิ้นไปแห่งสัญญาตัวแทน 826–832",
+            "label": "หมวด 5 · ความระงับสิ้นไปแห่งสัญญาตัวแทน",
+            "range": "826–832",
             "children": [
               {
                 "id": "civil-art-826",
@@ -5890,7 +6002,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-15-หมวด-6",
-            "label": "หมวด 6 · ตัวแทนค้าต่าง 833–844",
+            "label": "หมวด 6 · ตัวแทนค้าต่าง",
+            "range": "833–844",
             "children": [
               {
                 "id": "civil-art-833",
@@ -5970,7 +6083,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-16",
-        "label": "ลักษณะ 16 · นายหน้า 845–849",
+        "label": "ลักษณะ 16 · นายหน้า",
+        "range": "845–849",
         "children": [
           {
             "id": "civil-art-845",
@@ -6006,7 +6120,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-17",
-        "label": "ลักษณะ 17 · ประนีประนอมยอมความ 850–852",
+        "label": "ลักษณะ 17 · ประนีประนอมยอมความ",
+        "range": "850–852",
         "children": [
           {
             "id": "civil-art-850",
@@ -6030,7 +6145,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-18",
-        "label": "ลักษณะ 18 · การพนัน และขันต่อ 853–855",
+        "label": "ลักษณะ 18 · การพนัน และขันต่อ",
+        "range": "853–855",
         "children": [
           {
             "id": "civil-art-853",
@@ -6054,7 +6170,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-19",
-        "label": "ลักษณะ 19 · บัญชีเดินสะพัด 856–860",
+        "label": "ลักษณะ 19 · บัญชีเดินสะพัด",
+        "range": "856–860",
         "children": [
           {
             "id": "civil-art-856",
@@ -6090,11 +6207,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-20",
-        "label": "ลักษณะ 20 · ประกันภัย 861–897",
+        "label": "ลักษณะ 20 · ประกันภัย",
+        "range": "861–897",
         "children": [
           {
             "id": "civil-บรรพ-3-ลักษณะ-20-หมวด-1",
-            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป 861–868",
+            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป",
+            "range": "861–868",
             "children": [
               {
                 "id": "civil-art-861",
@@ -6148,11 +6267,13 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-20-หมวด-2",
-            "label": "หมวด 2 · ประกันวินาศภัย 869–888",
+            "label": "หมวด 2 · ประกันวินาศภัย",
+            "range": "869–888",
             "children": [
               {
                 "id": "civil-บรรพ-3-ลักษณะ-20-หมวด-2-ส่วนที่-1",
-                "label": "ส่วนที่ 1 · บทเบ็ดเสร็จทั่วไป 869–882",
+                "label": "ส่วนที่ 1 · บทเบ็ดเสร็จทั่วไป",
+                "range": "869–882",
                 "children": [
                   {
                     "id": "civil-art-869",
@@ -6242,7 +6363,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-20-หมวด-2-ส่วนที่-2",
-                "label": "ส่วนที่ 2 · วิธีเฉพาะการประกันภัยในการรับขน 883–886",
+                "label": "ส่วนที่ 2 · วิธีเฉพาะการประกันภัยในการรับขน",
+                "range": "883–886",
                 "children": [
                   {
                     "id": "civil-art-883",
@@ -6272,7 +6394,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-20-หมวด-2-ส่วนที่-3",
-                "label": "ส่วนที่ 3 · ประกันภัยค้ำจุน 887–888",
+                "label": "ส่วนที่ 3 · ประกันภัยค้ำจุน",
+                "range": "887–888",
                 "children": [
                   {
                     "id": "civil-art-887",
@@ -6292,7 +6415,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-20-หมวด-3",
-            "label": "หมวด 3 · ประกันชีวิต 889–897",
+            "label": "หมวด 3 · ประกันชีวิต",
+            "range": "889–897",
             "children": [
               {
                 "id": "civil-art-889",
@@ -6354,11 +6478,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-21",
-        "label": "ลักษณะ 21 · ตั๋วเงิน 898–1011",
+        "label": "ลักษณะ 21 · ตั๋วเงิน",
+        "range": "898–1011",
         "children": [
           {
             "id": "civil-บรรพ-3-ลักษณะ-21-หมวด-1",
-            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป 898–907",
+            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป",
+            "range": "898–907",
             "children": [
               {
                 "id": "civil-art-898",
@@ -6424,11 +6550,13 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-21-หมวด-2",
-            "label": "หมวด 2 · ตั๋วแลกเงิน 908–981",
+            "label": "หมวด 2 · ตั๋วแลกเงิน",
+            "range": "908–981",
             "children": [
               {
                 "id": "civil-บรรพ-3-ลักษณะ-21-หมวด-2-ส่วนที่-1",
-                "label": "ส่วนที่ 1 · การออกและสลักหลังตั๋วแลกเงิน 908–926",
+                "label": "ส่วนที่ 1 · การออกและสลักหลังตั๋วแลกเงิน",
+                "range": "908–926",
                 "children": [
                   {
                     "id": "civil-art-908",
@@ -6548,7 +6676,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-21-หมวด-2-ส่วนที่-2",
-                "label": "ส่วนที่ 2 · การรับรอง 927–937",
+                "label": "ส่วนที่ 2 · การรับรอง",
+                "range": "927–937",
                 "children": [
                   {
                     "id": "civil-art-927",
@@ -6620,7 +6749,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-21-หมวด-2-ส่วนที่-3",
-                "label": "ส่วนที่ 3 · อาวัล 938–940",
+                "label": "ส่วนที่ 3 · อาวัล",
+                "range": "938–940",
                 "children": [
                   {
                     "id": "civil-art-938",
@@ -6644,7 +6774,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-21-หมวด-2-ส่วนที่-4",
-                "label": "ส่วนที่ 4 · การใช้เงิน 941–949",
+                "label": "ส่วนที่ 4 · การใช้เงิน",
+                "range": "941–949",
                 "children": [
                   {
                     "id": "civil-art-941",
@@ -6704,7 +6835,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-21-หมวด-2-ส่วนที่-5",
-                "label": "ส่วนที่ 5 · การสอดเข้าแก้หน้า 950–958",
+                "label": "ส่วนที่ 5 · การสอดเข้าแก้หน้า",
+                "range": "950–958",
                 "children": [
                   {
                     "id": "civil-art-950",
@@ -6764,7 +6896,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-21-หมวด-2-ส่วนที่-6",
-                "label": "ส่วนที่ 6 · สิทธิไล่เบี้ยเพราะเขาไม่รับรองหรือไม่ใช้เงิน 959–974",
+                "label": "ส่วนที่ 6 · สิทธิไล่เบี้ยเพราะเขาไม่รับรองหรือไม่ใช้เงิน",
+                "range": "959–974",
                 "children": [
                   {
                     "id": "civil-art-959",
@@ -6866,7 +6999,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-21-หมวด-2-ส่วนที่-7",
-                "label": "ส่วนที่ 7 · ตั๋วแลกเงินเป็นสำรับ 975–981",
+                "label": "ส่วนที่ 7 · ตั๋วแลกเงินเป็นสำรับ",
+                "range": "975–981",
                 "children": [
                   {
                     "id": "civil-art-975",
@@ -6916,7 +7050,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-21-หมวด-3",
-            "label": "หมวด 3 · ตั๋วสัญญาใช้เงิน 982–986",
+            "label": "หมวด 3 · ตั๋วสัญญาใช้เงิน",
+            "range": "982–986",
             "children": [
               {
                 "id": "civil-art-982",
@@ -6952,7 +7087,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-21-หมวด-4",
-            "label": "หมวด 4 · เช็ค 987–1000",
+            "label": "หมวด 4 · เช็ค",
+            "range": "987–1000",
             "children": [
               {
                 "id": "civil-art-987",
@@ -7042,7 +7178,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-21-หมวด-5",
-            "label": "หมวด 5 · อายุความ 1001–1005",
+            "label": "หมวด 5 · อายุความ",
+            "range": "1001–1005",
             "children": [
               {
                 "id": "civil-art-1001",
@@ -7078,7 +7215,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-21-หมวด-6",
-            "label": "หมวด 6 · ตั๋วเงินปลอม ตั๋วเงินถูกลัก และตั๋วเงินหาย 1006–1011",
+            "label": "หมวด 6 · ตั๋วเงินปลอม ตั๋วเงินถูกลัก และตั๋วเงินหาย",
+            "range": "1006–1011",
             "children": [
               {
                 "id": "civil-art-1006",
@@ -7122,11 +7260,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-3-ลักษณะ-22",
-        "label": "ลักษณะ 22 · หุ้นส่วนและบริษัท 1012–1274",
+        "label": "ลักษณะ 22 · หุ้นส่วนและบริษัท",
+        "range": "1012–1274",
         "children": [
           {
             "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-1",
-            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป 1012–1024",
+            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป",
+            "range": "1012–1024",
             "children": [
               {
                 "id": "civil-art-1012",
@@ -7222,11 +7362,13 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-2",
-            "label": "หมวด 2 · ห้างหุ้นส่วนสามัญ 1025–1076",
+            "label": "หมวด 2 · ห้างหุ้นส่วนสามัญ",
+            "range": "1025–1076",
             "children": [
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-2-ส่วนที่-1",
-                "label": "ส่วนที่ 1 · บทวิเคราะห์ 1025",
+                "label": "ส่วนที่ 1 · บทวิเคราะห์",
+                "range": "1025",
                 "children": [
                   {
                     "id": "civil-art-1025",
@@ -7238,7 +7380,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-2-ส่วนที่-2",
-                "label": "ส่วนที่ 2 · ความเกี่ยวพันระหว่างผู้เป็นหุ้นส่วนด้วยกันเอง 1026–1048",
+                "label": "ส่วนที่ 2 · ความเกี่ยวพันระหว่างผู้เป็นหุ้นส่วนด้วยกันเอง",
+                "range": "1026–1048",
                 "children": [
                   {
                     "id": "civil-art-1026",
@@ -7382,7 +7525,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-2-ส่วนที่-3",
-                "label": "ส่วนที่ 3 · ความเกี่ยวพันระหว่างผู้เป็นหุ้นส่วนกับบุคคลภายนอก 1049–1054",
+                "label": "ส่วนที่ 3 · ความเกี่ยวพันระหว่างผู้เป็นหุ้นส่วนกับบุคคลภายนอก",
+                "range": "1049–1054",
                 "children": [
                   {
                     "id": "civil-art-1049",
@@ -7424,7 +7568,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-2-ส่วนที่-4",
-                "label": "ส่วนที่ 4 · การเลิกและชำระบัญชีห้างหุ้นส่วนสามัญ 1055–1063",
+                "label": "ส่วนที่ 4 · การเลิกและชำระบัญชีห้างหุ้นส่วนสามัญ",
+                "range": "1055–1063",
                 "children": [
                   {
                     "id": "civil-art-1055",
@@ -7484,7 +7629,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-2-ส่วนที่-5",
-                "label": "ส่วนที่ 5 · การจดทะเบียนห้างหุ้นส่วนสามัญ 1064–1072",
+                "label": "ส่วนที่ 5 · การจดทะเบียนห้างหุ้นส่วนสามัญ",
+                "range": "1064–1072",
                 "children": [
                   {
                     "id": "civil-art-1064",
@@ -7556,7 +7702,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-2-ส่วนที่-6",
-                "label": "ส่วนที่ 6 · การควบห้างหุ้นส่วนจดทะเบียนเข้ากัน 1073–1076",
+                "label": "ส่วนที่ 6 · การควบห้างหุ้นส่วนจดทะเบียนเข้ากัน",
+                "range": "1073–1076",
                 "children": [
                   {
                     "id": "civil-art-1073",
@@ -7588,7 +7735,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-3",
-            "label": "หมวด 3 · ห้างหุ้นส่วนจำกัด 1077–1095",
+            "label": "หมวด 3 · ห้างหุ้นส่วนจำกัด",
+            "range": "1077–1095",
             "children": [
               {
                 "id": "civil-art-1077",
@@ -7720,11 +7868,13 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-4",
-            "label": "หมวด 4 · บริษัทจำกัด 1096–1246/7",
+            "label": "หมวด 4 · บริษัทจำกัด",
+            "range": "1096–1246/7",
             "children": [
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-4-ส่วนที่-1",
-                "label": "ส่วนที่ 1 · สภาพและการตั้งบริษัทจำกัด 1096–1116",
+                "label": "ส่วนที่ 1 · สภาพและการตั้งบริษัทจำกัด",
+                "range": "1096–1116",
                 "children": [
                   {
                     "id": "civil-art-1096",
@@ -7868,7 +8018,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-4-ส่วนที่-2",
-                "label": "ส่วนที่ 2 · หุ้นและผู้ถือหุ้น 1117–1143",
+                "label": "ส่วนที่ 2 · หุ้นและผู้ถือหุ้น",
+                "range": "1117–1143",
                 "children": [
                   {
                     "id": "civil-art-1117",
@@ -8036,7 +8187,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-4-ส่วนที่-3",
-                "label": "ส่วนที่ 3 · วิธีจัดการบริษัทจำกัด 1144–1207",
+                "label": "ส่วนที่ 3 · วิธีจัดการบริษัทจำกัด",
+                "range": "1144–1207",
                 "children": [
                   {
                     "id": "civil-art-1144",
@@ -8432,7 +8584,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-4-ส่วนที่-4",
-                "label": "ส่วนที่ 4 · การสอบบัญชี 1208–1214",
+                "label": "ส่วนที่ 4 · การสอบบัญชี",
+                "range": "1208–1214",
                 "children": [
                   {
                     "id": "civil-art-1208",
@@ -8480,7 +8633,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-4-ส่วนที่-5",
-                "label": "ส่วนที่ 5 · การตรวจ 1215–1219",
+                "label": "ส่วนที่ 5 · การตรวจ",
+                "range": "1215–1219",
                 "children": [
                   {
                     "id": "civil-art-1215",
@@ -8516,7 +8670,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-4-ส่วนที่-6",
-                "label": "ส่วนที่ 6 · การเพิ่มทุนและลดทุน 1220–1228",
+                "label": "ส่วนที่ 6 · การเพิ่มทุนและลดทุน",
+                "range": "1220–1228",
                 "children": [
                   {
                     "id": "civil-art-1220",
@@ -8576,7 +8731,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-4-ส่วนที่-7",
-                "label": "ส่วนที่ 7 · หุ้นกู้ 1229–1235",
+                "label": "ส่วนที่ 7 · หุ้นกู้",
+                "range": "1229–1235",
                 "children": [
                   {
                     "id": "civil-art-1229",
@@ -8624,7 +8780,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-4-ส่วนที่-8",
-                "label": "ส่วนที่ 8 · เลิกบริษัทจำกัด 1236–1237",
+                "label": "ส่วนที่ 8 · เลิกบริษัทจำกัด",
+                "range": "1236–1237",
                 "children": [
                   {
                     "id": "civil-art-1236",
@@ -8642,7 +8799,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-4-ส่วนที่-9",
-                "label": "ส่วนที่ 9 · การควบบริษัทจำกัด 1238–1243",
+                "label": "ส่วนที่ 9 · การควบบริษัทจำกัด",
+                "range": "1238–1243",
                 "children": [
                   {
                     "id": "civil-art-1238",
@@ -8684,7 +8842,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-4-ส่วนที่-10",
-                "label": "ส่วนที่ 10 · หนังสือบอกกล่าว 1244–1245",
+                "label": "ส่วนที่ 10 · หนังสือบอกกล่าว",
+                "range": "1244–1245",
                 "children": [
                   {
                     "id": "civil-art-1244",
@@ -8702,7 +8861,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-4-ส่วนที่-11",
-                "label": "ส่วนที่ 11 · การถอนทะเบียนบริษัทร้าง 1246",
+                "label": "ส่วนที่ 11 · การถอนทะเบียนบริษัทร้าง",
+                "range": "1246",
                 "children": [
                   {
                     "id": "civil-art-1246",
@@ -8714,7 +8874,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-4-ส่วนที่-12",
-                "label": "ส่วนที่ 12 · การแปรสภาพห้างหุ้นส่วนจดทะเบียนและห้างหุ้นส่วน 1246/1–1246/7",
+                "label": "ส่วนที่ 12 · การแปรสภาพห้างหุ้นส่วนจดทะเบียนและห้างหุ้นส่วน",
+                "range": "1246/1–1246/7",
                 "children": [
                   {
                     "id": "civil-art-1246-1",
@@ -8764,7 +8925,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-5",
-            "label": "หมวด 5 · การชำระบัญชีห้างหุ้นส่วนจดทะเบียน ห้างหุ้นส่วน 1247–1274",
+            "label": "หมวด 5 · การชำระบัญชีห้างหุ้นส่วนจดทะเบียน ห้างหุ้นส่วน",
+            "range": "1247–1274",
             "children": [
               {
                 "id": "civil-art-1247",
@@ -8938,7 +9100,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-3-ลักษณะ-22-หมวด-6",
-            "label": "หมวด 6 · การถอนทะเบียนห้างหุ้นส่วนจดทะเบียน ห้างหุ้นส่วน 1273/1–1273/4",
+            "label": "หมวด 6 · การถอนทะเบียนห้างหุ้นส่วนจดทะเบียน ห้างหุ้นส่วน",
+            "range": "1273/1–1273/4",
             "children": [
               {
                 "id": "civil-art-1273-1",
@@ -8972,11 +9135,13 @@ export const civilHierarchy: LegalNode[] = [
   },
   {
     "id": "civil-บรรพ-4",
-    "label": "บรรพ 4 · ทรัพย์สิน 1298–1434",
+    "label": "บรรพ 4 · ทรัพย์สิน",
+    "range": "1298–1434",
     "children": [
       {
         "id": "civil-บรรพ-4-ลักษณะ-1",
-        "label": "ลักษณะ 1 · บทเบ็ดเสร็จทั่วไป 1298–1307",
+        "label": "ลักษณะ 1 · บทเบ็ดเสร็จทั่วไป",
+        "range": "1298–1307",
         "children": [
           {
             "id": "civil-art-1298",
@@ -9042,11 +9207,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-4-ลักษณะ-2",
-        "label": "ลักษณะ 2 · กรรมสิทธิ์ 1308–1366",
+        "label": "ลักษณะ 2 · กรรมสิทธิ์",
+        "range": "1308–1366",
         "children": [
           {
             "id": "civil-บรรพ-4-ลักษณะ-2-หมวด-1",
-            "label": "หมวด 1 · การได้มาซึ่งกรรมสิทธิ์ 1308–1334",
+            "label": "หมวด 1 · การได้มาซึ่งกรรมสิทธิ์",
+            "range": "1308–1334",
             "children": [
               {
                 "id": "civil-art-1308",
@@ -9214,7 +9381,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-4-ลักษณะ-2-หมวด-2",
-            "label": "หมวด 2 · แดนแห่งกรรมสิทธิ์และการใช้กรรมสิทธิ์ 1335–1355",
+            "label": "หมวด 2 · แดนแห่งกรรมสิทธิ์และการใช้กรรมสิทธิ์",
+            "range": "1335–1355",
             "children": [
               {
                 "id": "civil-art-1335",
@@ -9346,7 +9514,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-4-ลักษณะ-2-หมวด-3",
-            "label": "หมวด 3 · กรรมสิทธิ์รวม 1356–1366",
+            "label": "หมวด 3 · กรรมสิทธิ์รวม",
+            "range": "1356–1366",
             "children": [
               {
                 "id": "civil-art-1356",
@@ -9420,7 +9589,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-4-ลักษณะ-3",
-        "label": "ลักษณะ 3 · ครอบครอง 1367–1386",
+        "label": "ลักษณะ 3 · ครอบครอง",
+        "range": "1367–1386",
         "children": [
           {
             "id": "civil-art-1367",
@@ -9546,7 +9716,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-4-ลักษณะ-4",
-        "label": "ลักษณะ 4 · ภาระจำยอม 1387–1401",
+        "label": "ลักษณะ 4 · ภาระจำยอม",
+        "range": "1387–1401",
         "children": [
           {
             "id": "civil-art-1387",
@@ -9642,7 +9813,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-4-ลักษณะ-5",
-        "label": "ลักษณะ 5 · อาศัย 1402–1409",
+        "label": "ลักษณะ 5 · อาศัย",
+        "range": "1402–1409",
         "children": [
           {
             "id": "civil-art-1402",
@@ -9696,7 +9868,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-4-ลักษณะ-6",
-        "label": "ลักษณะ 6 · สิทธิเหนือพื้นดิน 1410–1416",
+        "label": "ลักษณะ 6 · สิทธิเหนือพื้นดิน",
+        "range": "1410–1416",
         "children": [
           {
             "id": "civil-art-1410",
@@ -9744,7 +9917,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-4-ลักษณะ-7",
-        "label": "ลักษณะ 7 · สิทธิเก็บกิน 1417–1428",
+        "label": "ลักษณะ 7 · สิทธิเก็บกิน",
+        "range": "1417–1428",
         "children": [
           {
             "id": "civil-art-1417",
@@ -9822,7 +9996,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-4-ลักษณะ-8",
-        "label": "ลักษณะ 8 · ภาระติดพันในอสังหาริมทรัพย์ 1429–1434",
+        "label": "ลักษณะ 8 · ภาระติดพันในอสังหาริมทรัพย์",
+        "range": "1429–1434",
         "children": [
           {
             "id": "civil-art-1429",
@@ -9866,15 +10041,18 @@ export const civilHierarchy: LegalNode[] = [
   },
   {
     "id": "civil-บรรพ-5",
-    "label": "บรรพ 5 · ครอบครัว 1435–1598/41",
+    "label": "บรรพ 5 · ครอบครัว",
+    "range": "1435–1598/41",
     "children": [
       {
         "id": "civil-บรรพ-5-ลักษณะ-1",
-        "label": "ลักษณะ 1 · การสมรส 1435–1535",
+        "label": "ลักษณะ 1 · การสมรส",
+        "range": "1435–1535",
         "children": [
           {
             "id": "civil-บรรพ-5-ลักษณะ-1-หมวด-1",
-            "label": "หมวด 1 · การหมั้น 1435–1447/2",
+            "label": "หมวด 1 · การหมั้น",
+            "range": "1435–1447/2",
             "children": [
               {
                 "id": "civil-art-1435",
@@ -9970,7 +10148,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-5-ลักษณะ-1-หมวด-2",
-            "label": "หมวด 2 · เงื่อนไขแห่งการสมรส 1448–1460",
+            "label": "หมวด 2 · เงื่อนไขแห่งการสมรส",
+            "range": "1448–1460",
             "children": [
               {
                 "id": "civil-art-1448",
@@ -10054,7 +10233,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-5-ลักษณะ-1-หมวด-3",
-            "label": "หมวด 3 · ความสัมพันธ์ระหว่างคู่สมรส 1461–1464/1",
+            "label": "หมวด 3 · ความสัมพันธ์ระหว่างคู่สมรส",
+            "range": "1461–1464/1",
             "children": [
               {
                 "id": "civil-art-1461",
@@ -10090,7 +10270,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-5-ลักษณะ-1-หมวด-4",
-            "label": "หมวด 4 · ทรัพย์สินระหว่างคู่สมรส 1465–1493",
+            "label": "หมวด 4 · ทรัพย์สินระหว่างคู่สมรส",
+            "range": "1465–1493",
             "children": [
               {
                 "id": "civil-art-1465",
@@ -10288,7 +10469,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-5-ลักษณะ-1-หมวด-5",
-            "label": "หมวด 5 · ความเป็นโมฆะของการสมรส 1494–1500",
+            "label": "หมวด 5 · ความเป็นโมฆะของการสมรส",
+            "range": "1494–1500",
             "children": [
               {
                 "id": "civil-art-1494",
@@ -10348,7 +10530,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-5-ลักษณะ-1-หมวด-6",
-            "label": "หมวด 6 · การสิ้นสุดแห่งการสมรส 1501–1535",
+            "label": "หมวด 6 · การสิ้นสุดแห่งการสมรส",
+            "range": "1501–1535",
             "children": [
               {
                 "id": "civil-art-1501",
@@ -10566,11 +10749,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-5-ลักษณะ-2",
-        "label": "ลักษณะ 2 · บิดามารดากับบุตร 1536–1598/37",
+        "label": "ลักษณะ 2 · บิดามารดากับบุตร",
+        "range": "1536–1598/37",
         "children": [
           {
             "id": "civil-บรรพ-5-ลักษณะ-2-หมวด-1",
-            "label": "หมวด 1 · บิดามารดา 1536–1560",
+            "label": "หมวด 1 · บิดามารดา",
+            "range": "1536–1560",
             "children": [
               {
                 "id": "civil-art-1536",
@@ -10726,7 +10911,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-5-ลักษณะ-2-หมวด-2",
-            "label": "หมวด 2 · สิทธิและหน้าที่ของบิดามารดาและบุตร 1561–1584/1",
+            "label": "หมวด 2 · สิทธิและหน้าที่ของบิดามารดาและบุตร",
+            "range": "1561–1584/1",
             "children": [
               {
                 "id": "civil-art-1561",
@@ -10888,7 +11074,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-5-ลักษณะ-2-หมวด-3",
-            "label": "หมวด 3 · ความปกครอง 1585–1598/18",
+            "label": "หมวด 3 · ความปกครอง",
+            "range": "1585–1598/18",
             "children": [
               {
                 "id": "civil-art-1585",
@@ -11086,7 +11273,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-5-ลักษณะ-2-หมวด-4",
-            "label": "หมวด 4 · บุตรบุญธรรม 1598/19–1598/37",
+            "label": "หมวด 4 · บุตรบุญธรรม",
+            "range": "1598/19–1598/37",
             "children": [
               {
                 "id": "civil-art-1598-19",
@@ -11208,7 +11396,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-5-ลักษณะ-3",
-        "label": "ลักษณะ 3 · ค่าอุปการะเลี้ยงดู 1598/38–1598/41",
+        "label": "ลักษณะ 3 · ค่าอุปการะเลี้ยงดู",
+        "range": "1598/38–1598/41",
         "children": [
           {
             "id": "civil-art-1598-38",
@@ -11240,15 +11429,18 @@ export const civilHierarchy: LegalNode[] = [
   },
   {
     "id": "civil-บรรพ-6",
-    "label": "บรรพ 6 · มรดก 1599–1755",
+    "label": "บรรพ 6 · มรดก",
+    "range": "1599–1755",
     "children": [
       {
         "id": "civil-บรรพ-6-ลักษณะ-1",
-        "label": "ลักษณะ 1 · บทเบ็ดเสร็จทั่วไป 1599–1619",
+        "label": "ลักษณะ 1 · บทเบ็ดเสร็จทั่วไป",
+        "range": "1599–1619",
         "children": [
           {
             "id": "civil-บรรพ-6-ลักษณะ-1-หมวด-1",
-            "label": "หมวด 1 · การตกทอดแห่งทรัพย์มรดก 1599–1603",
+            "label": "หมวด 1 · การตกทอดแห่งทรัพย์มรดก",
+            "range": "1599–1603",
             "children": [
               {
                 "id": "civil-art-1599",
@@ -11284,7 +11476,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-6-ลักษณะ-1-หมวด-2",
-            "label": "หมวด 2 · การเป็นทายาท 1604–1607",
+            "label": "หมวด 2 · การเป็นทายาท",
+            "range": "1604–1607",
             "children": [
               {
                 "id": "civil-art-1604",
@@ -11314,7 +11507,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-6-ลักษณะ-1-หมวด-3",
-            "label": "หมวด 3 · การตัดมิให้รับมรดก 1608–1609",
+            "label": "หมวด 3 · การตัดมิให้รับมรดก",
+            "range": "1608–1609",
             "children": [
               {
                 "id": "civil-art-1608",
@@ -11332,7 +11526,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-6-ลักษณะ-1-หมวด-4",
-            "label": "หมวด 4 · การสละมรดกและอื่น ๆ 1610–1619",
+            "label": "หมวด 4 · การสละมรดกและอื่น ๆ",
+            "range": "1610–1619",
             "children": [
               {
                 "id": "civil-art-1610",
@@ -11400,11 +11595,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-6-ลักษณะ-2",
-        "label": "ลักษณะ 2 · สิทธิโดยธรรมในการรับมรดก 1620–1645",
+        "label": "ลักษณะ 2 · สิทธิโดยธรรมในการรับมรดก",
+        "range": "1620–1645",
         "children": [
           {
             "id": "civil-บรรพ-6-ลักษณะ-2-หมวด-1",
-            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป 1620–1628",
+            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป",
+            "range": "1620–1628",
             "children": [
               {
                 "id": "civil-art-1620",
@@ -11464,7 +11661,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-6-ลักษณะ-2-หมวด-2",
-            "label": "หมวด 2 · การแบ่งทรัพย์มรดกระหว่างทายาทโดยธรรมในลำดับ 1629–1631",
+            "label": "หมวด 2 · การแบ่งทรัพย์มรดกระหว่างทายาทโดยธรรมในลำดับ",
+            "range": "1629–1631",
             "children": [
               {
                 "id": "civil-art-1629",
@@ -11488,11 +11686,13 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-6-ลักษณะ-2-หมวด-3",
-            "label": "หมวด 3 · การแบ่งส่วนมรดกของทายาทโดยธรรมในลำดับและ 1632–1638",
+            "label": "หมวด 3 · การแบ่งส่วนมรดกของทายาทโดยธรรมในลำดับและ",
+            "range": "1632–1638",
             "children": [
               {
                 "id": "civil-บรรพ-6-ลักษณะ-2-หมวด-3-ส่วนที่-1",
-                "label": "ส่วนที่ 1 · ญาติ 1632–1634",
+                "label": "ส่วนที่ 1 · ญาติ",
+                "range": "1632–1634",
                 "children": [
                   {
                     "id": "civil-art-1632",
@@ -11516,7 +11716,8 @@ export const civilHierarchy: LegalNode[] = [
               },
               {
                 "id": "civil-บรรพ-6-ลักษณะ-2-หมวด-3-ส่วนที่-2",
-                "label": "ส่วนที่ 2 · คู่สมรส 1635–1638",
+                "label": "ส่วนที่ 2 · คู่สมรส",
+                "range": "1635–1638",
                 "children": [
                   {
                     "id": "civil-art-1635",
@@ -11548,7 +11749,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-6-ลักษณะ-2-หมวด-4",
-            "label": "หมวด 4 · การรับมรดกแทนที่กัน 1639–1645",
+            "label": "หมวด 4 · การรับมรดกแทนที่กัน",
+            "range": "1639–1645",
             "children": [
               {
                 "id": "civil-art-1639",
@@ -11598,11 +11800,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-6-ลักษณะ-3",
-        "label": "ลักษณะ 3 · พินัยกรรม 1646–1710",
+        "label": "ลักษณะ 3 · พินัยกรรม",
+        "range": "1646–1710",
         "children": [
           {
             "id": "civil-บรรพ-6-ลักษณะ-3-หมวด-1",
-            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป 1646–1654",
+            "label": "หมวด 1 · บทเบ็ดเสร็จทั่วไป",
+            "range": "1646–1654",
             "children": [
               {
                 "id": "civil-art-1646",
@@ -11662,7 +11866,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-6-ลักษณะ-3-หมวด-2",
-            "label": "หมวด 2 · แบบพินัยกรรม 1655–1672",
+            "label": "หมวด 2 · แบบพินัยกรรม",
+            "range": "1655–1672",
             "children": [
               {
                 "id": "civil-art-1655",
@@ -11776,7 +11981,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-6-ลักษณะ-3-หมวด-3",
-            "label": "หมวด 3 · ผลและการตีความแห่งพินัยกรรม 1673–1685",
+            "label": "หมวด 3 · ผลและการตีความแห่งพินัยกรรม",
+            "range": "1673–1685",
             "children": [
               {
                 "id": "civil-art-1673",
@@ -11860,7 +12066,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-6-ลักษณะ-3-หมวด-4",
-            "label": "หมวด 4 · พินัยกรรมที่ตั้งผู้ปกครองทรัพย์ 1686–1692",
+            "label": "หมวด 4 · พินัยกรรมที่ตั้งผู้ปกครองทรัพย์",
+            "range": "1686–1692",
             "children": [
               {
                 "id": "civil-art-1686",
@@ -11908,7 +12115,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-6-ลักษณะ-3-หมวด-5",
-            "label": "หมวด 5 · การเพิกถอนและการตกไปแห่งพินัยกรรมหรือ 1693–1699",
+            "label": "หมวด 5 · การเพิกถอนและการตกไปแห่งพินัยกรรมหรือ",
+            "range": "1693–1699",
             "children": [
               {
                 "id": "civil-art-1693",
@@ -11956,7 +12164,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-6-ลักษณะ-3-หมวด-6",
-            "label": "หมวด 6 · ความเสียเปล่าแห่งพินัยกรรมหรือข้อกำหนดพินัยกรรม 1700–1710",
+            "label": "หมวด 6 · ความเสียเปล่าแห่งพินัยกรรมหรือข้อกำหนดพินัยกรรม",
+            "range": "1700–1710",
             "children": [
               {
                 "id": "civil-art-1700",
@@ -12030,11 +12239,13 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-6-ลักษณะ-4",
-        "label": "ลักษณะ 4 · วิธีจัดการและปันทรัพย์มรดก 1711–1752",
+        "label": "ลักษณะ 4 · วิธีจัดการและปันทรัพย์มรดก",
+        "range": "1711–1752",
         "children": [
           {
             "id": "civil-บรรพ-6-ลักษณะ-4-หมวด-1",
-            "label": "หมวด 1 · ผู้จัดการมรดก 1711–1733",
+            "label": "หมวด 1 · ผู้จัดการมรดก",
+            "range": "1711–1733",
             "children": [
               {
                 "id": "civil-art-1711",
@@ -12178,7 +12389,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-6-ลักษณะ-4-หมวด-2",
-            "label": "หมวด 2 · การรวบรวมจำหน่ายทรัพย์มรดกเป็นตัวเงินและการ 1734–1744",
+            "label": "หมวด 2 · การรวบรวมจำหน่ายทรัพย์มรดกเป็นตัวเงินและการ",
+            "range": "1734–1744",
             "children": [
               {
                 "id": "civil-art-1734",
@@ -12250,7 +12462,8 @@ export const civilHierarchy: LegalNode[] = [
           },
           {
             "id": "civil-บรรพ-6-ลักษณะ-4-หมวด-3",
-            "label": "หมวด 3 · การแบ่งมรดก 1745–1752",
+            "label": "หมวด 3 · การแบ่งมรดก",
+            "range": "1745–1752",
             "children": [
               {
                 "id": "civil-art-1745",
@@ -12306,7 +12519,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-6-ลักษณะ-5",
-        "label": "ลักษณะ 5 · มรดกที่ไม่มีผู้รับ 1753",
+        "label": "ลักษณะ 5 · มรดกที่ไม่มีผู้รับ",
+        "range": "1753",
         "children": [
           {
             "id": "civil-art-1753",
@@ -12318,7 +12532,8 @@ export const civilHierarchy: LegalNode[] = [
       },
       {
         "id": "civil-บรรพ-6-ลักษณะ-6",
-        "label": "ลักษณะ 6 · อายุความ 1754–1755",
+        "label": "ลักษณะ 6 · อายุความ",
+        "range": "1754–1755",
         "children": [
           {
             "id": "civil-art-1754",
@@ -12341,15 +12556,18 @@ export const civilHierarchy: LegalNode[] = [
 export const criminalHierarchy: LegalNode[] = [
   {
     "id": "criminal-ภาค-1",
-    "label": "ภาค 1 · บทบัญญัติทั่วไป 1–106",
+    "label": "ภาค 1 · บทบัญญัติทั่วไป",
+    "range": "1–106",
     "children": [
       {
         "id": "criminal-ภาค-1-ลักษณะ-1",
-        "label": "ลักษณะ 1 · บทบัญญัติที่ใช้แก่ความผิดทั่วไป 1–101",
+        "label": "ลักษณะ 1 · บทบัญญัติที่ใช้แก่ความผิดทั่วไป",
+        "range": "1–101",
         "children": [
           {
             "id": "criminal-ภาค-1-ลักษณะ-1-หมวด-1",
-            "label": "หมวด 1 · บทนิยาม 1",
+            "label": "หมวด 1 · บทนิยาม",
+            "range": "1",
             "children": [
               {
                 "id": "criminal-art-1",
@@ -12361,7 +12579,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-1-ลักษณะ-1-หมวด-2",
-            "label": "หมวด 2 · การใช้กฎหมายอาญา 2–17",
+            "label": "หมวด 2 · การใช้กฎหมายอาญา",
+            "range": "2–17",
             "children": [
               {
                 "id": "criminal-art-2",
@@ -12463,11 +12682,13 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-1-ลักษณะ-1-หมวด-3",
-            "label": "หมวด 3 · โทษและวิธีการเพื่อความปลอดภัย 18–58",
+            "label": "หมวด 3 · โทษและวิธีการเพื่อความปลอดภัย",
+            "range": "18–58",
             "children": [
               {
                 "id": "criminal-ภาค-1-ลักษณะ-1-หมวด-3-ส่วนที่-1",
-                "label": "ส่วนที่ 1 · โทษ 18–38",
+                "label": "ส่วนที่ 1 · โทษ",
+                "range": "18–38",
                 "children": [
                   {
                     "id": "criminal-art-18",
@@ -12623,7 +12844,8 @@ export const criminalHierarchy: LegalNode[] = [
               },
               {
                 "id": "criminal-ภาค-1-ลักษณะ-1-หมวด-3-ส่วนที่-2",
-                "label": "ส่วนที่ 2 · วิธีการเพื่อความปลอดภัย 39–50",
+                "label": "ส่วนที่ 2 · วิธีการเพื่อความปลอดภัย",
+                "range": "39–50",
                 "children": [
                   {
                     "id": "criminal-art-39",
@@ -12701,7 +12923,8 @@ export const criminalHierarchy: LegalNode[] = [
               },
               {
                 "id": "criminal-ภาค-1-ลักษณะ-1-หมวด-3-ส่วนที่-3",
-                "label": "ส่วนที่ 3 · วิธีเพิ่มโทษ ลดโทษ และการรอการลงโทษ 51–58",
+                "label": "ส่วนที่ 3 · วิธีเพิ่มโทษ ลดโทษ และการรอการลงโทษ",
+                "range": "51–58",
                 "children": [
                   {
                     "id": "criminal-art-51",
@@ -12757,7 +12980,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-1-ลักษณะ-1-หมวด-4",
-            "label": "หมวด 4 · ความรับผิดในทางอาญา 59–79",
+            "label": "หมวด 4 · ความรับผิดในทางอาญา",
+            "range": "59–79",
             "children": [
               {
                 "id": "criminal-art-59",
@@ -12889,7 +13113,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-1-ลักษณะ-1-หมวด-5",
-            "label": "หมวด 5 · การพยายามกระทำความผิด 80–82",
+            "label": "หมวด 5 · การพยายามกระทำความผิด",
+            "range": "80–82",
             "children": [
               {
                 "id": "criminal-art-80",
@@ -12913,7 +13138,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-1-ลักษณะ-1-หมวด-6",
-            "label": "หมวด 6 · ตัวการและผู้สนับสนุน 83–89",
+            "label": "หมวด 6 · ตัวการและผู้สนับสนุน",
+            "range": "83–89",
             "children": [
               {
                 "id": "criminal-art-83",
@@ -12967,7 +13193,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-1-ลักษณะ-1-หมวด-7",
-            "label": "หมวด 7 · การกระทำความผิดหลายบทหรือหลายกระทง 90–91",
+            "label": "หมวด 7 · การกระทำความผิดหลายบทหรือหลายกระทง",
+            "range": "90–91",
             "children": [
               {
                 "id": "criminal-art-90",
@@ -12985,7 +13212,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-1-ลักษณะ-1-หมวด-8",
-            "label": "หมวด 8 · การกระทำความผิดอีก 92–94",
+            "label": "หมวด 8 · การกระทำความผิดอีก",
+            "range": "92–94",
             "children": [
               {
                 "id": "criminal-art-92",
@@ -13009,7 +13237,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-1-ลักษณะ-1-หมวด-9",
-            "label": "หมวด 9 · อายุความ 95–101",
+            "label": "หมวด 9 · อายุความ",
+            "range": "95–101",
             "children": [
               {
                 "id": "criminal-art-95",
@@ -13059,7 +13288,8 @@ export const criminalHierarchy: LegalNode[] = [
       },
       {
         "id": "criminal-ภาค-1-ลักษณะ-2",
-        "label": "ลักษณะ 2 · บทบัญญัติที่ใช้แก่ความผิดลหุโทษ 102–106",
+        "label": "ลักษณะ 2 · บทบัญญัติที่ใช้แก่ความผิดลหุโทษ",
+        "range": "102–106",
         "children": [
           {
             "id": "criminal-art-102",
@@ -13097,15 +13327,18 @@ export const criminalHierarchy: LegalNode[] = [
   },
   {
     "id": "criminal-ภาค-2",
-    "label": "ภาค 2 · ความผิด 107–366/4",
+    "label": "ภาค 2 · ความผิด",
+    "range": "107–366/4",
     "children": [
       {
         "id": "criminal-ภาค-2-ลักษณะ-1",
-        "label": "ลักษณะ 1 · ความผิดเกี่ยวกับความมั่นคงแห่งราชอาณาจักร 107–135",
+        "label": "ลักษณะ 1 · ความผิดเกี่ยวกับความมั่นคงแห่งราชอาณาจักร",
+        "range": "107–135",
         "children": [
           {
             "id": "criminal-ภาค-2-ลักษณะ-1-หมวด-1",
-            "label": "หมวด 1 · ความผิดต่อองค์พระมหากษัตริย์ พระราชินี 107–112",
+            "label": "หมวด 1 · ความผิดต่อองค์พระมหากษัตริย์ พระราชินี",
+            "range": "107–112",
             "children": [
               {
                 "id": "criminal-art-107",
@@ -13147,7 +13380,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-1-หมวด-2",
-            "label": "หมวด 2 · ความผิดต่อความมั่นคงของรัฐภายในราชอาณาจักร 113–118",
+            "label": "หมวด 2 · ความผิดต่อความมั่นคงของรัฐภายในราชอาณาจักร",
+            "range": "113–118",
             "children": [
               {
                 "id": "criminal-art-113",
@@ -13189,7 +13423,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-1-หมวด-3",
-            "label": "หมวด 3 · ความผิดต่อความมั่นคงของรัฐภายนอกราชอาณาจักร 119–129",
+            "label": "หมวด 3 · ความผิดต่อความมั่นคงของรัฐภายนอกราชอาณาจักร",
+            "range": "119–129",
             "children": [
               {
                 "id": "criminal-art-119",
@@ -13261,7 +13496,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-1-หมวด-4",
-            "label": "หมวด 4 · ความผิดต่อสัมพันธไมตรีกับต่างประเทศ 130–135",
+            "label": "หมวด 4 · ความผิดต่อสัมพันธไมตรีกับต่างประเทศ",
+            "range": "130–135",
             "children": [
               {
                 "id": "criminal-art-130",
@@ -13305,7 +13541,8 @@ export const criminalHierarchy: LegalNode[] = [
       },
       {
         "id": "criminal-ภาค-2-ลักษณะ-1-1",
-        "label": "ลักษณะ 1/1 · ความผิดเกี่ยวกับการก่อการร้าย 135/1–135/4",
+        "label": "ลักษณะ 1/1 · ความผิดเกี่ยวกับการก่อการร้าย",
+        "range": "135/1–135/4",
         "children": [
           {
             "id": "criminal-art-135-1",
@@ -13335,11 +13572,13 @@ export const criminalHierarchy: LegalNode[] = [
       },
       {
         "id": "criminal-ภาค-2-ลักษณะ-2",
-        "label": "ลักษณะ 2 · ความผิดเกี่ยวกับการปกครอง 136–166",
+        "label": "ลักษณะ 2 · ความผิดเกี่ยวกับการปกครอง",
+        "range": "136–166",
         "children": [
           {
             "id": "criminal-ภาค-2-ลักษณะ-2-หมวด-1",
-            "label": "หมวด 1 · ความผิดต่อเจ้าพนักงาน 136–146",
+            "label": "หมวด 1 · ความผิดต่อเจ้าพนักงาน",
+            "range": "136–146",
             "children": [
               {
                 "id": "criminal-art-136",
@@ -13411,7 +13650,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-2-หมวด-2",
-            "label": "หมวด 2 · ความผิดต่อตำแหน่งหน้าที่ราชการ 147–166",
+            "label": "หมวด 2 · ความผิดต่อตำแหน่งหน้าที่ราชการ",
+            "range": "147–166",
             "children": [
               {
                 "id": "criminal-art-147",
@@ -13539,11 +13779,13 @@ export const criminalHierarchy: LegalNode[] = [
       },
       {
         "id": "criminal-ภาค-2-ลักษณะ-3",
-        "label": "ลักษณะ 3 · ความผิดเกี่ยวกับการยุติธรรม 167–205",
+        "label": "ลักษณะ 3 · ความผิดเกี่ยวกับการยุติธรรม",
+        "range": "167–205",
         "children": [
           {
             "id": "criminal-ภาค-2-ลักษณะ-3-หมวด-1",
-            "label": "หมวด 1 · ความผิดต่อเจ้าพนักงานในการยุติธรรม 167–199",
+            "label": "หมวด 1 · ความผิดต่อเจ้าพนักงานในการยุติธรรม",
+            "range": "167–199",
             "children": [
               {
                 "id": "criminal-art-167",
@@ -13747,7 +13989,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-3-หมวด-2",
-            "label": "หมวด 2 · ความผิดต่อตำแหน่งหน้าที่ในการยุติธรรม 200–205",
+            "label": "หมวด 2 · ความผิดต่อตำแหน่งหน้าที่ในการยุติธรรม",
+            "range": "200–205",
             "children": [
               {
                 "id": "criminal-art-200",
@@ -13791,7 +14034,8 @@ export const criminalHierarchy: LegalNode[] = [
       },
       {
         "id": "criminal-ภาค-2-ลักษณะ-4",
-        "label": "ลักษณะ 4 · ความผิดเกี่ยวกับศาสนา 206–208",
+        "label": "ลักษณะ 4 · ความผิดเกี่ยวกับศาสนา",
+        "range": "206–208",
         "children": [
           {
             "id": "criminal-art-206",
@@ -13815,7 +14059,8 @@ export const criminalHierarchy: LegalNode[] = [
       },
       {
         "id": "criminal-ภาค-2-ลักษณะ-5",
-        "label": "ลักษณะ 5 · ความผิดเกี่ยวกับความสงบสุขของประชาชน 209–216",
+        "label": "ลักษณะ 5 · ความผิดเกี่ยวกับความสงบสุขของประชาชน",
+        "range": "209–216",
         "children": [
           {
             "id": "criminal-art-209",
@@ -13869,7 +14114,8 @@ export const criminalHierarchy: LegalNode[] = [
       },
       {
         "id": "criminal-ภาค-2-ลักษณะ-6",
-        "label": "ลักษณะ 6 · ความผิดเกี่ยวกับการก่อให้เกิดภยันตรายต่อประชาชน 217–239",
+        "label": "ลักษณะ 6 · ความผิดเกี่ยวกับการก่อให้เกิดภยันตรายต่อประชาชน",
+        "range": "217–239",
         "children": [
           {
             "id": "criminal-art-217",
@@ -14013,11 +14259,13 @@ export const criminalHierarchy: LegalNode[] = [
       },
       {
         "id": "criminal-ภาค-2-ลักษณะ-7",
-        "label": "ลักษณะ 7 · ความผิดเกี่ยวกับการปลอมและการแปลง 240–269/15",
+        "label": "ลักษณะ 7 · ความผิดเกี่ยวกับการปลอมและการแปลง",
+        "range": "240–269/15",
         "children": [
           {
             "id": "criminal-ภาค-2-ลักษณะ-7-หมวด-1",
-            "label": "หมวด 1 · ความผิดเกี่ยวกับเงินตรา 240–249",
+            "label": "หมวด 1 · ความผิดเกี่ยวกับเงินตรา",
+            "range": "240–249",
             "children": [
               {
                 "id": "criminal-art-240",
@@ -14083,7 +14331,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-7-หมวด-2",
-            "label": "หมวด 2 · ความผิดเกี่ยวกับดวงตรา แสตมป์และตั๋ว 250–263",
+            "label": "หมวด 2 · ความผิดเกี่ยวกับดวงตรา แสตมป์และตั๋ว",
+            "range": "250–263",
             "children": [
               {
                 "id": "criminal-art-250",
@@ -14173,7 +14422,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-7-หมวด-3",
-            "label": "หมวด 3 · ความผิดเกี่ยวกับเอกสาร 264–269",
+            "label": "หมวด 3 · ความผิดเกี่ยวกับเอกสาร",
+            "range": "264–269",
             "children": [
               {
                 "id": "criminal-art-264",
@@ -14215,7 +14465,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-7-หมวด-4",
-            "label": "หมวด 4 · ความผิดเกี่ยวกับบัตรอิเล็กทรอนิกส์ 269/1–269/7",
+            "label": "หมวด 4 · ความผิดเกี่ยวกับบัตรอิเล็กทรอนิกส์",
+            "range": "269/1–269/7",
             "children": [
               {
                 "id": "criminal-art-269-1",
@@ -14263,7 +14514,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-7-หมวด-5",
-            "label": "หมวด 5 · ความผิดเกี่ยวกับหนังสือเดินทาง 269/8–269/15",
+            "label": "หมวด 5 · ความผิดเกี่ยวกับหนังสือเดินทาง",
+            "range": "269/8–269/15",
             "children": [
               {
                 "id": "criminal-art-269-8",
@@ -14319,7 +14571,8 @@ export const criminalHierarchy: LegalNode[] = [
       },
       {
         "id": "criminal-ภาค-2-ลักษณะ-8",
-        "label": "ลักษณะ 8 · ความผิดเกี่ยวกับการค้า 270–275",
+        "label": "ลักษณะ 8 · ความผิดเกี่ยวกับการค้า",
+        "range": "270–275",
         "children": [
           {
             "id": "criminal-art-270",
@@ -14361,7 +14614,8 @@ export const criminalHierarchy: LegalNode[] = [
       },
       {
         "id": "criminal-ภาค-2-ลักษณะ-9",
-        "label": "ลักษณะ 9 · ความผิดเกี่ยวกับเพศ 276–287/2",
+        "label": "ลักษณะ 9 · ความผิดเกี่ยวกับเพศ",
+        "range": "276–287/2",
         "children": [
           {
             "id": "criminal-art-276",
@@ -14505,11 +14759,13 @@ export const criminalHierarchy: LegalNode[] = [
       },
       {
         "id": "criminal-ภาค-2-ลักษณะ-10",
-        "label": "ลักษณะ 10 · ความผิดเกี่ยวกับชีวิตและร่างกาย 288–308",
+        "label": "ลักษณะ 10 · ความผิดเกี่ยวกับชีวิตและร่างกาย",
+        "range": "288–308",
         "children": [
           {
             "id": "criminal-ภาค-2-ลักษณะ-10-หมวด-1",
-            "label": "หมวด 1 · ความผิดต่อชีวิต 288–294",
+            "label": "หมวด 1 · ความผิดต่อชีวิต",
+            "range": "288–294",
             "children": [
               {
                 "id": "criminal-art-288",
@@ -14557,7 +14813,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-10-หมวด-2",
-            "label": "หมวด 2 · ความผิดต่อร่างกาย 295–300",
+            "label": "หมวด 2 · ความผิดต่อร่างกาย",
+            "range": "295–300",
             "children": [
               {
                 "id": "criminal-art-295",
@@ -14599,7 +14856,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-10-หมวด-3",
-            "label": "หมวด 3 · ความผิดฐานทำให้แท้งลูก 301–305",
+            "label": "หมวด 3 · ความผิดฐานทำให้แท้งลูก",
+            "range": "301–305",
             "children": [
               {
                 "id": "criminal-art-301",
@@ -14635,7 +14893,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-10-หมวด-4",
-            "label": "หมวด 4 · ความผิดฐานทอดทิ้งเด็ก คนป่วยเจ็บหรือคนชรา 306–308",
+            "label": "หมวด 4 · ความผิดฐานทอดทิ้งเด็ก คนป่วยเจ็บหรือคนชรา",
+            "range": "306–308",
             "children": [
               {
                 "id": "criminal-art-306",
@@ -14661,11 +14920,13 @@ export const criminalHierarchy: LegalNode[] = [
       },
       {
         "id": "criminal-ภาค-2-ลักษณะ-11",
-        "label": "ลักษณะ 11 · ความผิดเกี่ยวกับเสรีภาพและชื่อเสียง 309–333",
+        "label": "ลักษณะ 11 · ความผิดเกี่ยวกับเสรีภาพและชื่อเสียง",
+        "range": "309–333",
         "children": [
           {
             "id": "criminal-ภาค-2-ลักษณะ-11-หมวด-1",
-            "label": "หมวด 1 · ความผิดต่อเสรีภาพ 309–321/1",
+            "label": "หมวด 1 · ความผิดต่อเสรีภาพ",
+            "range": "309–321/1",
             "children": [
               {
                 "id": "criminal-art-309",
@@ -14773,7 +15034,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-11-หมวด-2",
-            "label": "หมวด 2 · ความผิดฐานเปิดเผยความลับ 322–325",
+            "label": "หมวด 2 · ความผิดฐานเปิดเผยความลับ",
+            "range": "322–325",
             "children": [
               {
                 "id": "criminal-art-322",
@@ -14803,7 +15065,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-11-หมวด-3",
-            "label": "หมวด 3 · ความผิดฐานหมิ่นประมาท 326–333",
+            "label": "หมวด 3 · ความผิดฐานหมิ่นประมาท",
+            "range": "326–333",
             "children": [
               {
                 "id": "criminal-art-326",
@@ -14859,11 +15122,13 @@ export const criminalHierarchy: LegalNode[] = [
       },
       {
         "id": "criminal-ภาค-2-ลักษณะ-12",
-        "label": "ลักษณะ 12 · ความผิดเกี่ยวกับทรัพย์ 334–366",
+        "label": "ลักษณะ 12 · ความผิดเกี่ยวกับทรัพย์",
+        "range": "334–366",
         "children": [
           {
             "id": "criminal-ภาค-2-ลักษณะ-12-หมวด-1",
-            "label": "หมวด 1 · ความผิดฐานลักทรัพย์และวิ่งราวทรัพย์ 334–336 ทวิ",
+            "label": "หมวด 1 · ความผิดฐานลักทรัพย์และวิ่งราวทรัพย์",
+            "range": "334–336 ทวิ",
             "children": [
               {
                 "id": "criminal-art-334",
@@ -14899,7 +15164,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-12-หมวด-2",
-            "label": "หมวด 2 · ความผิดฐานกรรโชก รีดเอาทรัพย์ ชิงทรัพย์และปล้น 337–340 ตรี",
+            "label": "หมวด 2 · ความผิดฐานกรรโชก รีดเอาทรัพย์ ชิงทรัพย์และปล้น",
+            "range": "337–340 ตรี",
             "children": [
               {
                 "id": "criminal-art-337",
@@ -14947,7 +15213,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-12-หมวด-3",
-            "label": "หมวด 3 · ความผิดฐานฉ้อโกง 341–348",
+            "label": "หมวด 3 · ความผิดฐานฉ้อโกง",
+            "range": "341–348",
             "children": [
               {
                 "id": "criminal-art-341",
@@ -15001,7 +15268,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-12-หมวด-4",
-            "label": "หมวด 4 · ความผิดฐานโกงเจ้าหนี้ 349–351",
+            "label": "หมวด 4 · ความผิดฐานโกงเจ้าหนี้",
+            "range": "349–351",
             "children": [
               {
                 "id": "criminal-art-349",
@@ -15025,7 +15293,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-12-หมวด-5",
-            "label": "หมวด 5 · ความผิดฐานยักยอก 352–356",
+            "label": "หมวด 5 · ความผิดฐานยักยอก",
+            "range": "352–356",
             "children": [
               {
                 "id": "criminal-art-352",
@@ -15061,7 +15330,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-12-หมวด-6",
-            "label": "หมวด 6 · ความผิดฐานรับของโจร 357",
+            "label": "หมวด 6 · ความผิดฐานรับของโจร",
+            "range": "357",
             "children": [
               {
                 "id": "criminal-art-357",
@@ -15073,7 +15343,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-12-หมวด-7",
-            "label": "หมวด 7 · ความผิดฐานทำให้เสียทรัพย์ 358–361",
+            "label": "หมวด 7 · ความผิดฐานทำให้เสียทรัพย์",
+            "range": "358–361",
             "children": [
               {
                 "id": "criminal-art-358",
@@ -15109,7 +15380,8 @@ export const criminalHierarchy: LegalNode[] = [
           },
           {
             "id": "criminal-ภาค-2-ลักษณะ-12-หมวด-8",
-            "label": "หมวด 8 · ความผิดฐานบุกรุก 362–366",
+            "label": "หมวด 8 · ความผิดฐานบุกรุก",
+            "range": "362–366",
             "children": [
               {
                 "id": "criminal-art-362",
@@ -15147,7 +15419,8 @@ export const criminalHierarchy: LegalNode[] = [
       },
       {
         "id": "criminal-ภาค-2-ลักษณะ-13",
-        "label": "ลักษณะ 13 · ความผิดเกี่ยวกับศพ 366/1–366/4",
+        "label": "ลักษณะ 13 · ความผิดเกี่ยวกับศพ",
+        "range": "366/1–366/4",
         "children": [
           {
             "id": "criminal-art-366-1",
@@ -15179,7 +15452,8 @@ export const criminalHierarchy: LegalNode[] = [
   },
   {
     "id": "criminal-ภาค-3",
-    "label": "ภาค 3 · ลหุโทษ 367–398",
+    "label": "ภาค 3 · ลหุโทษ",
+    "range": "367–398",
     "children": [
       {
         "id": "criminal-art-367",

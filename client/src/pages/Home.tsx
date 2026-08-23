@@ -40,6 +40,7 @@ const BACKGROUND_MUSIC_SRC = `${import.meta.env.BASE_URL}music/alex-morgan-jazz-
 export type LegalNode = {
   id: string;
   label: string;
+  range?: string; // มาตรา span, e.g. "149–193" — rendered on its own line below label
   dx?: number;
   dy?: number;
   radius?: number;
@@ -51,6 +52,7 @@ export type LegalNode = {
 type LegalSubject = {
   id: string;
   label: string;
+  range?: string;
   x: number;
   y: number;
   radius: number;
@@ -98,6 +100,7 @@ function buildBookSubjects(nodes: LegalNode[], centerX: number, centerY: number,
     return {
       id: node.id,
       label: node.label,
+      range: node.range,
       x: pos.x,
       y: pos.y,
       radius: Math.round(Math.min(34, Math.max(18, weight * 3.2))),
@@ -566,7 +569,16 @@ function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, 
               >
                 <circle cx={pos.x} cy={pos.y} r={radius + (isLeaf ? 3 : 5)} fill={domainColor} opacity={isActive ? 0.22 : isLeaf ? 0.14 : 0.12} filter="url(#softBlur)" />
                 <circle cx={pos.x} cy={pos.y} r={radius} fill={isLeaf ? "#FFFFFF" : domainSoftColor} stroke={domainColor} strokeWidth={isActive ? 1.9 : isLeaf ? 1.1 : 1} strokeDasharray={!isLeaf ? "2 2.5" : undefined} />
-                <text x={pos.x} y={pos.y + radius + (isLeaf ? 12 : 14)} textAnchor="middle" className={isLeaf ? "article-label" : "micro-label"}>{isLeaf ? `ม.${node.number}` : node.label}</text>
+                <text x={pos.x} y={pos.y + radius + (isLeaf ? 12 : 14)} textAnchor="middle" className={isLeaf ? "article-label" : "micro-label"}>
+                  {isLeaf ? (
+                    `ม.${node.number}`
+                  ) : (
+                    <>
+                      <tspan x={pos.x}>{node.label}</tspan>
+                      {node.range && <tspan x={pos.x} dy="12" className="node-label__range">{node.range}</tspan>}
+                    </>
+                  )}
+                </text>
               </g>
             </g>
             {isActive && node.children && (
@@ -757,7 +769,7 @@ export default function Home() {
   const cameraTarget = pathSteps.length ? pathSteps[pathSteps.length - 1] : null;
   const cameraScale = cameraEnabled && cameraTarget ? zoom * cameraScaleForDepth(pathSteps.length) : zoom;
   const cameraTransform = cameraEnabled && cameraTarget
-    ? `translate(${720 + pan.x} ${450 + pan.y}) scale(${cameraScale}) translate(-${cameraTarget.x} -${cameraTarget.y})`
+    ? `translate(${720 + pan.x} ${450 + pan.y}) scale(${cameraScale}) translate(${-cameraTarget.x} ${-cameraTarget.y})`
     : `translate(${720 + pan.x} ${450 + pan.y}) scale(${zoom}) translate(-720 -450)`;
 
   // Handles a click at any depth: the domain circle (path=[domainId]), a
@@ -1043,7 +1055,10 @@ export default function Home() {
                             <circle cx={subject.x} cy={subject.y} r={subject.radius + 10} fill={domain.color} opacity={isSubjectSelected ? 0.19 : 0.075} filter="url(#softBlur)" />
                             <circle cx={subject.x} cy={subject.y} r={subject.radius} fill={domain.softColor} stroke={domain.color} strokeWidth={isSubjectSelected ? 2.1 : 1.15} filter="url(#nodeShadow)" />
                             <circle cx={subject.x} cy={subject.y} r={Math.max(4, subject.radius * 0.3)} fill="#FFFFFF" opacity="0.38" />
-                            <text x={subject.x} y={subject.y + subject.radius + 20} textAnchor="middle" className="subject-label">{subject.label}</text>
+                            <text x={subject.x} y={subject.y + subject.radius + 20} textAnchor="middle" className="subject-label">
+                              <tspan x={subject.x}>{subject.label}</tspan>
+                              {subject.range && <tspan x={subject.x} dy="13" className="node-label__range">{subject.range}</tspan>}
+                            </text>
                           </g>
                         </g>
                         {isSubjectSelected && subject.children && (

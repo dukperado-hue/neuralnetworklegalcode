@@ -107,12 +107,16 @@ function labelTierForDistance(distance: number) {
   return 0;
 }
 
-function labelIsVisible(node: UniverseNode, tier: number) {
-  if (node.kind === "origin") return true;
-  if (node.kind === "domain") return tier >= 1;
-  if (node.kind === "subject") return tier >= 2;
-  if (node.kind === "nexus" || node.kind === "issue" || node.kind === "law") return true;
-  return tier >= 3;
+// Labels stay visible at every zoom level per feedback that hiding them
+// until zoomed-in made the graph hard to read; text is kept short (see
+// shortenFor3D) specifically so this doesn't turn into clutter.
+function labelIsVisible(_node: UniverseNode, _tier: number) {
+  return true;
+}
+
+function shortenFor3D(text: string, max = 16) {
+  if (text.length <= max) return text;
+  return `${text.slice(0, max - 1).trimEnd()}…`;
 }
 
 function createGlowTexture() {
@@ -311,6 +315,23 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
     return () => window.clearTimeout(timer);
   }, [expanded, selectedDomainId]);
 
+  // OrbitControls: clamp the polar angle so the camera can never orbit past
+  // the poles - past that point three.js flips the camera's up-vector,
+  // which is what made labels render upside-down. Also add a very slow
+  // idle auto-rotate (only while motion is enabled) so the graph never
+  // feels static once the force simulation has cooled down.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const controls = graphRef.current?.controls() as { minPolarAngle?: number; maxPolarAngle?: number; autoRotate?: boolean; autoRotateSpeed?: number } | undefined;
+      if (!controls) return;
+      controls.minPolarAngle = 0.15;
+      controls.maxPolarAngle = Math.PI - 0.15;
+      controls.autoRotate = motionEnabled;
+      controls.autoRotateSpeed = 0.35;
+    }, 50);
+    return () => window.clearTimeout(timer);
+  }, [motionEnabled]);
+
   const onNodeClick = useCallback((node: UniverseNode) => {
     const graph = graphRef.current;
     if (graph && node.kind !== "origin") {
@@ -358,7 +379,7 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
       }
     }
 
-    const label = new SpriteText(node.label);
+    const label = new SpriteText(shortenFor3D(node.label));
     label.color = "#34283A";
     label.textHeight = node.kind === "origin" ? 9 : node.kind === "domain" ? 7 : node.kind === "subject" ? 5.4 : node.kind === "nexus" ? 6.4 : node.kind === "issue" ? 5 : node.kind === "law" ? 4 : 4.2;
     label.backgroundColor = "rgba(250,249,246,0.84)";
@@ -397,8 +418,8 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
         nodeThreeObjectExtend
         linkVisibility={linkVisibility}
         linkColor={(link) => link.color}
-        linkOpacity={0.24}
-        linkWidth={(link) => link.kind === "root" ? 0.56 : link.kind === "subject" ? 0.32 : link.kind === "nexus" ? 0.5 : link.kind === "law" ? 0.34 : 0.18}
+        linkOpacity={0.48}
+        linkWidth={(link) => link.kind === "root" ? 1 : link.kind === "subject" ? 0.6 : link.kind === "nexus" ? 0.85 : link.kind === "law" ? 0.62 : 0.4}
         linkCurvature={(link) => link.kind === "nexus" || link.kind === "issue" || link.kind === "law" ? 0.28 : link.kind === "law-anchor" ? 0.15 : 0}
         enableNodeDrag={false}
         enableNavigationControls

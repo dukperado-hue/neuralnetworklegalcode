@@ -139,7 +139,8 @@ function toNode(group, idPrefix, path) {
 
   return {
     id,
-    label: `${label} ${rangeLabel([...group.articles, ...flattenArticles(childGroups)])}`.trim(),
+    label,
+    range: rangeLabel([...group.articles, ...flattenArticles(childGroups)]),
     children: children.length ? children : undefined,
   };
 }

@@ -99,7 +99,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid #9d6eea; outline-
 /* Visual breathing room: once a มาตรา's full text is open in the side panel,
    the map behind it recedes so attention lands on what's actually being read. */
 .law-map.law-focus .domain-cluster { opacity: 0.5; filter: blur(0.5px) saturate(0.7); transition: opacity 320ms ease, filter 320ms ease; }
-.map-particle { transform-box: fill-box; transform-origin: center; animation: particle-drift 14s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate; }
+.map-particle { transform-box: fill-box; transform-origin: center; }
 .network-connections path { transition: opacity 250ms ease, stroke-width 250ms ease; }
 .domain-cluster { animation: cluster-arrive 720ms var(--ease-out, cubic-bezier(0.23, 1, 0.32, 1)) both; animation-delay: var(--delay); transition: opacity 260ms ease; }
 .domain-cluster.is-dimmed { opacity: 0.3; }
@@ -267,7 +267,6 @@ button:focus-visible, input:focus-visible { outline: 2px solid #9d6eea; outline-
 .book-list small { overflow: hidden; margin-top: 3px; color: #968b9b; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .book-list svg { color: #988aa1; }
 
-@keyframes particle-drift { from { transform: translate3d(-1px, 1px, 0); } to { transform: translate3d(4px, -6px, 0); } }
 @keyframes origin-breathe { 0%, 100% { transform: scale(1); opacity: 0.95; } 50% { transform: scale(1.025); opacity: 1; } }
 @keyframes origin-settle { from { transform: scale(1.35); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 @keyframes cluster-arrive { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -278,7 +277,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid #9d6eea; outline-
 @keyframes panel-enter { from { opacity: 0; transform: translateX(22px) scale(0.98); } to { opacity: 1; transform: translateX(0) scale(1); } }
 @keyframes force-pulse { 0%, 100% { transform: scale(1); opacity: 0.75; } 50% { transform: scale(1.25); opacity: 1; } }
 
-.motion-off .map-particle, .motion-off .origin-node--initial, .motion-off .domain-cluster, .motion-off .subject-node-wrap, .motion-off .subject-node-drift, .motion-off .micro-node-wrap, .motion-off .micro-node-drift { animation: none !important; }
+.motion-off .origin-node--initial, .motion-off .domain-cluster, .motion-off .subject-node-wrap, .motion-off .subject-node-drift, .motion-off .micro-node-wrap, .motion-off .micro-node-drift { animation: none !important; }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; } }
 @media (max-width: 1060px) { .route-links { display: none; } }

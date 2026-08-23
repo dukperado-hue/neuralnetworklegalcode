@@ -2,7 +2,7 @@
  * รัศมีนิติธรรม — แผนที่ความรู้กฎหมายแบบ organic radial constellation
  * จังหวะภาพ: ivory editorial canvas + color-family nodes + restrained orbital motion.
  */
-import { Fragment, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type RefObject, type WheelEvent as ReactWheelEvent } from "react";
 import { Link } from "wouter";
 import ForceNetwork3D from "@/components/ForceNetwork3D";
 import WebGLBoundary from "@/components/WebGLBoundary";
@@ -403,13 +403,99 @@ const legalDomains: LegalDomain[] = [
   },
 ];
 
+// Base/home layout for the background particle swarm. Actual per-frame
+// position is owned by a small physics sim (see useParticleSwarm below) -
+// this array only supplies each particle's identity (home point, radius,
+// color) and a per-particle speed multiplier so the swarm doesn't move as
+// one uniform block.
 const particles = Array.from({ length: 46 }, (_, index) => ({
   x: (index * 137 + 57) % 1440,
   y: (index * 89 + 31) % 900,
   r: index % 7 === 0 ? 4 : index % 3 === 0 ? 2.5 : 1.5,
   color: index % 3 === 0 ? "#811970" : index % 3 === 1 ? "#1A2C79" : "#FF8D68",
-  delay: `${(index % 11) * -1.2}s`,
+  // Wander phase/frequency and an overall speed multiplier (0.55x-1.85x) so
+  // particles drift at visibly different paces rather than lock-step.
+  phase: (index * 2.399963) % (Math.PI * 2),
+  speed: 0.55 + ((index * 47) % 131) / 100,
 }));
+
+type ParticleState = { x: number; y: number; vx: number; vy: number };
+
+// Drives the background particles as a light physics sim instead of a
+// uniform CSS keyframe: each particle idles around its home point at its
+// own speed, and when the user focuses a node (a domain/subject/มาตรา
+// selection - an "event"), nearby particles get pulled into a loose cluster
+// around that point, with closer particles pulled harder, easing back out
+// once the selection changes again. Position is written straight to each
+// circle's cx/cy via refs on every frame - no React re-render in the hot
+// path, which matters for 46 elements at 60fps.
+function useParticleSwarm(targetRef: RefObject<{ x: number; y: number } | null>, motionEnabled: boolean) {
+  const circleRefs = useRef<(SVGCircleElement | null)[]>([]);
+  const stateRef = useRef<ParticleState[]>(particles.map((p) => ({ x: p.x, y: p.y, vx: 0, vy: 0 })));
+  const impulseRef = useRef(0);
+  const lastTargetKeyRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!motionEnabled) return;
+    let frame = 0;
+    let lastTime = performance.now();
+
+    const tick = (now: number) => {
+      const dt = Math.min(0.05, (now - lastTime) / 1000);
+      lastTime = now;
+      const target = targetRef.current;
+      const targetKey = target ? `${target.x.toFixed(1)},${target.y.toFixed(1)}` : null;
+      if (targetKey !== lastTargetKeyRef.current) {
+        // A new node just became the focus - kick off a brief inward pull
+        // that decays over ~1.1s, on top of the steady ambient attraction.
+        if (targetKey) impulseRef.current = 1;
+        lastTargetKeyRef.current = targetKey;
+      }
+      if (impulseRef.current > 0) impulseRef.current = Math.max(0, impulseRef.current - dt * 0.9);
+
+      const states = stateRef.current;
+      for (let i = 0; i < particles.length; i += 1) {
+        const base = particles[i];
+        const state = states[i];
+        const t = now / 1000;
+        // Ambient wander: a small Lissajous-ish orbit around home, unique
+        // per particle via phase/speed so the field never looks uniform.
+        const wanderX = Math.cos(t * 0.22 * base.speed + base.phase) * 14 * base.speed;
+        const wanderY = Math.sin(t * 0.17 * base.speed + base.phase * 1.3) * 11 * base.speed;
+        let ax = (base.x + wanderX - state.x) * 0.6;
+        let ay = (base.y + wanderY - state.y) * 0.6;
+
+        if (target) {
+          const dx = target.x - state.x;
+          const dy = target.y - state.y;
+          const dist = Math.max(24, Math.hypot(dx, dy));
+          // Closer particles cluster in harder (inverse-distance), capped
+          // so they orbit near the node rather than collapsing onto it.
+          const pull = Math.min(0.9, 90 / dist) * (0.22 + impulseRef.current * 0.7) * base.speed;
+          ax += (dx / dist) * pull * 60;
+          ay += (dy / dist) * pull * 60;
+        }
+
+        state.vx = (state.vx + ax * dt) * 0.9;
+        state.vy = (state.vy + ay * dt) * 0.9;
+        state.x += state.vx * dt * 60 * 0.5;
+        state.y += state.vy * dt * 60 * 0.5;
+
+        const circle = circleRefs.current[i];
+        if (circle) {
+          circle.setAttribute("cx", state.x.toFixed(1));
+          circle.setAttribute("cy", state.y.toFixed(1));
+        }
+      }
+      frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [motionEnabled, targetRef]);
+
+  return circleRefs;
+}
 
 function curvedPath(fromX: number, fromY: number, toX: number, toY: number) {
   const midpointX = (fromX + toX) / 2;
@@ -750,6 +836,13 @@ export default function Home() {
     ? `translate(${720 + pan.x} ${450 + pan.y}) scale(${cameraScale}) translate(${-cameraTarget.x} ${-cameraTarget.y})`
     : `translate(${720 + pan.x} ${450 + pan.y}) scale(${zoom}) translate(-720 -450)`;
 
+  // Background particle swarm: nearby particles cluster toward whatever
+  // node is currently focused (the same point the camera follows), so
+  // selecting something reads as a small event rather than a static field.
+  const particleTargetRef = useRef<{ x: number; y: number } | null>(null);
+  particleTargetRef.current = expanded && cameraTarget ? { x: cameraTarget.x, y: cameraTarget.y } : null;
+  const particleCircleRefs = useParticleSwarm(particleTargetRef, motionEnabled);
+
   // Handles a click at any depth: the domain circle (path=[domainId]), a
   // subject/บรรพ/ภาค (path=[domainId,subjectId]), or any node further down
   // the auto-generated tree. Re-clicking the currently-focused node collapses
@@ -981,7 +1074,16 @@ export default function Home() {
 
             <g className="background-particles" aria-hidden="true">
               {particles.map((particle, index) => (
-                <circle key={index} className="map-particle" cx={particle.x} cy={particle.y} r={particle.r} fill={particle.color} opacity={expanded ? 0.28 : 0.16} style={{ animationDelay: particle.delay } as CSSProperties} />
+                <circle
+                  key={index}
+                  ref={(el) => { particleCircleRefs.current[index] = el; }}
+                  className="map-particle"
+                  cx={particle.x}
+                  cy={particle.y}
+                  r={particle.r}
+                  fill={particle.color}
+                  opacity={expanded ? 0.28 : 0.16}
+                />
               ))}
             </g>
 

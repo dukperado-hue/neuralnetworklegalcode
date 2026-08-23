@@ -3,12 +3,14 @@
  * จังหวะภาพ: ivory editorial canvas + color-family nodes + restrained orbital motion.
  */
 import { useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent } from "react";
+import { Link } from "wouter";
 import ForceNetwork3D from "@/components/ForceNetwork3D";
 import WebGLBoundary from "@/components/WebGLBoundary";
 import {
   ArrowUpRight,
   ChevronRight,
   Crosshair,
+  GitBranch,
   Layers2,
   Link2,
   List,
@@ -596,6 +598,7 @@ export default function Home() {
             <a className="lab-return" href="https://coolunclelab.com" target="_blank" rel="noreferrer"><ArrowUpRight size={12} /> <span>Cool Uncle</span></a>
             <a className="lab-return" href="https://coolunclelab.com/lab" target="_blank" rel="noreferrer"><span>Lab</span></a>
             <a className="lab-return" href="https://ประมวล.com" target="_blank" rel="noreferrer"><span>ประมวล.com</span></a>
+            <Link href="/case/serm-jenjira" className="lab-return"><GitBranch size={12} /> <span>โหมดคดี</span></Link>
           </nav>
           <div className="view-switch" aria-label="เลือกรูปแบบการแสดงผล">
             <button className={viewMode === "network" ? "is-active" : ""} onClick={() => setViewMode("network")}>

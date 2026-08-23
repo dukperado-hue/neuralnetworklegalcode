@@ -5,6 +5,7 @@ import { Route, Router as WouterRouter, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
+import CaseMap from "./pages/CaseMap";
 
 
 function Router() {
@@ -13,6 +14,8 @@ function Router() {
     <WouterRouter base={base}>
       <Switch>
         <Route path={"/"} component={Home} />
+        <Route path={"/case/:caseId"} component={CaseMap} />
+        <Route path={"/case"} component={CaseMap} />
         <Route path={"/404"} component={NotFound} />
         {/* Final fallback route */}
         <Route component={NotFound} />

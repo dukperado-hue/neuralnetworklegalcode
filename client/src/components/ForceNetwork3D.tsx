@@ -9,8 +9,13 @@ import * as THREE from "three";
 import { recordWebGLTelemetry } from "@/lib/webglTelemetry";
 import type { CaseGraphData, CaseLawRef } from "@/data/caseGraphs";
 
-type MicroNode = { id: string; label: string; radius: number };
-type Subject = { id: string; label: string; radius: number; microNodes?: MicroNode[] };
+// radius is optional: the auto-generated civil/criminal hierarchy (Home.tsx
+// legalHierarchy.generated.ts) doesn't carry hand-placed radii the way the
+// legacy hand-authored micro-nodes do, and may also carry a `children` field
+// this 3D view doesn't recurse into (it renders one level below subject,
+// same as before - going deeper here is a separate, larger task).
+type MicroNode = { id: string; label: string; radius?: number };
+type Subject = { id: string; label: string; radius: number; children?: MicroNode[] };
 
 export type ForceNetworkDomain = {
   id: string;
@@ -161,10 +166,10 @@ export default function ForceNetwork3D({ domains, expanded, selectedDomainId, se
         };
         subjectNodes.push(subjectNode);
         links.push({ source: domain.id, target: subjectNode.id, color: domain.color, kind: "subject" });
-        (subject.microNodes ?? []).forEach((micro, microIndex) => {
-          const microOffset = spherePoint(microIndex, subject.microNodes?.length ?? 1, 72, 0.7);
+        (subject.children ?? []).forEach((micro, microIndex) => {
+          const microOffset = spherePoint(microIndex, subject.children?.length ?? 1, 72, 0.7);
           const microNode: UniverseNode = {
-            id: `${domain.id}-${subject.id}-${micro.id}`, label: micro.label, color: domain.color, radius: Math.max(7, micro.radius * 0.72), kind: "micro", domainId: domain.id, subjectId: subject.id,
+            id: `${domain.id}-${subject.id}-${micro.id}`, label: micro.label, color: domain.color, radius: Math.max(7, (micro.radius ?? 16) * 0.72), kind: "micro", domainId: domain.id, subjectId: subject.id,
             x: (subjectNode.x ?? 0) + microOffset.x, y: (subjectNode.y ?? 0) + microOffset.y, z: (subjectNode.z ?? 0) + microOffset.z,
           };
           microNodes.push(microNode);

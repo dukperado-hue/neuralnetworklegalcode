@@ -2,12 +2,13 @@
  * รัศมีนิติธรรม — แผนที่ความรู้กฎหมายแบบ organic radial constellation
  * จังหวะภาพ: ivory editorial canvas + color-family nodes + restrained orbital motion.
  */
-import { useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
+import { Fragment, useMemo, useRef, useState, type CSSProperties, type PointerEvent as ReactPointerEvent, type WheelEvent as ReactWheelEvent } from "react";
 import { Link } from "wouter";
 import ForceNetwork3D from "@/components/ForceNetwork3D";
 import WebGLBoundary from "@/components/WebGLBoundary";
 import LawSidePanel from "@/components/LawSidePanel";
 import { caseGraphs, DEFAULT_CASE_ID, type CaseLawRef } from "@/data/caseGraphs";
+import { civilHierarchy, criminalHierarchy } from "@/data/legalHierarchy.generated";
 import {
   ArrowUpRight,
   ChevronRight,
@@ -32,9 +33,20 @@ import {
 
 const BACKGROUND_MUSIC_SRC = `${import.meta.env.BASE_URL}music/alex-morgan-jazz-restaurant-music-556244.mp3`;
 
-type LegalArticleNode = { id: string; number: string; label: string };
-
-type MicroNode = { id: string; label: string; dx: number; dy: number; radius: number; articleNodes?: LegalArticleNode[] };
+// Generic recursive node: covers every tier below "subject" (ลักษณะ, หมวด,
+// ส่วน, and finally มาตรา leaves) for both the hand-placed legacy domains
+// (dx/dy/radius given explicitly) and the auto-generated civil/criminal
+// hierarchy (dx/dy/radius omitted -> positioned automatically at render time).
+export type LegalNode = {
+  id: string;
+  label: string;
+  dx?: number;
+  dy?: number;
+  radius?: number;
+  book?: string; // set only on มาตรา leaves, for LawSidePanel fetch
+  number?: string; // set only on มาตรา leaves
+  children?: LegalNode[];
+};
 
 type LegalSubject = {
   id: string;
@@ -44,7 +56,7 @@ type LegalSubject = {
   radius: number;
   description: string;
   references: string[];
-  microNodes?: MicroNode[];
+  children?: LegalNode[];
 };
 
 type LegalDomain = {
@@ -61,6 +73,50 @@ type LegalDomain = {
   children: LegalSubject[];
 };
 
+// Positions a sibling node on a ring around its parent. Radius grows with the
+// number of siblings so dense levels (e.g. 23 ลักษณะ under ภาค 2) don't
+// overlap, while sparse levels stay compact. Used for every tier that has no
+// hand-placed dx/dy (i.e. anything coming out of the auto-generated
+// civil/criminal hierarchy).
+function autoRadialPosition(centerX: number, centerY: number, index: number, count: number, baseRadius: number) {
+  const angle = (index / Math.max(1, count)) * Math.PI * 2 - Math.PI / 2;
+  const radius = Math.min(baseRadius * 2.1, Math.max(baseRadius, baseRadius * 0.55 + count * 7.5));
+  return { x: centerX + Math.cos(angle) * radius, y: centerY + Math.sin(angle) * radius };
+}
+
+function countLeaves(node: LegalNode): number {
+  if (!node.children) return 1;
+  return node.children.reduce((sum, child) => sum + countLeaves(child), 0);
+}
+
+// Turns a top-level auto-generated tier (บรรพ for civil, already-placed for
+// criminal) into LegalSubject entries laid out radially around the domain.
+function buildBookSubjects(nodes: LegalNode[], centerX: number, centerY: number, ringRadius: number): LegalSubject[] {
+  return nodes.map((node, index) => {
+    const pos = autoRadialPosition(centerX, centerY, index, nodes.length, ringRadius);
+    const weight = Math.log2(1 + countLeaves(node));
+    return {
+      id: node.id,
+      label: node.label,
+      x: pos.x,
+      y: pos.y,
+      radius: Math.round(Math.min(34, Math.max(18, weight * 3.2))),
+      description: "",
+      references: [],
+      children: node.children,
+    };
+  });
+}
+
+// Camera scale multiplier per drill depth (1 = domain only, 2 = subject,
+// 3 = ลักษณะ, 4 = หมวด, 5 = ส่วน, 6 = deeper still). The deeper we go, the
+// more the current focus is blown up so its own children stay legible.
+const DEPTH_CAMERA_SCALES = [1, 1.45, 1.72, 2.15, 2.6, 3.05, 3.45];
+
+function cameraScaleForDepth(depth: number) {
+  return DEPTH_CAMERA_SCALES[Math.min(depth, DEPTH_CAMERA_SCALES.length - 1)];
+}
+
 const legalDomains: LegalDomain[] = [
   {
     id: "civil",
@@ -73,23 +129,7 @@ const legalDomains: LegalDomain[] = [
     y: 277,
     radius: 52,
     description: "เครือข่ายกฎหมายเอกชนสำหรับสำรวจตั้งแต่นิติกรรม สัญญา หนี้ ทรัพย์ ละเมิด ครอบครัว และมรดก",
-    children: [
-      { id: "juristic-contract", label: "นิติกรรมและสัญญา", x: 163, y: 165, radius: 25, description: "หลักนิติกรรมและสัญญา", references: ["นิติกรรม", "สัญญา"] },
-      { id: "debt", label: "หนี้", x: 223, y: 420, radius: 24, description: "หลักแห่งหนี้และการระงับหนี้", references: ["หนี้", "การชำระหนี้"] },
-      { id: "property", label: "ทรัพย์", x: 324, y: 530, radius: 22, description: "ทรัพย์สินและทรัพยสิทธิ", references: ["ทรัพย์สิน", "ทรัพยสิทธิ"] },
-      { id: "sale", label: "ซื้อขาย", x: 505, y: 158, radius: 18, description: "สัญญาซื้อขาย", references: ["ซื้อขาย", "ส่งมอบ"] },
-      { id: "exchange", label: "แลกเปลี่ยน", x: 526, y: 241, radius: 16, description: "สัญญาแลกเปลี่ยน", references: ["แลกเปลี่ยน"] },
-      { id: "gift", label: "ให้", x: 522, y: 325, radius: 15, description: "สัญญาให้", references: ["ให้"] },
-      { id: "lease", label: "เช่าทรัพย์", x: 477, y: 413, radius: 18, description: "สัญญาเช่าทรัพย์", references: ["เช่าทรัพย์"] },
-      { id: "hire-purchase", label: "เช่าซื้อ", x: 383, y: 469, radius: 17, description: "สัญญาเช่าซื้อ", references: ["เช่าซื้อ"] },
-      { id: "sale-redemption", label: "ขายฝาก", x: 214, y: 520, radius: 16, description: "สัญญาขายฝาก", references: ["ขายฝาก"] },
-      { id: "loan", label: "ยืม", x: 93, y: 447, radius: 15, description: "ยืมใช้คงรูปและยืมใช้สิ้นเปลือง", references: ["ยืม"] },
-      { id: "hire-work", label: "จ้างทำของ", x: 79, y: 344, radius: 17, description: "สัญญาจ้างทำของ", references: ["จ้างทำของ"] },
-      { id: "agency", label: "ตัวแทน", x: 106, y: 246, radius: 16, description: "ตัวแทน", references: ["ตัวแทน"] },
-      { id: "tort", label: "ละเมิด", x: 401, y: 142, radius: 29, description: "กลุ่มความรับผิดจากการกระทำละเมิด", references: ["มาตรา 420", "มาตรา 425", "มาตรา 429"], microNodes: [{ id: "tort-420", label: "ม.420", dx: -80, dy: 31, radius: 10 }, { id: "tort-425", label: "ม.425", dx: 76, dy: 26, radius: 10 }, { id: "tort-429", label: "ม.429", dx: 7, dy: -76, radius: 10 }, { id: "tort-employer", label: "ผู้ว่าจ้าง", dx: 90, dy: -50, radius: 9 }] },
-      { id: "family", label: "ครอบครัว", x: 429, y: 510, radius: 20, description: "กฎหมายครอบครัว", references: ["ครอบครัว"] },
-      { id: "inheritance", label: "มรดก", x: 267, y: 105, radius: 19, description: "การตกทอดและการจัดการมรดก", references: ["มรดก"] },
-    ],
+    children: buildBookSubjects(civilHierarchy, 342, 277, 195),
   },
   {
     id: "criminal",
@@ -111,14 +151,7 @@ const legalDomains: LegalDomain[] = [
         radius: 27,
         description: "กฎกติกากลางที่นำไปใช้ร่วมกับความผิดทุกฐาน",
         references: ["มาตรา 1–106", "ภาคทั่วไป"],
-        microNodes: [
-          { id: "criminal-definition", label: "บทนิยาม 1–17", dx: -103, dy: -50, radius: 13 },
-          { id: "criminal-penalty", label: "โทษ 18–38", dx: -20, dy: -104, radius: 14 },
-          { id: "criminal-liability", label: "ความรับผิด 59–79", dx: 94, dy: -73, radius: 17 },
-          { id: "criminal-attempt", label: "พยายาม 80–82", dx: 128, dy: 17, radius: 13 },
-          { id: "criminal-participants", label: "ผู้ร่วม 83–89", dx: 86, dy: 100, radius: 14 },
-          { id: "criminal-counting", label: "กรรม/อายุความ 90–101", dx: -39, dy: 112, radius: 14 },
-        ],
+        children: criminalHierarchy[0]?.children,
       },
       {
         id: "criminal-part-2",
@@ -128,18 +161,7 @@ const legalDomains: LegalDomain[] = [
         radius: 31,
         description: "ฐานความผิดเฉพาะเรื่อง จัดตามสิ่งที่กฎหมายมุ่งคุ้มครอง",
         references: ["มาตรา 107–366/4", "ภาคความผิด"],
-        microNodes: [
-          { id: "crime-security", label: "มั่นคง 107–135/4", dx: -158, dy: -53, radius: 13 },
-          { id: "crime-government", label: "การปกครอง 136–166", dx: -78, dy: -121, radius: 14 },
-          { id: "crime-justice", label: "ยุติธรรม 167–205", dx: 40, dy: -133, radius: 14 },
-          { id: "crime-public-safety", label: "สงบ/ภัย 209–239", dx: 133, dy: -74, radius: 14 },
-          { id: "crime-forgery", label: "ปลอม 240–269/15", dx: 148, dy: 26, radius: 14 },
-          { id: "crime-sex", label: "เพศ 276–287/2", dx: 65, dy: 111, radius: 13 },
-          { id: "crime-life", label: "ชีวิต/ร่างกาย 288–308", dx: -50, dy: 128, radius: 17 },
-          { id: "crime-liberty", label: "เสรีภาพ/ชื่อเสียง 309–333", dx: -150, dy: 78, radius: 14 },
-          { id: "crime-property", label: "ทรัพย์ 334–366", dx: -166, dy: 6, radius: 17 },
-          { id: "crime-corpse", label: "ศพ 366/1–366/4", dx: -148, dy: -94, radius: 12 },
-        ],
+        children: criminalHierarchy[1]?.children,
       },
       {
         id: "criminal-part-3",
@@ -149,76 +171,7 @@ const legalDomains: LegalDomain[] = [
         radius: 20,
         description: "ความผิดฐานลหุโทษและมาตราสำคัญในชีวิตประจำวัน",
         references: ["มาตรา 367–398", "ลหุโทษ"],
-        microNodes: [
-          {
-            id: "crime-petty-order",
-            label: "ความสงบ/เจ้าพนักงาน 367–374",
-            dx: -95,
-            dy: -55,
-            radius: 16,
-            articleNodes: [
-              { id: "crime-petty-367", number: "367", label: "ไม่บอกชื่อ-ที่อยู่ต่อเจ้าพนักงาน" },
-              { id: "crime-petty-368", number: "368", label: "ไม่ปฏิบัติตามคำสั่งเจ้าพนักงาน" },
-              { id: "crime-petty-369", number: "369", label: "ทำลาย/ปิดบังประกาศเจ้าพนักงาน" },
-              { id: "crime-petty-370", number: "370", label: "ส่งเสียงอื้ออึงไม่มีเหตุอันควร" },
-              { id: "crime-petty-371", number: "371", label: "พกพาอาวุธในที่ชุมนุมชน" },
-              { id: "crime-petty-372", number: "372", label: "ทะเลาะอื้ออึงในที่สาธารณะ" },
-              { id: "crime-petty-373", number: "373", label: "ปล่อยคนวิกลจริตออกเที่ยว" },
-              { id: "crime-petty-374", number: "374", label: "ไม่ช่วยผู้ตกอยู่ในภยันตราย" },
-            ],
-          },
-          {
-            id: "crime-petty-safety",
-            label: "ความปลอดภัย/สัตว์ 375–382",
-            dx: 45,
-            dy: -95,
-            radius: 16,
-            articleNodes: [
-              { id: "crime-petty-375", number: "375", label: "ทำทางระบายน้ำสาธารณะขัดข้อง" },
-              { id: "crime-petty-376", number: "376", label: "ยิงปืนโดยใช่เหตุในที่ชุมนุมชน" },
-              { id: "crime-petty-377", number: "377", label: "ปล่อยสัตว์ดุ/สัตว์ร้ายตามลำพัง" },
-              { id: "crime-petty-378", number: "378", label: "เมาสุราจนเสียสติในที่สาธารณะ" },
-              { id: "crime-petty-379", number: "379", label: "ชักอาวุธในการวิวาท" },
-              { id: "crime-petty-380", number: "380", label: "ทำน้ำสาธารณะให้เป็นปฏิกูล" },
-              { id: "crime-petty-381", number: "381", label: "ทารุณกรรมสัตว์" },
-              { id: "crime-petty-382", number: "382", label: "ใช้สัตว์ทำงานเกินสมควร" },
-            ],
-          },
-          {
-            id: "crime-petty-hazard",
-            label: "ภัยพิบัติ/ทางสาธารณะ 383–390",
-            dx: 120,
-            dy: 35,
-            radius: 16,
-            articleNodes: [
-              { id: "crime-petty-383", number: "383", label: "ไม่ช่วยเหตุเพลิงไหม้/สาธารณภัย" },
-              { id: "crime-petty-384", number: "384", label: "แกล้งบอกความเท็จให้ตื่นตกใจ" },
-              { id: "crime-petty-385", number: "385", label: "กีดขวางทางสาธารณะ" },
-              { id: "crime-petty-386", number: "386", label: "ขุด/วางสิ่งกีดขวางทางสาธารณะ" },
-              { id: "crime-petty-387", number: "387", label: "แขวน/วางของเสี่ยงตกเป็นอันตราย" },
-              { id: "crime-petty-388", number: "388", label: "กระทำอนาจารในที่สาธารณะ" },
-              { id: "crime-petty-389", number: "389", label: "ทำของแข็งตกเป็นอันตราย" },
-              { id: "crime-petty-390", number: "390", label: "ประมาทเป็นเหตุให้ผู้อื่นบาดเจ็บ" },
-            ],
-          },
-          {
-            id: "crime-petty-dignity",
-            label: "ร่างกาย/เกียรติยศ/ทรัพย์ 391–398",
-            dx: -30,
-            dy: 115,
-            radius: 16,
-            articleNodes: [
-              { id: "crime-petty-391", number: "391", label: "ทำร้ายร่างกายไม่ถึงอันตราย" },
-              { id: "crime-petty-392", number: "392", label: "ทำให้ผู้อื่นตกใจกลัว" },
-              { id: "crime-petty-393", number: "393", label: "ดูหมิ่นซึ่งหน้า" },
-              { id: "crime-petty-394", number: "394", label: "ไล่สัตว์เข้าที่ดินผู้อื่น" },
-              { id: "crime-petty-395", number: "395", label: "ปล่อยสัตว์เข้าที่ดินผู้อื่น" },
-              { id: "crime-petty-396", number: "396", label: "ทิ้งซากสัตว์ในที่สาธารณะ" },
-              { id: "crime-petty-397", number: "397", label: "รังแก/ข่มเหง/คุกคามผู้อื่น" },
-              { id: "crime-petty-398", number: "398", label: "ทารุณเด็ก/คนป่วย/คนชรา" },
-            ],
-          },
-        ],
+        children: criminalHierarchy[2]?.children,
       },
     ],
   },
@@ -242,7 +195,7 @@ const legalDomains: LegalDomain[] = [
         radius: 26,
         description: "กติกาพื้นฐานก่อนเริ่มคดี ใช้ร่วมกันในทุกขั้นตอนของคดีแพ่ง",
         references: ["บททั่วไป", "อำนาจฟ้อง", "พยานหลักฐาน"],
-        microNodes: [
+        children: [
           { id: "civil-right-to-sue", label: "อำนาจฟ้อง 55–56", dx: -94, dy: -67, radius: 13 },
           { id: "civil-venue", label: "เขตอำนาจ 4–7", dx: -12, dy: -108, radius: 14 },
           { id: "civil-parties", label: "คู่ความ/ร้องสอด 57–59", dx: 91, dy: -76, radius: 14 },
@@ -259,7 +212,7 @@ const legalDomains: LegalDomain[] = [
         radius: 30,
         description: "ขั้นตอนสู้คดีตั้งแต่ยื่นฟ้องจนศาลชั้นต้นมีคำพิพากษา",
         references: ["คำฟ้อง", "คำให้การ", "เตรียมคดี"],
-        microNodes: [
+        children: [
           { id: "civil-ordinary", label: "วิธีสามัญ", dx: -126, dy: -48, radius: 16 },
           { id: "civil-pleading", label: "คำฟ้อง/คำให้การ 177", dx: -51, dy: -116, radius: 14 },
           { id: "civil-ending", label: "ทิ้ง/ถอนฟ้อง 174–175", dx: 62, dy: -109, radius: 14 },
@@ -276,7 +229,7 @@ const legalDomains: LegalDomain[] = [
         radius: 23,
         description: "การโต้แย้งคำตัดสินของศาลชั้นต้นในชั้นอุทธรณ์และฎีกา",
         references: ["อุทธรณ์", "ฎีกาอนุญาต"],
-        microNodes: [
+        children: [
           { id: "civil-appeal", label: "อุทธรณ์ 223–228", dx: -87, dy: -68, radius: 15 },
           { id: "civil-supreme", label: "ฎีกาอนุญาต 244/1 · 247", dx: 78, dy: -52, radius: 15 },
         ],
@@ -289,7 +242,7 @@ const legalDomains: LegalDomain[] = [
         radius: 27,
         description: "การคุ้มครองสิทธิชั่วคราวก่อนพิพากษา และการนำคำพิพากษาไปบังคับจริง",
         references: ["วิธีการชั่วคราว", "บังคับคดี"],
-        microNodes: [
+        children: [
           { id: "civil-provisional", label: "คุ้มครองชั่วคราว 254", dx: -88, dy: -71, radius: 15 },
           { id: "civil-execution", label: "บังคับคดี 271+", dx: 86, dy: -69, radius: 16 },
         ],
@@ -316,7 +269,7 @@ const legalDomains: LegalDomain[] = [
         radius: 22,
         description: "สถานะบุคคลและกติกาพื้นฐานก่อนเริ่มกระบวนการคดีอาญา",
         references: ["มาตรา 1–119 ทวิ", "ข้อความทั่วไป"],
-        microNodes: [
+        children: [
           { id: "crim-proc-status", label: "สถานะบุคคล ม.2", dx: -91, dy: -55, radius: 14 },
           { id: "crim-proc-victim", label: "ผู้เสียหาย/โจทก์ร่วม 4–6 · 30–31", dx: 5, dy: -111, radius: 14 },
           { id: "crim-proc-extinguish", label: "สิทธินำคดีระงับ ม.39", dx: 104, dy: -52, radius: 14 },
@@ -330,7 +283,7 @@ const legalDomains: LegalDomain[] = [
         radius: 25,
         description: "ชั้นเจ้าพนักงาน ตั้งแต่สืบสวน สอบสวน หมายอาญา จนถึงชันสูตร",
         references: ["มาตรา 120–156", "สอบสวน"],
-        microNodes: [
+        children: [
           { id: "crim-proc-investigation", label: "สืบสวน/สอบสวน", dx: -112, dy: -56, radius: 16 },
           { id: "crim-proc-warrants", label: "หมาย/ปล่อยชั่วคราว 52–105", dx: -11, dy: -120, radius: 15 },
           { id: "crim-proc-suspect-rights", label: "สิทธิผู้ต้องหา", dx: 104, dy: -63, radius: 14 },
@@ -345,7 +298,7 @@ const legalDomains: LegalDomain[] = [
         radius: 29,
         description: "การยื่นฟ้อง ไต่สวน พิจารณา และคำพิพากษาในศาลชั้นต้น",
         references: ["มาตรา 157–192", "ศาลชั้นต้น"],
-        microNodes: [
+        children: [
           { id: "crim-proc-charge", label: "คำฟ้อง ม.158", dx: -109, dy: -75, radius: 15 },
           { id: "crim-proc-civil-related", label: "แพ่งเกี่ยวเนื่อง 43 · 44/1", dx: -22, dy: -126, radius: 14 },
           { id: "crim-proc-inquiry", label: "ไต่สวนมูลฟ้อง", dx: 92, dy: -86, radius: 14 },
@@ -362,7 +315,7 @@ const legalDomains: LegalDomain[] = [
         radius: 21,
         description: "การโต้แย้งคำสั่งหรือคำพิพากษาไปยังศาลสูง",
         references: ["มาตรา 193–225", "อุทธรณ์และฎีกา"],
-        microNodes: [
+        children: [
           { id: "crim-proc-appeal", label: "อุทธรณ์/ฎีกา 193–225", dx: -81, dy: 4, radius: 16 },
         ],
       },
@@ -374,7 +327,7 @@ const legalDomains: LegalDomain[] = [
         radius: 20,
         description: "หลักเกณฑ์การรับฟังพยานหลักฐานในคดีอาญา",
         references: ["มาตรา 226–244", "พยานหลักฐาน"],
-        microNodes: [
+        children: [
           { id: "crim-proc-evidence", label: "รับฟังพยาน 226–244", dx: -47, dy: 93, radius: 16 },
           { id: "crim-proc-expert", label: "พยานผู้เชี่ยวชาญ", dx: 74, dy: 60, radius: 14 },
         ],
@@ -387,7 +340,7 @@ const legalDomains: LegalDomain[] = [
         radius: 21,
         description: "การนำคำพิพากษาไปบังคับโทษและการจัดการค่าธรรมเนียม",
         references: ["มาตรา 245–258", "บังคับตามคำพิพากษา"],
-        microNodes: [
+        children: [
           { id: "crim-proc-execution", label: "บังคับโทษ 245–258", dx: -93, dy: 27, radius: 16 },
           { id: "crim-proc-fine", label: "กักขังแทนค่าปรับ", dx: -31, dy: -90, radius: 14 },
         ],
@@ -400,7 +353,7 @@ const legalDomains: LegalDomain[] = [
         radius: 19,
         description: "ขั้นตอนอภัยโทษ เปลี่ยนโทษหนักเป็นเบา และลดโทษ",
         references: ["มาตรา 259–267", "อภัยโทษ"],
-        microNodes: [
+        children: [
           { id: "crim-proc-pardon", label: "อภัย/ลดโทษ 259–267", dx: -102, dy: 8, radius: 16 },
         ],
       },
@@ -426,7 +379,7 @@ const legalDomains: LegalDomain[] = [
         radius: 28,
         description: "หลักรัฐธรรมนูญ สิทธิ เสรีภาพ และโครงสร้างของรัฐ",
         references: ["รัฐธรรมนูญ", "16 หมวด"],
-        microNodes: [
+        children: [
           { id: "constitution-1", label: "หมวด 1 · บททั่วไป", dx: -144, dy: -59, radius: 12 },
           { id: "constitution-2", label: "หมวด 2 · พระมหากษัตริย์", dx: -80, dy: -128, radius: 12 },
           { id: "constitution-3", label: "หมวด 3 · สิทธิและเสรีภาพ", dx: 5, dy: -150, radius: 13 },
@@ -454,7 +407,7 @@ const legalDomains: LegalDomain[] = [
         radius: 29,
         description: "หลักการใช้อำนาจทางปกครองและการคุ้มครองสิทธิของประชาชน",
         references: ["กฎหมายปกครอง", "คำสั่งทางปกครอง"],
-        microNodes: [
+        children: [
           { id: "admin-court-establishment", label: "พ.ร.บ. จัดตั้งศาลปกครอง", dx: -103, dy: -63, radius: 15 },
           { id: "admin-procedure", label: "วิธีปฏิบัติราชการทางปกครอง", dx: 92, dy: 60, radius: 15 },
         ],
@@ -481,7 +434,7 @@ const legalDomains: LegalDomain[] = [
         radius: 24,
         description: "กฎหมายเฉพาะด้านว่าด้วยการคุ้มครองผลงานสร้างสรรค์และนวัตกรรม",
         references: ["ทรัพย์สินทางปัญญา"],
-        microNodes: [
+        children: [
           { id: "ip-copyright", label: "ลิขสิทธิ์", dx: -88, dy: -53, radius: 14 },
           { id: "ip-patent", label: "สิทธิบัตร", dx: 5, dy: -104, radius: 14 },
           { id: "ip-trademark", label: "เครื่องหมายการค้า", dx: 100, dy: -45, radius: 14 },
@@ -508,24 +461,146 @@ function curvedPath(fromX: number, fromY: number, toX: number, toY: number) {
   return `M ${fromX} ${fromY} Q ${midpointX - bend} ${midpointY - bend} ${toX} ${toY}`;
 }
 
-function getMicroAbsolutePosition2D(microNodeId: string): { x: number; y: number } | null {
-  for (const domain of legalDomains) {
-    for (const subject of domain.children) {
-      const micro = subject.microNodes?.find((item) => item.id === microNodeId);
-      if (micro) {
-        const scale = domain.id === "criminal" ? 1.82 : 1.58;
-        return { x: subject.x + micro.dx * scale, y: subject.y + micro.dy * scale };
-      }
-    }
+// Base ring radius for each drill depth (index = position within
+// selectedPath: 2 = ลักษณะ-tier under a subject, 3 = หมวด, 4 = ส่วน,
+// 5 = มาตรา leaves, 6+ = fallback for anything deeper). Indices 0/1 are
+// unused since domain/subject already carry their own absolute x/y.
+const LEVEL_RING_RADIUS = [0, 0, 150, 95, 68, 52, 44];
+
+type PathStep = { id: string; label: string; x: number; y: number };
+
+// Walks selectedPath through the domain's tree, computing the absolute
+// position of each step. Legacy hand-placed nodes (dx/dy given) use their
+// authored offset; auto-generated civil/criminal nodes fall back to radial
+// layout. Stops early (returns what it has) if a path segment can't be
+// resolved, e.g. right after the underlying data changes.
+function resolveSelectedPath(domain: LegalDomain, path: string[]): PathStep[] {
+  const steps: PathStep[] = [];
+  if (path.length === 0) return steps;
+  steps.push({ id: domain.id, label: domain.shortLabel, x: domain.x, y: domain.y });
+  if (path.length === 1) return steps;
+  const subject = domain.children.find((item) => item.id === path[1]);
+  if (!subject) return steps;
+  steps.push({ id: subject.id, label: subject.label, x: subject.x, y: subject.y });
+  const legacyScale = domain.id === "criminal" ? 1.82 : 1.58;
+  let currentChildren = subject.children;
+  let currentX = subject.x;
+  let currentY = subject.y;
+  for (let depth = 2; depth < path.length; depth += 1) {
+    if (!currentChildren) break;
+    const index = currentChildren.findIndex((item) => item.id === path[depth]);
+    if (index === -1) break;
+    const node = currentChildren[index];
+    const baseRadius = LEVEL_RING_RADIUS[Math.min(depth, LEVEL_RING_RADIUS.length - 1)];
+    const pos = node.dx !== undefined && node.dy !== undefined
+      ? { x: currentX + node.dx * legacyScale, y: currentY + node.dy * legacyScale }
+      : autoRadialPosition(currentX, currentY, index, currentChildren.length, baseRadius);
+    steps.push({ id: node.id, label: node.label, x: pos.x, y: pos.y });
+    currentX = pos.x;
+    currentY = pos.y;
+    currentChildren = node.children;
   }
-  return null;
+  return steps;
+}
+
+type LegalNodeRingProps = {
+  nodes: LegalNode[];
+  centerX: number;
+  centerY: number;
+  depth: number;
+  domainId: string;
+  domainColor: string;
+  domainSoftColor: string;
+  groupLabel: string;
+  selectedPath: string[];
+  pathPrefix: string[];
+  onSelectPath: (path: string[]) => void;
+  onSelectArticle: (book: string, node: LegalNode, groupLabel: string) => void;
+  showConnections: boolean;
+  legacyScale: number;
+};
+
+// Recursively renders one ring of sibling nodes around a parent position,
+// and - if one of them is the next step in selectedPath - recurses into its
+// children centered on its own computed position. Handles both hand-placed
+// legacy nodes (explicit dx/dy) and auto-generated ones (radial layout) via
+// the same code path, and terminates at มาตรา leaves (book+number set),
+// which open the side panel instead of drilling further.
+function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, domainSoftColor, groupLabel, selectedPath, pathPrefix, onSelectPath, onSelectArticle, showConnections, legacyScale }: LegalNodeRingProps) {
+  const baseRadius = LEVEL_RING_RADIUS[Math.min(depth, LEVEL_RING_RADIUS.length - 1)];
+  const activeId = selectedPath[depth];
+  const placed = nodes.map((node, index) => {
+    const pos = node.dx !== undefined && node.dy !== undefined
+      ? { x: centerX + node.dx * legacyScale, y: centerY + node.dy * legacyScale }
+      : autoRadialPosition(centerX, centerY, index, nodes.length, baseRadius);
+    return { node, pos };
+  });
+  const staggerStep = Math.min(70, Math.max(18, 480 / Math.max(1, nodes.length)));
+
+  return (
+    <>
+      {showConnections && (
+        <g className="micro-connections-layer" aria-hidden="true">
+          {placed.map(({ node, pos }) => (
+            <path key={`ring-link-${node.id}`} d={curvedPath(centerX, centerY, pos.x, pos.y)} fill="none" stroke={domainColor} strokeWidth="0.8" opacity={activeId && activeId !== node.id ? 0.16 : 0.48} />
+          ))}
+        </g>
+      )}
+      {placed.map(({ node, pos }, index) => {
+        const isLeaf = !node.children;
+        const isActive = activeId === node.id;
+        const radius = node.radius ?? Math.max(6, 15 - depth * 1.4);
+        const nodePath = [...pathPrefix, node.id];
+        const handleActivate = () => (isLeaf ? onSelectArticle(domainId, node, groupLabel) : onSelectPath(nodePath));
+        return (
+          <g key={node.id} className="micro-node-wrap" style={{ "--micro-delay": `${index * staggerStep}ms`, "--micro-drift-delay": `${(index % 5) * -1.1}s` } as CSSProperties}>
+            <g className="micro-node-drift">
+              <g
+                className={`graph-node ${isLeaf ? "graph-node--article" : "graph-node--micro is-expandable"} ${isActive ? "is-selected" : ""}`}
+                role="button"
+                tabIndex={0}
+                aria-label={isLeaf ? `มาตรา ${node.number} ${node.label}` : node.label}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={handleActivate}
+                onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); handleActivate(); } }}
+              >
+                <circle cx={pos.x} cy={pos.y} r={radius + (isLeaf ? 3 : 5)} fill={domainColor} opacity={isActive ? 0.22 : isLeaf ? 0.14 : 0.12} filter="url(#softBlur)" />
+                <circle cx={pos.x} cy={pos.y} r={radius} fill={isLeaf ? "#FFFFFF" : domainSoftColor} stroke={domainColor} strokeWidth={isActive ? 1.9 : isLeaf ? 1.1 : 1} strokeDasharray={!isLeaf ? "2 2.5" : undefined} />
+                <text x={pos.x} y={pos.y + radius + (isLeaf ? 12 : 14)} textAnchor="middle" className={isLeaf ? "article-label" : "micro-label"}>{isLeaf ? `ม.${node.number}` : node.label}</text>
+              </g>
+            </g>
+            {isActive && node.children && (
+              <LegalNodeRing
+                nodes={node.children}
+                centerX={pos.x}
+                centerY={pos.y}
+                depth={depth + 1}
+                domainId={domainId}
+                domainColor={domainColor}
+                domainSoftColor={domainSoftColor}
+                groupLabel={node.label}
+                selectedPath={selectedPath}
+                pathPrefix={nodePath}
+                onSelectPath={onSelectPath}
+                onSelectArticle={onSelectArticle}
+                showConnections={showConnections}
+                legacyScale={legacyScale}
+              />
+            )}
+          </g>
+        );
+      })}
+    </>
+  );
 }
 
 export default function Home() {
   const [expanded, setExpanded] = useState(false);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
-  const [selectedMicroNodeId, setSelectedMicroNodeId] = useState<string | null>(null);
+  // [domainId, subjectId(บรรพ/ภาค), ...ลักษณะ/หมวด/ส่วน ids down to whatever
+  // depth the user has drilled into]. Replaces the old fixed-depth
+  // selectedId/selectedSubjectId/selectedMicroNodeId trio now that the tree
+  // goes arbitrarily deep.
+  const [selectedPath, setSelectedPath] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<"network" | "book">("network");
   const [zoom, setZoom] = useState(1);
   const [showConnections, setShowConnections] = useState(true);
@@ -545,6 +620,19 @@ export default function Home() {
   const backgroundMusicRef = useRef<HTMLAudioElement>(null);
   const panGestureRef = useRef({ pointerId: -1, startX: 0, startY: 0, startPanX: 0, startPanY: 0 });
   const didDragRef = useRef(false);
+  // Two-finger pinch-zoom, tracked manually via Pointer Events rather than
+  // native gesture events: Safari's gesturestart/gesturechange is
+  // WebKit-only and never fires on Android Chrome, so it's not a viable
+  // cross-platform pinch source. Pointer Events (with touch-action:none,
+  // already set on .law-map) work identically on both.
+  const activePointersRef = useRef(new Map<number, { x: number; y: number }>());
+  const pinchStartRef = useRef<{ distance: number; zoom: number } | null>(null);
+
+  const hapticPulse = () => {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      try { navigator.vibrate(12); } catch { /* unsupported or blocked - iOS Safari never exposes this */ }
+    }
+  };
 
   const playSoftTone = () => {
     if (!soundEnabled || typeof window === "undefined") return;
@@ -590,6 +678,15 @@ export default function Home() {
 
   const handleMapPointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
     if (event.pointerType === "mouse" && event.button !== 0) return;
+    activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (activePointersRef.current.size === 2) {
+      const [a, b] = Array.from(activePointersRef.current.values());
+      pinchStartRef.current = { distance: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)), zoom };
+      setIsPanning(false);
+      didDragRef.current = true;
+      try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* already released elsewhere */ }
+      return;
+    }
     const gesture = panGestureRef.current;
     gesture.pointerId = event.pointerId;
     gesture.startX = event.clientX;
@@ -600,6 +697,16 @@ export default function Home() {
   };
 
   const handleMapPointerMove = (event: ReactPointerEvent<SVGSVGElement>) => {
+    if (activePointersRef.current.has(event.pointerId)) {
+      activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    }
+    if (activePointersRef.current.size === 2 && pinchStartRef.current) {
+      const [a, b] = Array.from(activePointersRef.current.values());
+      const distance = Math.hypot(a.x - b.x, a.y - b.y);
+      const ratio = distance / pinchStartRef.current.distance;
+      setZoom(Math.max(0.42, Math.min(1.32, Number((pinchStartRef.current.zoom * ratio).toFixed(2)))));
+      return;
+    }
     const bounds = event.currentTarget.getBoundingClientRect();
     const gesture = panGestureRef.current;
     if (gesture.pointerId !== event.pointerId) return;
@@ -614,6 +721,20 @@ export default function Home() {
   };
 
   const handleMapPointerUp = (event: ReactPointerEvent<SVGSVGElement>) => {
+    activePointersRef.current.delete(event.pointerId);
+    if (activePointersRef.current.size < 2) {
+      pinchStartRef.current = null;
+      const remaining = Array.from(activePointersRef.current.entries())[0];
+      if (remaining) {
+        const [remainingId, point] = remaining;
+        const gesture = panGestureRef.current;
+        gesture.pointerId = remainingId;
+        gesture.startX = point.x;
+        gesture.startY = point.y;
+        gesture.startPanX = pan.x;
+        gesture.startPanY = pan.y;
+      }
+    }
     if (panGestureRef.current.pointerId !== event.pointerId) return;
     panGestureRef.current.pointerId = -1;
     setIsPanning(false);
@@ -624,92 +745,82 @@ export default function Home() {
   const handleMapWheel = (event: ReactWheelEvent<SVGSVGElement>) => {
     event.preventDefault();
     const delta = event.deltaY > 0 ? -0.06 : 0.06;
-    setZoom((value) => Math.max(0.78, Math.min(1.32, Number((value + delta).toFixed(2)))));
+    setZoom((value) => Math.max(0.42, Math.min(1.32, Number((value + delta).toFixed(2)))));
   };
 
+  const selectedId = selectedPath[0] ?? null;
+  const selectedSubjectId = selectedPath[1] ?? null;
   const selectedDomain = legalDomains.find((domain) => domain.id === selectedId) ?? null;
   const selectedSubject = selectedDomain?.children.find((subject) => subject.id === selectedSubjectId) ?? null;
-  const microOrbitScale = selectedDomain?.id === "criminal" ? 1.82 : 1.58;
-  const selectedMicroPosition = selectedMicroNodeId ? getMicroAbsolutePosition2D(selectedMicroNodeId) : null;
-  const cameraTarget = selectedMicroPosition ?? selectedSubject ?? selectedDomain;
-  const cameraScale = cameraEnabled && cameraTarget ? zoom * (selectedMicroPosition ? 2.65 : selectedSubject ? 1.72 : 1.45) : zoom;
+  const legacyScale = selectedDomain?.id === "criminal" ? 1.82 : 1.58;
+  const pathSteps = selectedDomain ? resolveSelectedPath(selectedDomain, selectedPath) : [];
+  const cameraTarget = pathSteps.length ? pathSteps[pathSteps.length - 1] : null;
+  const cameraScale = cameraEnabled && cameraTarget ? zoom * cameraScaleForDepth(pathSteps.length) : zoom;
   const cameraTransform = cameraEnabled && cameraTarget
     ? `translate(${720 + pan.x} ${450 + pan.y}) scale(${cameraScale}) translate(-${cameraTarget.x} -${cameraTarget.y})`
     : `translate(${720 + pan.x} ${450 + pan.y}) scale(${zoom}) translate(-720 -450)`;
 
-  const exploreDomain = (domainId: string, subjectId: string | null = null) => {
+  // Handles a click at any depth: the domain circle (path=[domainId]), a
+  // subject/บรรพ/ภาค (path=[domainId,subjectId]), or any node further down
+  // the auto-generated tree. Re-clicking the currently-focused node collapses
+  // one level back up; clicking anything else drills straight to it,
+  // discarding whatever was selected deeper than that.
+  const selectPath = (path: string[]) => {
     if (didDragRef.current) return;
     playSoftTone();
+    hapticPulse();
     setExpanded(true);
     setPan({ x: 0, y: 0 });
-    setSelectedMicroNodeId(null);
-    if (!subjectId && selectedId === domainId) {
-      setSelectedId(null);
-      setSelectedSubjectId(null);
-      setZoom(1);
-      return;
-    }
-    if (subjectId && selectedId === domainId && selectedSubjectId === subjectId) {
-      setSelectedSubjectId(null);
-      setZoom(1);
-      return;
-    }
-    setSelectedId(domainId);
-    setSelectedSubjectId(subjectId);
-    setZoom(subjectId ? 0.89 : 1);
+    const same = selectedPath.length === path.length && selectedPath.every((id, index) => id === path[index]);
+    const next = same ? path.slice(0, -1) : path;
+    setSelectedPath(next);
+    setZoom(next.length > 1 ? 0.89 : 1);
     setViewMode("network");
   };
 
-  const selectMicroNode = (microId: string) => {
-    if (didDragRef.current) return;
-    playSoftTone();
-    setPan({ x: 0, y: 0 });
-    setSelectedMicroNodeId((current) => (current === microId ? null : microId));
-    setZoom(0.89);
+  // Thin compatibility shim: ForceNetwork3D (the separate 3D/WebGL mode,
+  // untouched this pass) and the book-view list still call the old
+  // two-argument shape.
+  const exploreDomain = (domainId: string, subjectId: string | null = null) => {
+    selectPath(subjectId ? [domainId, subjectId] : [domainId]);
   };
 
-  const handleSelectArticle = (book: string, article: LegalArticleNode, groupLabel: string) => {
-    setLawSelection({ law: { book, number: article.number, label: article.label, anchorMicroNodeId: "" }, issueTitle: groupLabel });
+  const handleSelectArticle = (book: string, node: LegalNode, groupLabel: string) => {
+    if (!node.number) return;
+    setLawSelection({ law: { book, number: node.number, label: node.label }, issueTitle: groupLabel });
   };
 
   const activeCaseData = caseGraphs[activeCaseId];
 
-  // Nexus overlay for the 2D map: a free-floating hub (not a child of the domain
-  // node) whose position is the centroid of its Issue nodes, which in turn float
-  // at the centroid of their มาตรา — mirrors the same floating-hub logic used in
-  // the 3D graph (ForceNetwork3D), just computed in 2D SVG coordinates.
+  // Nexus overlay: a self-contained radial diagram (hub -> issues -> laws)
+  // centered on the viewport, independent of the background map's selection
+  // or camera state. Earlier versions anchored these nodes to background
+  // micro-node positions, but that made the nexus fragile (it broke whenever
+  // the underlying map data changed) and let corner UI chrome cover the hub
+  // whenever its computed position happened to land near a menu. Being
+  // self-positioned guarantees it's always fully visible.
   const caseOverlay2D = useMemo(() => {
     if (!caseOverlayOpen) return null;
     const caseData = activeCaseData;
-    const issues = caseData.issues.map((issue) => {
-      const lawAnchors = issue.laws.map((law) => ({ law, anchor: getMicroAbsolutePosition2D(law.anchorMicroNodeId) }));
-      const validAnchors = lawAnchors.map((item) => item.anchor).filter((point): point is { x: number; y: number } => Boolean(point));
-      const centroid = validAnchors.length
-        ? { x: validAnchors.reduce((sum, point) => sum + point.x, 0) / validAnchors.length, y: validAnchors.reduce((sum, point) => sum + point.y, 0) / validAnchors.length }
-        : { x: 720, y: 450 };
-      const issuePos = { x: centroid.x + 40, y: centroid.y + 46 };
-      const laws = lawAnchors.map((item, index) => {
-        const anchor = item.anchor ?? issuePos;
-        const angle = (index / Math.max(1, lawAnchors.length)) * Math.PI * 2;
-        const spread = lawAnchors.length > 1 ? 26 : 0;
-        return { ...item.law, issueId: issue.id, x: anchor.x + Math.cos(angle) * spread, y: anchor.y + Math.sin(angle) * spread, anchorX: anchor.x, anchorY: anchor.y };
+    const hubX = 720;
+    const hubY = 450;
+    const issueCount = Math.max(1, caseData.issues.length);
+    const issues = caseData.issues.map((issue, issueIndex) => {
+      const issueAngle = (issueIndex / issueCount) * Math.PI * 2 - Math.PI / 2;
+      const issueRadius = 130 + issueCount * 6;
+      const issueX = hubX + Math.cos(issueAngle) * issueRadius;
+      const issueY = hubY + Math.sin(issueAngle) * issueRadius;
+      const lawCount = Math.max(1, issue.laws.length);
+      const laws = issue.laws.map((law, lawIndex) => {
+        const spread = issue.laws.length > 1 ? Math.PI / 3.4 : 0;
+        const lawAngle = issueAngle + (lawIndex / Math.max(1, lawCount - 1) - 0.5) * spread;
+        const lawRadius = issueRadius + 88;
+        return { ...law, issueId: issue.id, x: hubX + Math.cos(lawAngle) * lawRadius, y: hubY + Math.sin(lawAngle) * lawRadius };
       });
-      return { id: issue.id, title: issue.title, x: issuePos.x, y: issuePos.y, laws };
+      return { id: issue.id, title: issue.title, x: issueX, y: issueY, laws };
     });
-    const issueCentroid = issues.length
-      ? { x: issues.reduce((sum, item) => sum + item.x, 0) / issues.length, y: issues.reduce((sum, item) => sum + item.y, 0) / issues.length }
-      : { x: 720, y: 450 };
-    return { title: caseData.title, x: issueCentroid.x, y: issueCentroid.y - 74, issues };
+    return { title: caseData.title, x: hubX, y: hubY, issues };
   }, [caseOverlayOpen, activeCaseData]);
-
-  const findSubjectIdForMicroNode = (microNodeId: string) => {
-    for (const domain of legalDomains) {
-      for (const subject of domain.children) {
-        if (subject.microNodes?.some((micro) => micro.id === microNodeId)) return subject.id;
-      }
-    }
-    return null;
-  };
 
   const toggleCaseOverlay = (caseId: string) => {
     if (caseOverlayOpen && activeCaseId === caseId) {
@@ -717,15 +828,13 @@ export default function Home() {
       setLawSelection(null);
       return;
     }
-    const caseData = caseGraphs[caseId];
-    const firstAnchorSubjectId = findSubjectIdForMicroNode(caseData.issues[0]?.laws[0]?.anchorMicroNodeId ?? "");
     setActiveCaseId(caseId);
     setCaseOverlayOpen(true);
     setLawSelection(null);
     setExpanded(true);
     setPan({ x: 0, y: 0 });
-    setSelectedId(caseData.domainId);
-    setSelectedSubjectId(firstAnchorSubjectId);
+    setSelectedPath([]);
+    setZoom(1);
     setViewMode("network");
   };
 
@@ -735,18 +844,14 @@ export default function Home() {
   };
 
   const returnToAllDomains = () => {
-    setSelectedId(null);
-    setSelectedSubjectId(null);
-    setSelectedMicroNodeId(null);
+    setSelectedPath([]);
     setPan({ x: 0, y: 0 });
     setZoom(1);
   };
 
   const resetExplorer = () => {
     setExpanded(false);
-    setSelectedId(null);
-    setSelectedSubjectId(null);
-    setSelectedMicroNodeId(null);
+    setSelectedPath([]);
     setViewMode("network");
     setZoom(1);
     setPan({ x: 0, y: 0 });
@@ -799,8 +904,14 @@ export default function Home() {
         {expanded && (
           <nav className="breadcrumb" aria-label="เส้นทางการสำรวจ">
             <button onClick={resetExplorer}>กฎหมายทั้งหมด</button>
-            {selectedDomain && <><ChevronRight size={13} /><button onClick={() => exploreDomain(selectedDomain.id)}>{selectedDomain.shortLabel}</button></>}
-            {selectedSubject && <><ChevronRight size={13} /><span>{selectedSubject.label}</span></>}
+            {pathSteps.map((step, index) => (
+              <Fragment key={step.id}>
+                <ChevronRight size={13} />
+                {index === pathSteps.length - 1
+                  ? <span>{step.label}</span>
+                  : <button onClick={() => selectPath(selectedPath.slice(0, index + 1))}>{step.label}</button>}
+              </Fragment>
+            ))}
           </nav>
         )}
 
@@ -832,7 +943,7 @@ export default function Home() {
         </div>
 
         <div className="zoom-controls" aria-label="ควบคุมการซูม">
-          <button onClick={() => setZoom((value) => Math.max(0.78, Number((value - 0.12).toFixed(2))))} aria-label="ซูมออก"><ZoomOut size={18} /></button>
+          <button onClick={() => setZoom((value) => Math.max(0.42, Number((value - 0.12).toFixed(2))))} aria-label="ซูมออก"><ZoomOut size={18} /></button>
           <span>{Math.round(zoom * 100)}%</span>
           <button onClick={() => setZoom((value) => Math.min(1.32, Number((value + 0.12).toFixed(2))))} aria-label="ซูมเข้า"><ZoomIn size={18} /></button>
         </div>
@@ -849,7 +960,7 @@ export default function Home() {
             <ForceNetwork3D domains={legalDomains} expanded={expanded} selectedDomainId={selectedId} selectedSubjectId={selectedSubjectId} showConnections={showConnections} motionEnabled={motionEnabled} caseOverlay={caseOverlayOpen ? activeCaseData : null} onExploreDomain={exploreDomain} onOpen={() => { playSoftTone(); setExpanded(true); }} onReset={resetExplorer} onFallbackTo2D={() => setIs3D(false)} onSelectLaw={handleSelectOverlayLaw} />
           </WebGLBoundary>
         ) : (
-        <svg className={`law-map ${isPanning ? "is-panning" : ""}`} viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" onPointerDown={handleMapPointerDown} onPointerMove={handleMapPointerMove} onPointerUp={handleMapPointerUp} onPointerCancel={handleMapPointerUp} onPointerLeave={() => { if (panGestureRef.current.pointerId === -1) setIsPanning(false); }} onWheel={handleMapWheel}>
+        <svg className={`law-map ${isPanning ? "is-panning" : ""} ${lawSelection ? "law-focus" : ""}`} viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" onPointerDown={handleMapPointerDown} onPointerMove={handleMapPointerMove} onPointerUp={handleMapPointerUp} onPointerCancel={handleMapPointerUp} onPointerLeave={() => { if (panGestureRef.current.pointerId === -1) setIsPanning(false); }} onWheel={handleMapWheel}>
           <defs>
             <filter id="softBlur"><feGaussianBlur stdDeviation="16" /></filter>
             <filter id="nodeShadow" x="-70%" y="-70%" width="240%" height="240%"><feDropShadow dx="0" dy="9" stdDeviation="8" floodColor="#3C3651" floodOpacity="0.16" /></filter>
@@ -915,7 +1026,7 @@ export default function Home() {
                     <circle cx={domain.x + domain.radius + 14} cy={domain.y - 12} r="3.5" fill={domain.color} />
                     <circle cx={domain.x + 7} cy={domain.y - domain.radius - 18} r="3" fill={domain.softColor} />
                   </g>
-                  <g className={`graph-node graph-node--domain ${isSelected ? "is-selected" : ""}`} role="button" tabIndex={0} aria-label={`เปิด ${domain.title}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => exploreDomain(domain.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); exploreDomain(domain.id); } }}>
+                  <g className={`graph-node graph-node--domain ${isSelected ? "is-selected" : ""}`} role="button" tabIndex={0} aria-label={`เปิด ${domain.title}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => selectPath([domain.id])} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectPath([domain.id]); } }}>
                     <circle cx={domain.x} cy={domain.y} r={domain.radius + 17} fill={domain.color} opacity={isSelected ? 0.19 : 0.1} filter="url(#softBlur)" />
                     <circle cx={domain.x} cy={domain.y} r={domain.radius + 5} fill="none" stroke={domain.color} strokeOpacity={isSelected ? 0.65 : 0.28} strokeWidth="1.3" />
                     <circle cx={domain.x} cy={domain.y} r={domain.radius} fill={domain.color} filter="url(#nodeShadow)" />
@@ -927,74 +1038,32 @@ export default function Home() {
                     const isSubjectSelected = selectedSubjectId === subject.id;
                     return (
                       <g key={subject.id} className="subject-node-wrap" style={{ "--subject-delay": `${subjectIndex * 55}ms`, "--drift-delay": `${(subjectIndex % 7) * -0.9}s` } as CSSProperties}>
-                        {isSubjectSelected && showConnections && (
-                          <g className="micro-connections-layer" aria-hidden="true">
-                            {subject.microNodes?.map((micro) => (
-                              <path key={`micro-link-${micro.id}`} d={curvedPath(subject.x, subject.y, subject.x + micro.dx * microOrbitScale, subject.y + micro.dy * microOrbitScale)} fill="none" stroke={domain.color} strokeWidth="0.8" opacity="0.48" />
-                            ))}
-                          </g>
-                        )}
                         <g className="subject-node-drift">
-                          <g className={`graph-node graph-node--subject ${isSubjectSelected ? "is-selected" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => exploreDomain(domain.id, subject.id)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); exploreDomain(domain.id, subject.id); } }}>
+                          <g className={`graph-node graph-node--subject ${isSubjectSelected ? "is-selected" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => selectPath([domain.id, subject.id])} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectPath([domain.id, subject.id]); } }}>
                             <circle cx={subject.x} cy={subject.y} r={subject.radius + 10} fill={domain.color} opacity={isSubjectSelected ? 0.19 : 0.075} filter="url(#softBlur)" />
                             <circle cx={subject.x} cy={subject.y} r={subject.radius} fill={domain.softColor} stroke={domain.color} strokeWidth={isSubjectSelected ? 2.1 : 1.15} filter="url(#nodeShadow)" />
                             <circle cx={subject.x} cy={subject.y} r={Math.max(4, subject.radius * 0.3)} fill="#FFFFFF" opacity="0.38" />
                             <text x={subject.x} y={subject.y + subject.radius + 20} textAnchor="middle" className="subject-label">{subject.label}</text>
                           </g>
                         </g>
-                        {isSubjectSelected && subject.microNodes?.map((micro, microIndex) => {
-                          const microX = subject.x + micro.dx * microOrbitScale;
-                          const microY = subject.y + micro.dy * microOrbitScale;
-                          const hasArticles = Boolean(micro.articleNodes?.length);
-                          const isMicroSelected = selectedMicroNodeId === micro.id;
-                          return (
-                            <g key={micro.id} className="micro-node-wrap" style={{ "--micro-delay": `${microIndex * 75}ms`, "--micro-drift-delay": `${(microIndex % 5) * -1.1}s` } as CSSProperties}>
-                              <g className="micro-node-drift">
-                                <g
-                                  className={`${hasArticles ? "graph-node graph-node--micro is-expandable" : ""} ${isMicroSelected ? "is-selected" : ""}`}
-                                  role={hasArticles ? "button" : undefined}
-                                  tabIndex={hasArticles ? 0 : undefined}
-                                  aria-label={micro.label}
-                                  onPointerDown={hasArticles ? (event) => event.stopPropagation() : undefined}
-                                  onClick={hasArticles ? () => selectMicroNode(micro.id) : undefined}
-                                  onKeyDown={hasArticles ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectMicroNode(micro.id); } } : undefined}
-                                >
-                                  <circle cx={microX} cy={microY} r={micro.radius + 5} fill={domain.color} opacity={isMicroSelected ? 0.22 : 0.12} filter="url(#softBlur)" />
-                                  <circle cx={microX} cy={microY} r={micro.radius} fill={domain.softColor} stroke={domain.color} strokeWidth={isMicroSelected ? 1.8 : 1} strokeDasharray={hasArticles ? "2 2.5" : undefined} />
-                                  <text x={microX} y={microY + micro.radius + 14} textAnchor="middle" className="micro-label">{micro.label}</text>
-                                </g>
-
-                                {isMicroSelected && micro.articleNodes && (
-                                  <g className="article-leaf-layer" aria-label={`มาตราใน ${micro.label}`}>
-                                    {micro.articleNodes.map((article, articleIndex) => {
-                                      const total = micro.articleNodes!.length;
-                                      const angle = (articleIndex / total) * Math.PI * 2 - Math.PI / 2;
-                                      const ax = microX + Math.cos(angle) * 46;
-                                      const ay = microY + Math.sin(angle) * 46;
-                                      return (
-                                        <g
-                                          key={article.id}
-                                          className="graph-node graph-node--article"
-                                          role="button"
-                                          tabIndex={0}
-                                          aria-label={`มาตรา ${article.number} ${article.label}`}
-                                          onPointerDown={(event) => event.stopPropagation()}
-                                          onClick={() => handleSelectArticle(domain.id, article, micro.label)}
-                                          onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); handleSelectArticle(domain.id, article, micro.label); } }}
-                                        >
-                                          <line x1={microX} y1={microY} x2={ax} y2={ay} stroke={domain.color} strokeWidth="0.7" opacity="0.35" />
-                                          <circle cx={ax} cy={ay} r="9" fill={domain.color} opacity="0.14" filter="url(#softBlur)" />
-                                          <circle cx={ax} cy={ay} r="6" fill="#FFFFFF" stroke={domain.color} strokeWidth="1.1" />
-                                          <text x={ax} y={ay + 14} textAnchor="middle" className="article-label">ม.{article.number}</text>
-                                        </g>
-                                      );
-                                    })}
-                                  </g>
-                                )}
-                              </g>
-                            </g>
-                          );
-                        })}
+                        {isSubjectSelected && subject.children && (
+                          <LegalNodeRing
+                            nodes={subject.children}
+                            centerX={subject.x}
+                            centerY={subject.y}
+                            depth={2}
+                            domainId={domain.id}
+                            domainColor={domain.color}
+                            domainSoftColor={domain.softColor}
+                            groupLabel={subject.label}
+                            selectedPath={selectedPath}
+                            pathPrefix={[domain.id, subject.id]}
+                            onSelectPath={selectPath}
+                            onSelectArticle={handleSelectArticle}
+                            showConnections={showConnections}
+                            legacyScale={legacyScale}
+                          />
+                        )}
                       </g>
                     );
                   })}
@@ -1008,13 +1077,19 @@ export default function Home() {
                   {caseOverlay2D.issues.map((issue) => (
                     <path key={`nexus-link-${issue.id}`} d={curvedPath(caseOverlay2D.x, caseOverlay2D.y, issue.x, issue.y)} fill="none" stroke="#D64545" strokeWidth="1.4" opacity="0.4" />
                   ))}
-                  {caseOverlay2D.issues.flatMap((issue) => issue.laws.map((law) => (
-                    <g key={`law-link-${issue.id}-${law.book}-${law.number}`}>
-                      <path d={curvedPath(issue.x, issue.y, law.x, law.y)} fill="none" stroke="#3E7BD6" strokeWidth="1.1" opacity="0.42" />
-                      {(law.anchorX !== law.x || law.anchorY !== law.y) && (
-                        <line x1={law.anchorX} y1={law.anchorY} x2={law.x} y2={law.y} stroke="#3E7BD6" strokeWidth="0.7" strokeDasharray="2 4" opacity="0.3" />
-                      )}
-                    </g>
+                  {caseOverlay2D.issues.flatMap((issue) => issue.laws.map((law, lawIndex) => (
+                    // First law under each issue reads as the primary basis (thicker,
+                    // more opaque); the rest are secondary grounds (thinner, fainter) -
+                    // gives the fan-out a sense of which มาตรา actually carries the issue.
+                    <path
+                      key={`law-link-${issue.id}-${law.book}-${law.number}`}
+                      d={curvedPath(issue.x, issue.y, law.x, law.y)}
+                      fill="none"
+                      stroke="#3E7BD6"
+                      strokeWidth={lawIndex === 0 ? 1.6 : 1}
+                      strokeDasharray={lawIndex === 0 ? undefined : "1 4"}
+                      opacity={lawIndex === 0 ? 0.5 : 0.32}
+                    />
                   )))}
                 </g>
 

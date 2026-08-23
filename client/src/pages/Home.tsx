@@ -30,7 +30,11 @@ import {
   ZoomOut,
 } from "lucide-react";
 
-const MANUS_ASSET_ORIGIN = "https://legalcodes-wmdmwjtc.manus.space";
+const BACKGROUND_MUSIC_SRC = "/music/alex-morgan-jazz-restaurant-music-556244.mp3";
+
+type LegalArticleNode = { id: string; number: string; label: string };
+
+type MicroNode = { id: string; label: string; dx: number; dy: number; radius: number; articleNodes?: LegalArticleNode[] };
 
 type LegalSubject = {
   id: string;
@@ -40,7 +44,7 @@ type LegalSubject = {
   radius: number;
   description: string;
   references: string[];
-  microNodes?: { id: string; label: string; dx: number; dy: number; radius: number }[];
+  microNodes?: MicroNode[];
 };
 
 type LegalDomain = {
@@ -146,9 +150,74 @@ const legalDomains: LegalDomain[] = [
         description: "ความผิดฐานลหุโทษและมาตราสำคัญในชีวิตประจำวัน",
         references: ["มาตรา 367–398", "ลหุโทษ"],
         microNodes: [
-          { id: "crime-petty", label: "ลหุโทษ 367–398", dx: 79, dy: 50, radius: 16 },
-          { id: "crime-petty-public", label: "ม.367 · 372 · 376", dx: 116, dy: -27, radius: 11 },
-          { id: "crime-petty-harm", label: "ม.391 · 397", dx: -14, dy: 105, radius: 11 },
+          {
+            id: "crime-petty-order",
+            label: "ความสงบ/เจ้าพนักงาน 367–374",
+            dx: -95,
+            dy: -55,
+            radius: 16,
+            articleNodes: [
+              { id: "crime-petty-367", number: "367", label: "ไม่บอกชื่อ-ที่อยู่ต่อเจ้าพนักงาน" },
+              { id: "crime-petty-368", number: "368", label: "ไม่ปฏิบัติตามคำสั่งเจ้าพนักงาน" },
+              { id: "crime-petty-369", number: "369", label: "ทำลาย/ปิดบังประกาศเจ้าพนักงาน" },
+              { id: "crime-petty-370", number: "370", label: "ส่งเสียงอื้ออึงไม่มีเหตุอันควร" },
+              { id: "crime-petty-371", number: "371", label: "พกพาอาวุธในที่ชุมนุมชน" },
+              { id: "crime-petty-372", number: "372", label: "ทะเลาะอื้ออึงในที่สาธารณะ" },
+              { id: "crime-petty-373", number: "373", label: "ปล่อยคนวิกลจริตออกเที่ยว" },
+              { id: "crime-petty-374", number: "374", label: "ไม่ช่วยผู้ตกอยู่ในภยันตราย" },
+            ],
+          },
+          {
+            id: "crime-petty-safety",
+            label: "ความปลอดภัย/สัตว์ 375–382",
+            dx: 45,
+            dy: -95,
+            radius: 16,
+            articleNodes: [
+              { id: "crime-petty-375", number: "375", label: "ทำทางระบายน้ำสาธารณะขัดข้อง" },
+              { id: "crime-petty-376", number: "376", label: "ยิงปืนโดยใช่เหตุในที่ชุมนุมชน" },
+              { id: "crime-petty-377", number: "377", label: "ปล่อยสัตว์ดุ/สัตว์ร้ายตามลำพัง" },
+              { id: "crime-petty-378", number: "378", label: "เมาสุราจนเสียสติในที่สาธารณะ" },
+              { id: "crime-petty-379", number: "379", label: "ชักอาวุธในการวิวาท" },
+              { id: "crime-petty-380", number: "380", label: "ทำน้ำสาธารณะให้เป็นปฏิกูล" },
+              { id: "crime-petty-381", number: "381", label: "ทารุณกรรมสัตว์" },
+              { id: "crime-petty-382", number: "382", label: "ใช้สัตว์ทำงานเกินสมควร" },
+            ],
+          },
+          {
+            id: "crime-petty-hazard",
+            label: "ภัยพิบัติ/ทางสาธารณะ 383–390",
+            dx: 120,
+            dy: 35,
+            radius: 16,
+            articleNodes: [
+              { id: "crime-petty-383", number: "383", label: "ไม่ช่วยเหตุเพลิงไหม้/สาธารณภัย" },
+              { id: "crime-petty-384", number: "384", label: "แกล้งบอกความเท็จให้ตื่นตกใจ" },
+              { id: "crime-petty-385", number: "385", label: "กีดขวางทางสาธารณะ" },
+              { id: "crime-petty-386", number: "386", label: "ขุด/วางสิ่งกีดขวางทางสาธารณะ" },
+              { id: "crime-petty-387", number: "387", label: "แขวน/วางของเสี่ยงตกเป็นอันตราย" },
+              { id: "crime-petty-388", number: "388", label: "กระทำอนาจารในที่สาธารณะ" },
+              { id: "crime-petty-389", number: "389", label: "ทำของแข็งตกเป็นอันตราย" },
+              { id: "crime-petty-390", number: "390", label: "ประมาทเป็นเหตุให้ผู้อื่นบาดเจ็บ" },
+            ],
+          },
+          {
+            id: "crime-petty-dignity",
+            label: "ร่างกาย/เกียรติยศ/ทรัพย์ 391–398",
+            dx: -30,
+            dy: 115,
+            radius: 16,
+            articleNodes: [
+              { id: "crime-petty-391", number: "391", label: "ทำร้ายร่างกายไม่ถึงอันตราย" },
+              { id: "crime-petty-392", number: "392", label: "ทำให้ผู้อื่นตกใจกลัว" },
+              { id: "crime-petty-393", number: "393", label: "ดูหมิ่นซึ่งหน้า" },
+              { id: "crime-petty-394", number: "394", label: "ไล่สัตว์เข้าที่ดินผู้อื่น" },
+              { id: "crime-petty-395", number: "395", label: "ปล่อยสัตว์เข้าที่ดินผู้อื่น" },
+              { id: "crime-petty-396", number: "396", label: "ทิ้งซากสัตว์ในที่สาธารณะ" },
+              { id: "crime-petty-397", number: "397", label: "รังแก/ข่มเหง/คุกคามผู้อื่น" },
+              { id: "crime-petty-398", number: "398", label: "ทารุณเด็ก/คนป่วย/คนชรา" },
+            ],
+          },
         ],
       },
     ],
@@ -456,6 +525,7 @@ export default function Home() {
   const [expanded, setExpanded] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  const [selectedMicroNodeId, setSelectedMicroNodeId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"network" | "book">("network");
   const [zoom, setZoom] = useState(1);
   const [showConnections, setShowConnections] = useState(true);
@@ -559,9 +629,10 @@ export default function Home() {
 
   const selectedDomain = legalDomains.find((domain) => domain.id === selectedId) ?? null;
   const selectedSubject = selectedDomain?.children.find((subject) => subject.id === selectedSubjectId) ?? null;
-  const cameraTarget = selectedSubject ?? selectedDomain;
   const microOrbitScale = selectedDomain?.id === "criminal" ? 1.82 : 1.58;
-  const cameraScale = cameraEnabled && cameraTarget ? zoom * (selectedSubject ? 1.72 : 1.45) : zoom;
+  const selectedMicroPosition = selectedMicroNodeId ? getMicroAbsolutePosition2D(selectedMicroNodeId) : null;
+  const cameraTarget = selectedMicroPosition ?? selectedSubject ?? selectedDomain;
+  const cameraScale = cameraEnabled && cameraTarget ? zoom * (selectedMicroPosition ? 2.65 : selectedSubject ? 1.72 : 1.45) : zoom;
   const cameraTransform = cameraEnabled && cameraTarget
     ? `translate(${720 + pan.x} ${450 + pan.y}) scale(${cameraScale}) translate(-${cameraTarget.x} -${cameraTarget.y})`
     : `translate(${720 + pan.x} ${450 + pan.y}) scale(${zoom}) translate(-720 -450)`;
@@ -571,18 +642,34 @@ export default function Home() {
     playSoftTone();
     setExpanded(true);
     setPan({ x: 0, y: 0 });
+    setSelectedMicroNodeId(null);
     if (!subjectId && selectedId === domainId) {
       setSelectedId(null);
       setSelectedSubjectId(null);
+      setZoom(1);
       return;
     }
     if (subjectId && selectedId === domainId && selectedSubjectId === subjectId) {
       setSelectedSubjectId(null);
+      setZoom(1);
       return;
     }
     setSelectedId(domainId);
     setSelectedSubjectId(subjectId);
+    setZoom(subjectId ? 0.89 : 1);
     setViewMode("network");
+  };
+
+  const selectMicroNode = (microId: string) => {
+    if (didDragRef.current) return;
+    playSoftTone();
+    setPan({ x: 0, y: 0 });
+    setSelectedMicroNodeId((current) => (current === microId ? null : microId));
+    setZoom(0.89);
+  };
+
+  const handleSelectArticle = (book: string, article: LegalArticleNode, groupLabel: string) => {
+    setLawSelection({ law: { book, number: article.number, label: article.label, anchorMicroNodeId: "" }, issueTitle: groupLabel });
   };
 
   const activeCaseData = caseGraphs[activeCaseId];
@@ -650,13 +737,16 @@ export default function Home() {
   const returnToAllDomains = () => {
     setSelectedId(null);
     setSelectedSubjectId(null);
+    setSelectedMicroNodeId(null);
     setPan({ x: 0, y: 0 });
+    setZoom(1);
   };
 
   const resetExplorer = () => {
     setExpanded(false);
     setSelectedId(null);
     setSelectedSubjectId(null);
+    setSelectedMicroNodeId(null);
     setViewMode("network");
     setZoom(1);
     setPan({ x: 0, y: 0 });
@@ -664,12 +754,12 @@ export default function Home() {
 
   return (
     <main className={`legal-universe ${motionEnabled ? "" : "motion-off"} ${is3D ? "is-3d" : ""} ${cameraEnabled && cameraTarget ? "camera-focus" : ""}`} onPointerDownCapture={activateBackgroundMusic}>
-      <audio ref={backgroundMusicRef} src={`${MANUS_ASSET_ORIGIN}/manus-storage/alex-morgan-jazz-restaurant-music-556244_b7af9a94.mp3`} loop autoPlay muted preload="metadata" onLoadedMetadata={(event) => { event.currentTarget.volume = musicVolume; }} />
+      <audio ref={backgroundMusicRef} src={BACKGROUND_MUSIC_SRC} loop autoPlay muted preload="metadata" onLoadedMetadata={(event) => { event.currentTarget.volume = musicVolume; }} />
       <div className="graph-atmosphere" aria-hidden="true" />
       <header className="universe-header">
         <div className="header-brand-row">
           <button className="brand-lockup" onClick={resetExplorer} aria-label="กลับสู่จุดเริ่มต้นของแผนที่กฎหมาย">
-            <img src={`${MANUS_ASSET_ORIGIN}/manus-storage/legal-atlas-mark_676ff7e4.png`} alt="" className="brand-mark" />
+            <span className="brand-mark" aria-hidden="true"><Scale size={19} /></span>
             <span>
               <strong>ประมวลกฎหมายฉบับ Neural Network</strong>
               <small>PRAMUAN NN · LEGAL KNOWLEDGE ATLAS</small>
@@ -753,7 +843,7 @@ export default function Home() {
           <span><i className="legend-dot legend-dot--small" />จุดเชื่อมโยง</span>
         </div>
 
-        {selectedDomain && <button className="return-overview-chip" onClick={returnToAllDomains}><RotateCcw size={14} /> กลับภาพรวม</button>}
+        {selectedDomain && <button className={`return-overview-chip ${caseMenuOpen ? "is-veiled" : ""}`} onClick={returnToAllDomains}><RotateCcw size={14} /> กลับภาพรวม</button>}
         {is3D && viewMode === "network" ? (
           <WebGLBoundary onFallback={() => setIs3D(false)}>
             <ForceNetwork3D domains={legalDomains} expanded={expanded} selectedDomainId={selectedId} selectedSubjectId={selectedSubjectId} showConnections={showConnections} motionEnabled={motionEnabled} caseOverlay={caseOverlayOpen ? activeCaseData : null} onExploreDomain={exploreDomain} onOpen={() => { playSoftTone(); setExpanded(true); }} onReset={resetExplorer} onFallbackTo2D={() => setIs3D(false)} onSelectLaw={handleSelectOverlayLaw} />
@@ -852,15 +942,59 @@ export default function Home() {
                             <text x={subject.x} y={subject.y + subject.radius + 20} textAnchor="middle" className="subject-label">{subject.label}</text>
                           </g>
                         </g>
-                        {isSubjectSelected && subject.microNodes?.map((micro, microIndex) => (
-                          <g key={micro.id} className="micro-node-wrap" style={{ "--micro-delay": `${microIndex * 75}ms`, "--micro-drift-delay": `${(microIndex % 5) * -1.1}s` } as CSSProperties}>
-                            <g className="micro-node-drift">
-                              <circle cx={subject.x + micro.dx * microOrbitScale} cy={subject.y + micro.dy * microOrbitScale} r={micro.radius + 5} fill={domain.color} opacity="0.12" filter="url(#softBlur)" />
-                              <circle cx={subject.x + micro.dx * microOrbitScale} cy={subject.y + micro.dy * microOrbitScale} r={micro.radius} fill={domain.softColor} stroke={domain.color} strokeWidth="1" />
-                              <text x={subject.x + micro.dx * microOrbitScale} y={subject.y + micro.dy * microOrbitScale + micro.radius + 14} textAnchor="middle" className="micro-label">{micro.label}</text>
+                        {isSubjectSelected && subject.microNodes?.map((micro, microIndex) => {
+                          const microX = subject.x + micro.dx * microOrbitScale;
+                          const microY = subject.y + micro.dy * microOrbitScale;
+                          const hasArticles = Boolean(micro.articleNodes?.length);
+                          const isMicroSelected = selectedMicroNodeId === micro.id;
+                          return (
+                            <g key={micro.id} className="micro-node-wrap" style={{ "--micro-delay": `${microIndex * 75}ms`, "--micro-drift-delay": `${(microIndex % 5) * -1.1}s` } as CSSProperties}>
+                              <g className="micro-node-drift">
+                                <g
+                                  className={`${hasArticles ? "graph-node graph-node--micro is-expandable" : ""} ${isMicroSelected ? "is-selected" : ""}`}
+                                  role={hasArticles ? "button" : undefined}
+                                  tabIndex={hasArticles ? 0 : undefined}
+                                  aria-label={micro.label}
+                                  onPointerDown={hasArticles ? (event) => event.stopPropagation() : undefined}
+                                  onClick={hasArticles ? () => selectMicroNode(micro.id) : undefined}
+                                  onKeyDown={hasArticles ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectMicroNode(micro.id); } } : undefined}
+                                >
+                                  <circle cx={microX} cy={microY} r={micro.radius + 5} fill={domain.color} opacity={isMicroSelected ? 0.22 : 0.12} filter="url(#softBlur)" />
+                                  <circle cx={microX} cy={microY} r={micro.radius} fill={domain.softColor} stroke={domain.color} strokeWidth={isMicroSelected ? 1.8 : 1} strokeDasharray={hasArticles ? "2 2.5" : undefined} />
+                                  <text x={microX} y={microY + micro.radius + 14} textAnchor="middle" className="micro-label">{micro.label}</text>
+                                </g>
+
+                                {isMicroSelected && micro.articleNodes && (
+                                  <g className="article-leaf-layer" aria-label={`มาตราใน ${micro.label}`}>
+                                    {micro.articleNodes.map((article, articleIndex) => {
+                                      const total = micro.articleNodes!.length;
+                                      const angle = (articleIndex / total) * Math.PI * 2 - Math.PI / 2;
+                                      const ax = microX + Math.cos(angle) * 46;
+                                      const ay = microY + Math.sin(angle) * 46;
+                                      return (
+                                        <g
+                                          key={article.id}
+                                          className="graph-node graph-node--article"
+                                          role="button"
+                                          tabIndex={0}
+                                          aria-label={`มาตรา ${article.number} ${article.label}`}
+                                          onPointerDown={(event) => event.stopPropagation()}
+                                          onClick={() => handleSelectArticle(domain.id, article, micro.label)}
+                                          onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); handleSelectArticle(domain.id, article, micro.label); } }}
+                                        >
+                                          <line x1={microX} y1={microY} x2={ax} y2={ay} stroke={domain.color} strokeWidth="0.7" opacity="0.35" />
+                                          <circle cx={ax} cy={ay} r="9" fill={domain.color} opacity="0.14" filter="url(#softBlur)" />
+                                          <circle cx={ax} cy={ay} r="6" fill="#FFFFFF" stroke={domain.color} strokeWidth="1.1" />
+                                          <text x={ax} y={ay + 14} textAnchor="middle" className="article-label">ม.{article.number}</text>
+                                        </g>
+                                      );
+                                    })}
+                                  </g>
+                                )}
+                              </g>
                             </g>
-                          </g>
-                        ))}
+                          );
+                        })}
                       </g>
                     );
                   })}

@@ -80,9 +80,13 @@ type LegalDomain = {
 // overlap, while sparse levels stay compact. Used for every tier that has no
 // hand-placed dx/dy (i.e. anything coming out of the auto-generated
 // civil/criminal hierarchy).
+function ringRadiusFor(baseRadius: number, count: number) {
+  return Math.min(baseRadius * 2.1, Math.max(baseRadius, baseRadius * 0.55 + count * 7.5));
+}
+
 function autoRadialPosition(centerX: number, centerY: number, index: number, count: number, baseRadius: number) {
   const angle = (index / Math.max(1, count)) * Math.PI * 2 - Math.PI / 2;
-  const radius = Math.min(baseRadius * 2.1, Math.max(baseRadius, baseRadius * 0.55 + count * 7.5));
+  const radius = ringRadiusFor(baseRadius, count);
   return { x: centerX + Math.cos(angle) * radius, y: centerY + Math.sin(angle) * radius };
 }
 
@@ -909,25 +913,31 @@ export default function Home() {
     ).filter((entry): entry is { issueId: string; law: CaseLawRef; path: string[]; x: number; y: number } => entry !== null);
   }, [caseOverlayOpen, activeCaseData, caseDomain]);
 
-  // Every non-leaf id along any resolved law's path - passed down as
-  // pinnedPathIds so LegalNodeRing keeps all of them open simultaneously
-  // (a case's laws routinely span more than one ลักษณะ under the same
-  // ภาค, which a single selectedPath can't represent on its own).
+  // Every id along any resolved law's path (subject through the leaf
+  // itself) - passed down as pinnedPathIds so LegalNodeRing keeps all of
+  // them open simultaneously (a case's laws routinely span more than one
+  // ลักษณะ under the same ภาค, which a single selectedPath can't represent
+  // on its own) AND so the specific cited มาตรา - not just its ancestor
+  // rings - gets the "in focus" treatment that fades its uncited siblings
+  // (e.g. ม.290-294 sitting next to a cited ม.288/289 under the same หมวด).
   const casePinnedIds = useMemo(() => {
     const ids = new Set<string>();
     for (const target of caseLawTargets) {
-      for (const id of target.path.slice(1, -1)) ids.add(id);
+      for (const id of target.path.slice(1)) ids.add(id);
     }
     return ids;
   }, [caseLawTargets]);
 
   // Nexus overlay: hub + issue nodes positioned in the map's own raw
   // coordinate space (not a fixed viewport point), pushed outward from the
-  // domain along the domain->subject direction so it reads as a satellite
-  // next to the real subject it's citing rather than sitting on top of it.
-  // This lets it share the exact same camera transform as the background
-  // map, so a line from an issue straight to a real มาตรา node's resolved
-  // position just works, no separate screen-space conversion needed.
+  // domain along the domain->subject direction - far enough to clear the
+  // subject's own ลักษณะ ring entirely (ringRadiusFor, same formula the
+  // ring itself uses, plus a margin for node radius/labels) so the nexus
+  // reads as a separate satellite next to the crowd rather than sitting in
+  // the middle of it. Sharing the map's own coordinate space (rather than
+  // a fixed viewport point) means a line from an issue straight to a real
+  // มาตรา node's resolved position just works under the same camera
+  // transform, no separate screen-space conversion needed.
   const caseOverlay2D = useMemo(() => {
     if (!caseOverlayOpen || !caseDomain) return null;
     const caseData = activeCaseData;
@@ -937,8 +947,10 @@ export default function Home() {
     const dx = subject.x - caseDomain.x;
     const dy = subject.y - caseDomain.y;
     const dist = Math.max(1, Math.hypot(dx, dy));
-    const hubX = subject.x + (dx / dist) * 150;
-    const hubY = subject.y + (dy / dist) * 150;
+    const subjectRingRadius = ringRadiusFor(LEVEL_RING_RADIUS[2], subject.children?.length ?? 0);
+    const hubDistance = subjectRingRadius + 190;
+    const hubX = subject.x + (dx / dist) * hubDistance;
+    const hubY = subject.y + (dy / dist) * hubDistance;
     const issueCount = Math.max(1, caseData.issues.length);
     const issues = caseData.issues.map((issue, issueIndex) => {
       const issueAngle = (issueIndex / issueCount) * Math.PI * 2 - Math.PI / 2;
@@ -1129,6 +1141,47 @@ export default function Home() {
               ))}
             </g>
 
+            {/* Rendered early, underneath every node circle drawn further down
+                (domains/subjects/มาตรา leaves all paint after this in document
+                order) - a line reaching a node should visually disappear behind
+                it, not draw across on top of it. */}
+            {caseOverlay2D && (
+              <g className="case-overlay-2d__links" aria-hidden="true">
+                {caseOverlay2D.issues.map((issue) => (
+                  <path key={`nexus-link-${issue.id}`} d={curvedPath(caseOverlay2D.x, caseOverlay2D.y, issue.x, issue.y)} fill="none" stroke="#D64545" strokeWidth="1.4" opacity="0.4" />
+                ))}
+                {/* Straight to the real มาตรา node's own resolved position - no
+                    duplicate law node in the nexus itself; the real node IS the
+                    endpoint. Draws in as the real node's own arrival animation
+                    plays, so the line reads as part of the same reveal. */}
+                {caseLawTargets.map((target) => {
+                  const issue = caseOverlay2D.issues.find((item) => item.id === target.issueId);
+                  if (!issue) return null;
+                  const linkPath = curvedPath(issue.x, issue.y, target.x, target.y);
+                  const linkKey = `${target.issueId}-${target.law.book}-${target.law.number}`;
+                  return (
+                    <g key={`nexus-real-link-group-${linkKey}`}>
+                      <path
+                        className="nexus-real-link"
+                        d={linkPath}
+                        fill="none"
+                        stroke="#1B4F91"
+                        strokeWidth="1.6"
+                        pathLength={1}
+                      />
+                      {/* Small dot travelling issue -> real มาตรา, on a loop -
+                          the "effect" reinforcing which way the connection
+                          reaches, once the initial draw-in has settled. */}
+                      <circle r="3" fill="#1B4F91" className="nexus-real-link__pulse">
+                        <animateMotion dur="2.6s" begin="0.85s" repeatCount="indefinite" path={linkPath} />
+                        <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.15;0.85;1" dur="2.6s" begin="0.85s" repeatCount="indefinite" />
+                      </circle>
+                    </g>
+                  );
+                })}
+              </g>
+            )}
+
             {expanded && showConnections && (
               <g className="network-connections">
                 {legalDomains.map((domain) => {
@@ -1230,31 +1283,6 @@ export default function Home() {
 
             {caseOverlay2D && (
               <g className="case-overlay-2d" aria-label={`ภาพรวมคดี ${caseOverlay2D.title}`}>
-                <g className="case-overlay-2d__links" aria-hidden="true">
-                  {caseOverlay2D.issues.map((issue) => (
-                    <path key={`nexus-link-${issue.id}`} d={curvedPath(caseOverlay2D.x, caseOverlay2D.y, issue.x, issue.y)} fill="none" stroke="#D64545" strokeWidth="1.4" opacity="0.4" />
-                  ))}
-                  {/* Straight to the real มาตรา node's own resolved position - no
-                      duplicate law node in the nexus itself; the real node IS the
-                      endpoint. Draws in as the real node's own arrival animation
-                      plays, so the line reads as part of the same reveal. */}
-                  {caseLawTargets.map((target) => {
-                    const issue = caseOverlay2D.issues.find((item) => item.id === target.issueId);
-                    if (!issue) return null;
-                    return (
-                      <path
-                        key={`nexus-real-link-${target.issueId}-${target.law.book}-${target.law.number}`}
-                        className="nexus-real-link"
-                        d={curvedPath(issue.x, issue.y, target.x, target.y)}
-                        fill="none"
-                        stroke="#1B4F91"
-                        strokeWidth="1.6"
-                        pathLength={1}
-                      />
-                    );
-                  })}
-                </g>
-
                 {caseOverlay2D.issues.map((issue) => (
                   <g key={`issue-${issue.id}`} className="overlay-node overlay-node--issue">
                     <circle cx={issue.x} cy={issue.y} r="19" fill="#E8933A" opacity="0.14" filter="url(#softBlur)" />

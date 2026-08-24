@@ -637,9 +637,28 @@ function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, 
     <>
       {showConnections && (
         <g className="micro-connections-layer" aria-hidden="true">
-          {placed.map(({ node, pos }) => (
-            <path key={`ring-link-${node.id}`} d={curvedPath(centerX, centerY, pos.x, pos.y)} fill="none" stroke={domainColor} strokeWidth="0.8" opacity={hasFocus && activeId !== node.id && !pinnedPathIds?.has(node.id) ? 0.07 : 0.48} />
-          ))}
+          {placed.map(({ node, pos }) => {
+            const isDimmed = hasFocus && activeId !== node.id && !pinnedPathIds?.has(node.id);
+            // Not-dimmed ring links (e.g. ภาค 2 -> its ลักษณะ children, or
+            // หมวด -> its มาตรา children - same code path at every depth)
+            // reuse the nexus-real-link glow treatment (draw-in + pulse +
+            // drop-shadow) so a node's real structural connections read with
+            // the same weight as its nexus links, not as faint background
+            // clutter. Dimmed siblings stay the original thin/faint line.
+            return (
+              <path
+                key={`ring-link-${node.id}`}
+                className={isDimmed ? undefined : "nexus-real-link"}
+                d={curvedPath(centerX, centerY, pos.x, pos.y)}
+                fill="none"
+                stroke={domainColor}
+                strokeWidth={isDimmed ? "0.8" : "1.5"}
+                opacity={isDimmed ? 0.07 : undefined}
+                pathLength={isDimmed ? undefined : 1}
+                style={isDimmed ? undefined : { filter: `drop-shadow(0 0 3px ${domainColor})` }}
+              />
+            );
+          })}
         </g>
       )}
       {placed.map(({ node, pos }, index) => {

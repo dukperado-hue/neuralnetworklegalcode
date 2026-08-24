@@ -18,11 +18,20 @@ export type CaseLawRef = {
   anchorMicroNodeId?: string;
 };
 export type CaseIssue = { id: string; title: string; summary: string; laws: CaseLawRef[] };
+
+/** The 3-root taxonomy CaseGalaxy clusters cases under (แพ่ง/อาญา/ระหว่างประเทศ)
+ * - a separate, coarser grouping from domainId (which picks which ประมวล
+ * domain/camera the Home.tsx nexus focuses on). A case's laws can span more
+ * than one domainId (see syamol-forensic citing both criminal and crimpro),
+ * but it still has exactly one galaxy category. */
+export type CaseCategory = "civil" | "criminal" | "international";
+
 export type CaseGraphData = {
   id: string;
   title: string;
   subtitle: string;
   domainId: string;
+  category: CaseCategory;
   issues: CaseIssue[];
   /** Link out to the real news write-up on coolunclelab.com's "โหมดอ่านข่าว"
    * (news-reading mode) for this case, opened in a new tab from the คดี
@@ -36,6 +45,7 @@ export const caseGraphs: Record<string, CaseGraphData> = {
     title: "คดี: เสริม–เจนจิรา",
     subtitle: "สถานการณ์สมมติเพื่อการศึกษา — คดีฆาตกรรมหั่นศพ",
     domainId: "criminal",
+    category: "criminal",
     newsUrl: "https://coolunclelab.com/news-case-khdii-serm-sakonrat-2541.html",
     issues: [
       {
@@ -60,6 +70,7 @@ export const caseGraphs: Record<string, CaseGraphData> = {
     title: "คดี: ศยามล",
     subtitle: "สถานการณ์สมมติเพื่อการศึกษา — คดีจ้างวานฆ่าด้วยพยานหลักฐานนิติวิทยาศาสตร์",
     domainId: "criminal",
+    category: "criminal",
     newsUrl: "https://coolunclelab.com/news-case-khdii-syamol-forensic-2536.html",
     issues: [
       {

@@ -308,6 +308,30 @@ button:focus-visible, input:focus-visible { outline: 2px solid #9d6eea; outline-
 .case-graph-webgl canvas { display: block; width: 100% !important; height: 100% !important; cursor: grab; outline: none; touch-action: none; overscroll-behavior: contain; -webkit-user-select: none; user-select: none; }
 .case-graph-webgl canvas:active { cursor: grabbing; }
 
+/* ===== Case Galaxy (/case, no caseId) - hero overview of every case,
+   clustered by category (แพ่ง/อาญา/ระหว่างประเทศ). Black background + glow is
+   deliberately its own dark page variant, not a sitewide dark theme - only
+   this route flips. ===== */
+.case-map-page--galaxy { background: #06050c; }
+.case-map-page--galaxy .universe-header { background: rgba(6,5,12,0.72); border-bottom-color: rgba(157,110,234,0.16); }
+.case-map-page--galaxy .brand-lockup strong { color: #f3f0fa; }
+.case-map-page--galaxy .brand-lockup small { color: #8f86ad; }
+.case-map-page--galaxy .header-kicker { color: #8f86ad; }
+.case-map-page--galaxy .lab-return { color: #8f86ad; }
+.case-map-page--galaxy .lab-return:hover { color: #f3f0fa; }
+.case-map-page--galaxy .route-links { border-right-color: rgba(157,110,234,0.18); }
+
+.case-galaxy { position: relative; width: 100%; height: calc(100dvh - 74px); min-height: 560px; overflow: hidden; background: radial-gradient(ellipse at 68% 45%, rgba(80,50,140,0.22), transparent 55%), #06050c; }
+.case-galaxy__svg { display: block; width: 100%; height: 100%; }
+.case-galaxy__link { fill: none; stroke-width: 1.1; opacity: 0.38; mix-blend-mode: screen; transition: opacity 200ms ease, stroke-width 200ms ease; }
+.case-galaxy__link.is-hovered { opacity: 0.85; stroke-width: 1.8; }
+.case-galaxy__node.is-case { cursor: pointer; }
+.case-galaxy__node-glow { pointer-events: none; transition: opacity 220ms ease; }
+.case-galaxy__node-core { transition: filter 220ms ease; }
+.case-galaxy__node-label { pointer-events: none; fill: #d8d2ec; font-family: "IBM Plex Sans Thai Looped", sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.01em; }
+.case-galaxy__node.is-root .case-galaxy__node-label { fill: #f3f0fa; font-size: 13px; font-weight: 700; }
+.case-galaxy__node:focus-visible .case-galaxy__node-core { outline: 2px solid #fff; outline-offset: 3px; }
+
 .case-map-legend { bottom: 24px; left: 34px; right: auto; }
 .case-legend-dot--case { width: 11px; height: 11px; background: #D64545; }
 .case-legend-dot--issue { width: 8px; height: 8px; background: #E8933A; }

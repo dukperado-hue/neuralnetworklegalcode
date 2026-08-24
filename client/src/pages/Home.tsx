@@ -124,6 +124,13 @@ function cameraScaleForDepth(depth: number) {
   return DEPTH_CAMERA_SCALES[Math.min(depth, DEPTH_CAMERA_SCALES.length - 1)];
 }
 
+// User-controllable zoom range (wheel/pinch/+-buttons). MAX_ZOOM was 1.32
+// until a case citing มาตรา packed close together (e.g. numbered leaves in
+// a dense ring) turned out unreadable with no way to zoom in past that -
+// raised so a crowded ring can always be zoomed past its own label overlap.
+const MIN_ZOOM = 0.42;
+const MAX_ZOOM = 2.6;
+
 const legalDomains: LegalDomain[] = [
   {
     id: "civil",
@@ -853,7 +860,7 @@ export default function Home() {
       const [a, b] = Array.from(activePointersRef.current.values());
       const distance = Math.hypot(a.x - b.x, a.y - b.y);
       const ratio = distance / pinchStartRef.current.distance;
-      setZoom(Math.max(0.42, Math.min(1.32, Number((pinchStartRef.current.zoom * ratio).toFixed(2)))));
+      setZoom(Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Number((pinchStartRef.current.zoom * ratio).toFixed(2)))));
       return;
     }
     const bounds = event.currentTarget.getBoundingClientRect();
@@ -921,7 +928,7 @@ export default function Home() {
     // events in a row still get a smooth, proportionally small zoom per
     // event. Clamped so a single large notch can't overshoot too far.
     const delta = Math.max(-0.18, Math.min(0.18, (-event.deltaY / 100) * 0.18));
-    setZoom((value) => Math.max(0.42, Math.min(1.32, Number((value + delta).toFixed(2)))));
+    setZoom((value) => Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Number((value + delta).toFixed(2)))));
   };
 
   const selectedId = selectedPath[0] ?? null;
@@ -1061,10 +1068,34 @@ export default function Home() {
       currentChildren = node.children;
     }
 
+    // Hub position: used to anchor purely off the primary law's own local
+    // ring, pushed a fixed diagonal distance away from it - fine when every
+    // cited law sits in the same neighborhood, but when a case's laws span
+    // two far-apart domains (e.g. civil + civ-procedure) that anchor point
+    // sits at one extreme of the whole nexus, dragging the hub (and its
+    // issue nodes) toward one edge of the map instead of sitting between
+    // what it actually connects to - read as "sub-nexus nodes at the top
+    // and at the bottom" instead of one nexus in the middle. Fixed by
+    // anchoring to the bounding-box center of every resolved มาตรา the case
+    // cites, then pushing that center away from the primary ring only by
+    // however much clearance is still needed: the push shrinks toward 0 as
+    // the targets are already spread out further than the clearance
+    // distance would have pushed anyway, so a same-domain case (both
+    // existing cases, close-together targets) keeps its original full
+    // clearance push, while a cross-domain case settles genuinely between
+    // its targets instead of overshooting past one of them.
     const anchorLeafRingRadius = ringRadiusFor(LEVEL_RING_RADIUS[4], anchorChildCount);
-    const hubDistance = anchorLeafRingRadius + 150;
-    const hubX = anchorX - hubDistance * 0.82;
-    const hubY = anchorY - hubDistance * 0.82;
+    const clearanceDistance = anchorLeafRingRadius + 150;
+    const targetXs = caseLawTargets.map((target) => target.x);
+    const targetYs = caseLawTargets.map((target) => target.y);
+    const midX = targetXs.length ? (Math.min(...targetXs) + Math.max(...targetXs)) / 2 : anchorX;
+    const midY = targetYs.length ? (Math.min(...targetYs) + Math.max(...targetYs)) / 2 : anchorY;
+    const targetHalfDiagonal = targetXs.length
+      ? Math.hypot((Math.max(...targetXs) - Math.min(...targetXs)) / 2, (Math.max(...targetYs) - Math.min(...targetYs)) / 2)
+      : 0;
+    const clearance = Math.max(0, clearanceDistance - targetHalfDiagonal);
+    const hubX = midX - clearance * 0.82;
+    const hubY = midY - clearance * 0.82;
     const issueCount = Math.max(1, caseData.issues.length);
     const issueRadius = 78 + issueCount * 4;
 
@@ -1304,9 +1335,9 @@ export default function Home() {
         </div>
 
         <div className="zoom-controls" aria-label="ควบคุมการซูม">
-          <button onClick={() => setZoom((value) => Math.max(0.42, Number((value - 0.12).toFixed(2))))} aria-label="ซูมออก"><ZoomOut size={18} /></button>
+          <button onClick={() => setZoom((value) => Math.max(MIN_ZOOM, Number((value - 0.12).toFixed(2))))} aria-label="ซูมออก"><ZoomOut size={18} /></button>
           <span>{Math.round(zoom * 100)}%</span>
-          <button onClick={() => setZoom((value) => Math.min(1.32, Number((value + 0.12).toFixed(2))))} aria-label="ซูมเข้า"><ZoomIn size={18} /></button>
+          <button onClick={() => setZoom((value) => Math.min(MAX_ZOOM, Number((value + 0.12).toFixed(2))))} aria-label="ซูมเข้า"><ZoomIn size={18} /></button>
         </div>
 
         <div className="legend" aria-label="คำอธิบายขนาดโหนด">

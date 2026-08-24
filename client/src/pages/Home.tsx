@@ -538,6 +538,19 @@ function findArticlePath(domain: LegalDomain, book: string, number: string): str
   return null;
 }
 
+// Same lookup, but tries every domain in turn instead of one - a case's
+// cited laws routinely span more than one ประมวล (e.g. a criminal-domain
+// case citing ป.วิ.อ., which lives under the separate criminal-procedure
+// domain), and each law needs to resolve inside whichever domain's tree
+// actually holds it, not just the case's own "home" domain.
+function findArticlePathAnyDomain(book: string, number: string): { domainId: string; path: string[] } | null {
+  for (const domain of legalDomains) {
+    const path = findArticlePath(domain, book, number);
+    if (path) return { domainId: domain.id, path };
+  }
+  return null;
+}
+
 type PathStep = { id: string; label: string; x: number; y: number };
 
 // Walks selectedPath through the domain's tree, computing the absolute
@@ -635,7 +648,13 @@ function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, 
         const isPinned = pinnedPathIds?.has(node.id) ?? false;
         const radius = node.radius ?? Math.max(6, 15 - depth * 1.4);
         const nodePath = [...pathPrefix, node.id];
-        const handleActivate = () => (isLeaf ? onSelectArticle(domainId, node, groupLabel) : onSelectPath(nodePath));
+        // node.book is the real codex book key ("crimpro", "civpro", ...) -
+        // set only on มาตรา leaves specifically for this lookup. domainId is
+        // a different string (e.g. "criminal-procedure") that only
+        // coincides with the book key for civil/criminal; falling back to
+        // it here was silently breaking the LawSidePanel fetch for every
+        // other domain's leaves.
+        const handleActivate = () => (isLeaf ? onSelectArticle(node.book ?? domainId, node, groupLabel) : onSelectPath(nodePath));
         return (
           <g key={node.id} className="micro-node-wrap" style={{ "--micro-delay": `${index * staggerStep}ms`, "--micro-drift-delay": `${(index % 5) * -1.1}s` } as CSSProperties}>
             <g className="micro-node-drift">
@@ -846,19 +865,19 @@ export default function Home() {
   const selectedSubjectId = selectedPath[1] ?? null;
   const selectedDomain = legalDomains.find((domain) => domain.id === selectedId) ?? null;
   const selectedSubject = selectedDomain?.children.find((subject) => subject.id === selectedSubjectId) ?? null;
-  const legacyScale = selectedDomain?.id === "criminal" ? 1.82 : 1.58;
   const pathSteps = selectedDomain ? resolveSelectedPath(selectedDomain, selectedPath) : [];
-  const cameraTarget = pathSteps.length ? pathSteps[pathSteps.length - 1] : null;
-  const cameraScale = cameraEnabled && cameraTarget ? zoom * cameraScaleForDepth(pathSteps.length) : zoom;
-  const cameraTransform = cameraEnabled && cameraTarget
-    ? `translate(${720 + pan.x} ${450 + pan.y}) scale(${cameraScale}) translate(${-cameraTarget.x} ${-cameraTarget.y})`
-    : `translate(${720 + pan.x} ${450 + pan.y}) scale(${zoom}) translate(-720 -450)`;
+  // Normal depth-based camera target - overridden below by a bounding-box
+  // fit whenever the case nexus is open (see caseCameraFrame), since a
+  // cross-domain case's cited law can sit far outside whatever this single
+  // domain/depth's default framing would show.
+  const baseCameraTarget = pathSteps.length ? pathSteps[pathSteps.length - 1] : null;
 
   // Background particle swarm: nearby particles cluster toward whatever
   // node is currently focused (the same point the camera follows), so
   // selecting something reads as a small event rather than a static field.
+  // (particleTargetRef.current is set further down, once the final
+  // cameraTarget - base or case-frame override - is known.)
   const particleTargetRef = useRef<{ x: number; y: number } | null>(null);
-  particleTargetRef.current = expanded && cameraTarget ? { x: cameraTarget.x, y: cameraTarget.y } : null;
   const particleCircleRefs = useParticleSwarm(particleTargetRef, motionEnabled);
 
   // Handles a click at any depth: the domain circle (path=[domainId]), a
@@ -895,23 +914,29 @@ export default function Home() {
   const caseDomain = legalDomains.find((item) => item.id === activeCaseData.domainId) ?? null;
 
   // Resolves every law cited by the active case to its real place in the
-  // ประมวล tree (full id-chain + raw x/y), so the nexus's issue nodes can
-  // point straight at the actual มาตรา node instead of drawing a duplicate
-  // one of their own - "ปลายสุดคือมาตราซึ่งเป็นอันเดียวกับปลายสุดของประมวล".
-  // Skips (rather than fabricates a position for) any law not yet modeled
-  // in legalHierarchy.generated.ts.
+  // ประมวล tree (domain + full id-chain + raw x/y), so the nexus's issue
+  // nodes can point straight at the actual มาตรา node instead of drawing a
+  // duplicate one of their own -
+  // "ปลายสุดคือมาตราซึ่งเป็นอันเดียวกับปลายสุดของประมวล". Looks across every
+  // domain (findArticlePathAnyDomain), not just the case's own home domain -
+  // a case's laws routinely span more than one ประมวล (e.g. a
+  // criminal-domain case citing ป.วิ.อ., which lives under the separate
+  // criminal-procedure domain). Skips (rather than fabricates a position
+  // for) any law not yet modeled in legalHierarchy.generated.ts anywhere.
   const caseLawTargets = useMemo(() => {
-    if (!caseOverlayOpen || !caseDomain) return [];
+    if (!caseOverlayOpen) return [];
     return activeCaseData.issues.flatMap((issue) =>
       issue.laws.map((law) => {
-        const path = findArticlePath(caseDomain, law.book, law.number);
-        if (!path) return null;
-        const steps = resolveSelectedPath(caseDomain, path);
+        const found = findArticlePathAnyDomain(law.book, law.number);
+        if (!found) return null;
+        const lawDomain = legalDomains.find((item) => item.id === found.domainId);
+        if (!lawDomain) return null;
+        const steps = resolveSelectedPath(lawDomain, found.path);
         const leaf = steps[steps.length - 1];
-        return leaf ? { issueId: issue.id, law, path, x: leaf.x, y: leaf.y } : null;
+        return leaf ? { issueId: issue.id, law, domainId: found.domainId, path: found.path, x: leaf.x, y: leaf.y } : null;
       }),
-    ).filter((entry): entry is { issueId: string; law: CaseLawRef; path: string[]; x: number; y: number } => entry !== null);
-  }, [caseOverlayOpen, activeCaseData, caseDomain]);
+    ).filter((entry): entry is { issueId: string; law: CaseLawRef; domainId: string; path: string[]; x: number; y: number } => entry !== null);
+  }, [caseOverlayOpen, activeCaseData]);
 
   // Every id along any resolved law's path (subject through the leaf
   // itself) - passed down as pinnedPathIds so LegalNodeRing keeps all of
@@ -1016,6 +1041,57 @@ export default function Home() {
     });
     return { title: caseData.title, x: hubX, y: hubY, issues };
   }, [caseOverlayOpen, activeCaseData, caseDomain, caseLawTargets]);
+
+  // Every domain the open case actually touches - its own home domain plus
+  // wherever any of its resolved laws landed. Used so a secondary domain
+  // (e.g. criminal-procedure, pulled in only because the case cites ป.วิ.อ.)
+  // renders its subject/ลักษณะ/มาตรา content and stays undimmed even though
+  // it isn't the one the user manually drilled into via selectedPath.
+  const caseRelevantDomainIds = useMemo(() => {
+    if (!caseOverlayOpen) return null;
+    const ids = new Set<string>(caseLawTargets.map((target) => target.domainId));
+    if (caseDomain) ids.add(caseDomain.id);
+    return ids;
+  }, [caseOverlayOpen, caseLawTargets, caseDomain]);
+
+  // Camera override while the nexus is open: fit every point the nexus
+  // touches (hub, issue nodes, every resolved มาตรา) into one bounding box
+  // instead of using the normal single-domain depth-based target. A
+  // cross-domain case's second domain can sit far outside whatever the
+  // primary domain's own drill-down framing would show, so without this
+  // the real ป.วิ.อ. node (say) would resolve and draw a line correctly but
+  // land off-screen. Falls back to the normal depth-based target when no
+  // case is open.
+  const caseCameraFrame = useMemo(() => {
+    if (!caseOverlayOpen || !caseOverlay2D) return null;
+    const points = [
+      { x: caseOverlay2D.x, y: caseOverlay2D.y },
+      ...caseOverlay2D.issues.map((issue) => ({ x: issue.x, y: issue.y })),
+      ...caseLawTargets.map((target) => ({ x: target.x, y: target.y })),
+    ];
+    const xs = points.map((point) => point.x);
+    const ys = points.map((point) => point.y);
+    const minX = Math.min(...xs);
+    const maxX = Math.max(...xs);
+    const minY = Math.min(...ys);
+    const maxY = Math.max(...ys);
+    const margin = 130;
+    const boxWidth = Math.max(1, maxX - minX + margin * 2);
+    const boxHeight = Math.max(1, maxY - minY + margin * 2);
+    const fitScale = Math.min(1440 / boxWidth, 900 / boxHeight);
+    return { x: (minX + maxX) / 2, y: (minY + maxY) / 2, scale: Math.min(1.55, Math.max(0.5, fitScale)) };
+  }, [caseOverlayOpen, caseOverlay2D, caseLawTargets]);
+
+  const cameraTarget = caseCameraFrame ?? baseCameraTarget;
+  const cameraScale = cameraEnabled && cameraTarget
+    ? caseCameraFrame
+      ? zoom * caseCameraFrame.scale
+      : zoom * cameraScaleForDepth(pathSteps.length)
+    : zoom;
+  const cameraTransform = cameraEnabled && cameraTarget
+    ? `translate(${720 + pan.x} ${450 + pan.y}) scale(${cameraScale}) translate(${-cameraTarget.x} ${-cameraTarget.y})`
+    : `translate(${720 + pan.x} ${450 + pan.y}) scale(${zoom}) translate(-720 -450)`;
+  particleTargetRef.current = expanded && cameraTarget ? { x: cameraTarget.x, y: cameraTarget.y } : null;
 
   const toggleCaseOverlay = (caseId: string) => {
     if (caseOverlayOpen && activeCaseId === caseId) {
@@ -1191,7 +1267,7 @@ export default function Home() {
           <g className="map-zoom-layer" transform={cameraTransform}>
             <g className="atmospheric-zones" aria-hidden="true">
               {expanded && legalDomains.map((domain) => (
-                <circle key={`zone-${domain.id}`} cx={domain.x} cy={domain.y} r={domain.radius * 2.55} fill={domain.softColor} opacity={selectedId && selectedId !== domain.id ? 0.025 : 0.105} filter="url(#softBlur)" />
+                <circle key={`zone-${domain.id}`} cx={domain.x} cy={domain.y} r={domain.radius * 2.55} fill={domain.softColor} opacity={selectedId && selectedId !== domain.id && !caseRelevantDomainIds?.has(domain.id) ? 0.025 : 0.105} filter="url(#softBlur)" />
               ))}
               <circle cx="720" cy="450" r="208" fill="#9D6EEA" opacity={expanded ? 0.035 : 0.08} filter="url(#softBlur)" />
               <circle cx="720" cy="450" r="178" fill="none" stroke="#9D6EEA" strokeWidth="1" opacity={expanded ? 0.1 : 0.18} />
@@ -1257,7 +1333,7 @@ export default function Home() {
             {expanded && showConnections && (
               <g className="network-connections">
                 {legalDomains.map((domain) => {
-                  const isDimmed = Boolean(selectedId && selectedId !== domain.id);
+                  const isDimmed = Boolean(selectedId && selectedId !== domain.id && !caseRelevantDomainIds?.has(domain.id));
                   return <path key={`root-${domain.id}`} d={curvedPath(720, 450, domain.x, domain.y)} fill="none" stroke={domain.color} strokeWidth={selectedId === domain.id ? 2 : 1.1} opacity={isDimmed ? 0.11 : selectedId === domain.id ? 0.64 : 0.37} />;
                 })}
                 <path d={curvedPath(342, 277, 1055, 244)} fill="none" stroke="#1A2C79" strokeWidth="0.9" strokeDasharray="4 7" opacity={selectedId === "civil" || selectedId === "criminal" ? 0.43 : 0.13} />
@@ -1295,7 +1371,8 @@ export default function Home() {
 
             {expanded && legalDomains.map((domain, index) => {
               const isSelected = selectedId === domain.id;
-              const isDimmed = Boolean(selectedId && !isSelected);
+              const isCaseRelevant = Boolean(caseRelevantDomainIds?.has(domain.id));
+              const isDimmed = Boolean(selectedId && !isSelected && !isCaseRelevant);
               return (
                 <g key={domain.id} className={`domain-cluster ${isDimmed ? "is-dimmed" : ""}`} style={{ "--delay": `${index * 90}ms` } as CSSProperties}>
                   <g className="cluster-satellites" aria-hidden="true" opacity={isDimmed ? 0.17 : 0.54}>
@@ -1311,7 +1388,7 @@ export default function Home() {
                     <text x={domain.x} y={domain.y - 3} textAnchor="middle" className="domain-abbr">{domain.abbreviation}</text>
                     <text x={domain.x} y={domain.y + domain.radius + 25} textAnchor="middle" className="domain-label">{domain.shortLabel}</text>
                   </g>
-                  {isSelected && domain.children.map((subject, subjectIndex) => {
+                  {(isSelected || isCaseRelevant) && domain.children.map((subject, subjectIndex) => {
                     const isSubjectSelected = selectedSubjectId === subject.id;
                     const isSubjectPinned = casePinnedIds.has(subject.id);
                     return (
@@ -1343,7 +1420,7 @@ export default function Home() {
                             onSelectArticle={handleSelectArticle}
                             showConnections={showConnections}
                             pinnedPathIds={casePinnedIds}
-                            legacyScale={legacyScale}
+                            legacyScale={domain.id === "criminal" ? 1.82 : 1.58}
                           />
                         )}
                       </g>

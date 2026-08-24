@@ -515,6 +515,26 @@ function curvedPath(fromX: number, fromY: number, toX: number, toY: number) {
   return `M ${fromX} ${fromY} Q ${midpointX - bend} ${midpointY - bend} ${toX} ${toY}`;
 }
 
+// Nudges (x,y) away from whichever top-level domain hub it's closest to,
+// if it's still within that domain's own circle plus a clearance margin -
+// used by the case-nexus overlay (caseOverlay2D) so its hub/issue nodes
+// never land on top of unrelated map furniture. Only the single nearest
+// domain is checked (domains are always far enough apart on this map that
+// a point can realistically only be "inside" one of them at a time).
+function clearDomainHub(x: number, y: number, margin: number) {
+  const nearest = legalDomains.reduce((closest, domain) => {
+    const dist = Math.hypot(x - domain.x, y - domain.y);
+    return !closest || dist < closest.dist ? { domain, dist } : closest;
+  }, null as { domain: LegalDomain; dist: number } | null);
+  if (!nearest) return { x, y };
+  const required = nearest.domain.radius + margin;
+  if (nearest.dist >= required) return { x, y };
+  const pushBy = required - nearest.dist;
+  const ux = nearest.dist > 0.01 ? (x - nearest.domain.x) / nearest.dist : 0;
+  const uy = nearest.dist > 0.01 ? (y - nearest.domain.y) / nearest.dist : -1;
+  return { x: x + ux * pushBy, y: y + uy * pushBy };
+}
+
 // Base ring radius for each drill depth (index = position within
 // selectedPath: 2 = ลักษณะ-tier under a subject, 3 = หมวด, 4 = ส่วน,
 // 5 = มาตรา leaves, 6+ = fallback for anything deeper). Indices 0/1 are
@@ -1094,8 +1114,24 @@ export default function Home() {
       ? Math.hypot((Math.max(...targetXs) - Math.min(...targetXs)) / 2, (Math.max(...targetYs) - Math.min(...targetYs)) / 2)
       : 0;
     const clearance = Math.max(0, clearanceDistance - targetHalfDiagonal);
-    const hubX = midX - clearance * 0.82;
-    const hubY = midY - clearance * 0.82;
+    const rawHub = { x: midX - clearance * 0.82, y: midY - clearance * 0.82 };
+
+    // The bbox-center midpoint above can coincidentally land on top of an
+    // unrelated top-level domain hub - e.g. a case citing one law near the
+    // top of แพ่ง and another far down in a different domain can put the
+    // literal midpoint between them right on top of แพ่ง's own big circle,
+    // which then also hides the short hub->issue link line underneath that
+    // circle (domain circles paint over the case overlay's link layer),
+    // reading as "the issue node only has one line" even though the
+    // hub->issue segment is really just invisible, not missing. clearDomainHub
+    // nudges a point away from whichever domain hub it's closest to if it's
+    // still within that domain's own circle + a clearance margin. Applied to
+    // the hub AND (below) each issue node individually - the issue node
+    // walks back toward its own real มาตรา target, which can sit almost
+    // directly on the far side of the very domain the hub was just pushed
+    // clear of, so clearing the hub alone isn't enough to keep the issue
+    // node's own circle and label off of that domain's edge too.
+    const { x: hubX, y: hubY } = clearDomainHub(rawHub.x, rawHub.y, 90);
     const issueCount = Math.max(1, caseData.issues.length);
     const issueRadius = 78 + issueCount * 4;
 
@@ -1131,7 +1167,9 @@ export default function Home() {
 
     const issues = caseData.issues.map((issue, issueIndex) => {
       const issueAngle = resolvedAngles[issueIndex];
-      return { id: issue.id, title: issue.title, x: hubX + Math.cos(issueAngle) * issueRadius, y: hubY + Math.sin(issueAngle) * issueRadius };
+      const raw = { x: hubX + Math.cos(issueAngle) * issueRadius, y: hubY + Math.sin(issueAngle) * issueRadius };
+      const cleared = clearDomainHub(raw.x, raw.y, 40);
+      return { id: issue.id, title: issue.title, x: cleared.x, y: cleared.y };
     });
     return { title: caseData.title, x: hubX, y: hubY, issues };
   }, [caseOverlayOpen, activeCaseData, caseDomain, caseLawTargets]);

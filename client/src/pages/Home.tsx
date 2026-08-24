@@ -7,7 +7,7 @@ import { Link } from "wouter";
 import ForceNetwork3D from "@/components/ForceNetwork3D";
 import WebGLBoundary from "@/components/WebGLBoundary";
 import LawSidePanel from "@/components/LawSidePanel";
-import { caseGraphs, type CaseLawRef } from "@/data/caseGraphs";
+import { caseGraphs, DEFAULT_CASE_ID, type CaseLawRef } from "@/data/caseGraphs";
 import { civilHierarchy, criminalHierarchy, civproHierarchy, crimproHierarchy } from "@/data/legalHierarchy.generated";
 import {
   ArrowUpRight,
@@ -551,19 +551,6 @@ function findArticlePathAnyDomain(book: string, number: string): { domainId: str
   return null;
 }
 
-// A stable color per case, keyed by its fixed position in caseGraphs (not
-// open-order, which would make a case's color change depending on what
-// else happens to be open at the time). When two open cases' nexuses
-// converge on the same real มาตรา node, this is what actually lets you
-// tell which line came from which case - every color chosen dark/saturated
-// enough to double as its own nexus label's text fill.
-const CASE_ACCENT_COLORS = ["#B8342F", "#2160A8", "#7A3FA0", "#B37A15", "#1E7A5C"];
-const CASE_ID_ORDER = Object.keys(caseGraphs);
-function caseAccentColor(caseId: string): string {
-  const index = CASE_ID_ORDER.indexOf(caseId);
-  return CASE_ACCENT_COLORS[index % CASE_ACCENT_COLORS.length] ?? CASE_ACCENT_COLORS[0];
-}
-
 type PathStep = { id: string; label: string; x: number; y: number };
 
 // Walks selectedPath through the domain's tree, computing the absolute
@@ -740,12 +727,8 @@ export default function Home() {
   const [isPanning, setIsPanning] = useState(false);
   const [controlsOpen, setControlsOpen] = useState(false);
   const [caseMenuOpen, setCaseMenuOpen] = useState(false);
-  // Every case currently pinned open on the map (not just one) - a case's
-  // "โยงคดีเป็น neural system" role only shows up when two open cases that
-  // cite the same มาตรา actually converge there at once, which needs more
-  // than one nexus rendered simultaneously.
-  const [openCaseIds, setOpenCaseIds] = useState<string[]>([]);
-  const caseOverlayOpen = openCaseIds.length > 0;
+  const [caseOverlayOpen, setCaseOverlayOpen] = useState(false);
+  const [activeCaseId, setActiveCaseId] = useState(DEFAULT_CASE_ID);
   const [lawSelection, setLawSelection] = useState<{ law: CaseLawRef; issueTitle: string } | null>(null);
   const backgroundMusicRef = useRef<HTMLAudioElement>(null);
   const panGestureRef = useRef({ pointerId: -1, startX: 0, startY: 0, startPanX: 0, startPanY: 0 });
@@ -937,42 +920,41 @@ export default function Home() {
     setLawSelection({ law: { book, number: node.number, label: node.label }, issueTitle: groupLabel });
   };
 
-  // Resolves every law cited by every OPEN case to its real place in the
-  // ประมวล tree (case + domain + full id-chain + raw x/y), so each nexus's
-  // issue nodes can point straight at the actual มาตรา node instead of
-  // drawing a duplicate one of their own -
-  // "ปลายสุดคือมาตราซึ่งเป็นอันเดียวกับปลายสุดของประมวล" - and so that when two
-  // open cases cite the SAME article, they resolve to the exact same real
-  // node and visibly converge there ("โยงคดีเป็น neural system"). Looks
-  // across every domain (findArticlePathAnyDomain), not just each case's own
-  // home domain - a case's laws routinely span more than one ประมวล.
-  // Skips (rather than fabricates a position for) any law not yet modeled
-  // in legalHierarchy.generated.ts anywhere.
+  const activeCaseData = caseGraphs[activeCaseId];
+  const caseDomain = legalDomains.find((item) => item.id === activeCaseData.domainId) ?? null;
+
+  // Resolves every law cited by the active case to its real place in the
+  // ประมวล tree (domain + full id-chain + raw x/y), so the nexus's issue
+  // nodes can point straight at the actual มาตรา node instead of drawing a
+  // duplicate one of their own -
+  // "ปลายสุดคือมาตราซึ่งเป็นอันเดียวกับปลายสุดของประมวล". Looks across every
+  // domain (findArticlePathAnyDomain), not just the case's own home domain -
+  // a case's laws routinely span more than one ประมวล (e.g. a
+  // criminal-domain case citing ป.วิ.อ., which lives under the separate
+  // criminal-procedure domain). Skips (rather than fabricates a position
+  // for) any law not yet modeled in legalHierarchy.generated.ts anywhere.
   const caseLawTargets = useMemo(() => {
-    return openCaseIds.flatMap((caseId) => {
-      const caseData = caseGraphs[caseId];
-      return caseData.issues.flatMap((issue) =>
-        issue.laws.map((law) => {
-          const found = findArticlePathAnyDomain(law.book, law.number);
-          if (!found) return null;
-          const lawDomain = legalDomains.find((item) => item.id === found.domainId);
-          if (!lawDomain) return null;
-          const steps = resolveSelectedPath(lawDomain, found.path);
-          const leaf = steps[steps.length - 1];
-          return leaf ? { caseId, issueId: issue.id, law, domainId: found.domainId, path: found.path, x: leaf.x, y: leaf.y } : null;
-        }),
-      );
-    }).filter((entry): entry is { caseId: string; issueId: string; law: CaseLawRef; domainId: string; path: string[]; x: number; y: number } => entry !== null);
-  }, [openCaseIds]);
+    if (!caseOverlayOpen) return [];
+    return activeCaseData.issues.flatMap((issue) =>
+      issue.laws.map((law) => {
+        const found = findArticlePathAnyDomain(law.book, law.number);
+        if (!found) return null;
+        const lawDomain = legalDomains.find((item) => item.id === found.domainId);
+        if (!lawDomain) return null;
+        const steps = resolveSelectedPath(lawDomain, found.path);
+        const leaf = steps[steps.length - 1];
+        return leaf ? { issueId: issue.id, law, domainId: found.domainId, path: found.path, x: leaf.x, y: leaf.y } : null;
+      }),
+    ).filter((entry): entry is { issueId: string; law: CaseLawRef; domainId: string; path: string[]; x: number; y: number } => entry !== null);
+  }, [caseOverlayOpen, activeCaseData]);
 
   // Every id along any resolved law's path (subject through the leaf
-  // itself), across every open case - passed down as pinnedPathIds so
-  // LegalNodeRing keeps all of them open simultaneously (a case's laws
-  // routinely span more than one ลักษณะ under the same ภาค, which a single
-  // selectedPath can't represent on its own) AND so the specific cited
-  // มาตรา - not just its ancestor rings - gets the "in focus" treatment
-  // that fades its uncited siblings (e.g. ม.290-294 sitting next to a cited
-  // ม.288/289 under the same หมวด).
+  // itself) - passed down as pinnedPathIds so LegalNodeRing keeps all of
+  // them open simultaneously (a case's laws routinely span more than one
+  // ลักษณะ under the same ภาค, which a single selectedPath can't represent
+  // on its own) AND so the specific cited มาตรา - not just its ancestor
+  // rings - gets the "in focus" treatment that fades its uncited siblings
+  // (e.g. ม.290-294 sitting next to a cited ม.288/289 under the same หมวด).
   const casePinnedIds = useMemo(() => {
     const ids = new Set<string>();
     for (const target of caseLawTargets) {
@@ -981,146 +963,120 @@ export default function Home() {
     return ids;
   }, [caseLawTargets]);
 
-  // One nexus overlay (hub + issue nodes, in the map's own raw coordinate
-  // space) per open case. Each hub anchors off ITS case's primary law's
-  // immediate parent grouping (e.g. "หมวด 1" for ม.288 - walked the same
-  // way resolveSelectedPath does, one level short of the leaf) rather than
-  // the far edge of the whole subject/ลักษณะ ring, so it reads as attached
-  // to the specific ประเด็น that case is about. Two simultaneously open
-  // cases anchored to the SAME grouping (exactly what happens when they
-  // cite the same มาตรา, e.g. เสริม-เจนจิรา and ศยามล both citing ม.288/289)
-  // would otherwise stack their hubs exactly on top of each other - they're
-  // detected via a shared rounded-anchor key and fanned around it instead
-  // of both using the fixed up-left direction a single case gets.
-  const caseOverlays = useMemo(() => {
-    const anchored = openCaseIds.flatMap((caseId) => {
-      const caseData = caseGraphs[caseId];
-      const domain = legalDomains.find((item) => item.id === caseData.domainId) ?? null;
-      if (!domain) return [];
-      const targets = caseLawTargets.filter((target) => target.caseId === caseId);
-      const primaryPath = targets[0]?.path ?? [];
-      const subject = domain.children.find((item) => item.id === primaryPath[1]) ?? domain.children[0];
-      if (!subject) return [];
+  // Nexus overlay: hub + issue nodes positioned in the map's own raw
+  // coordinate space (not a fixed viewport point). The hub anchors off the
+  // primary law's immediate parent grouping (e.g. "หมวด 1" for ม.288 -
+  // walked the same way resolveSelectedPath does, one level short of the
+  // leaf) rather than the far edge of the whole subject/ลักษณะ ring, so it
+  // reads as attached to the specific ประเด็น the case is about. It's then
+  // pushed up-and-left of that anchor - clear of the anchor's own
+  // มาตรา-leaf ring (ringRadiusFor at the next depth down, same formula
+  // every ring uses) plus a margin for the hub circle/label. Sharing the
+  // map's own coordinate space (rather than a fixed viewport point) means a
+  // line from an issue straight to a real มาตรา node's resolved position
+  // just works under the same camera transform, no separate screen-space
+  // conversion needed.
+  const caseOverlay2D = useMemo(() => {
+    if (!caseOverlayOpen || !caseDomain) return null;
+    const caseData = activeCaseData;
+    const primaryPath = caseLawTargets[0]?.path ?? [];
+    const subject = caseDomain.children.find((item) => item.id === primaryPath[1]) ?? caseDomain.children[0];
+    if (!subject) return null;
 
-      // Walk down to the anchor node (primaryPath minus its own มาตรา
-      // leaf), mirroring resolveSelectedPath's loop, so we land on the
-      // leaf's immediate parent grouping and know how many siblings it has
-      // (for its own leaf-ring clearance below).
-      let anchorX = subject.x;
-      let anchorY = subject.y;
-      let anchorChildCount = subject.children?.length ?? 0;
-      let currentChildren = subject.children;
-      const anchorPathLength = Math.max(2, primaryPath.length - 1);
-      for (let depth = 2; depth < anchorPathLength; depth += 1) {
-        if (!currentChildren) break;
-        const index = currentChildren.findIndex((item) => item.id === primaryPath[depth]);
-        if (index === -1) break;
-        const node = currentChildren[index];
-        const baseRadius = LEVEL_RING_RADIUS[Math.min(depth, LEVEL_RING_RADIUS.length - 1)];
-        const legacyScale = domain.id === "criminal" ? 1.82 : 1.58;
-        const pos = node.dx !== undefined && node.dy !== undefined
-          ? { x: anchorX + node.dx * legacyScale, y: anchorY + node.dy * legacyScale }
-          : autoRadialPosition(anchorX, anchorY, index, currentChildren.length, baseRadius);
-        anchorX = pos.x;
-        anchorY = pos.y;
-        anchorChildCount = node.children?.length ?? 0;
-        currentChildren = node.children;
-      }
-      return [{ caseId, caseData, targets, anchorX, anchorY, anchorChildCount }];
-    });
-
-    const anchorGroups = new Map<string, typeof anchored>();
-    for (const entry of anchored) {
-      const key = `${Math.round(entry.anchorX)}:${Math.round(entry.anchorY)}`;
-      const group = anchorGroups.get(key) ?? [];
-      group.push(entry);
-      anchorGroups.set(key, group);
+    // Walk down to the anchor node (primaryPath minus its own มาตรา leaf),
+    // mirroring resolveSelectedPath's loop, so we land on the leaf's
+    // immediate parent grouping and know how many siblings it has (for its
+    // own leaf-ring clearance below).
+    let anchorX = subject.x;
+    let anchorY = subject.y;
+    let anchorChildCount = subject.children?.length ?? 0;
+    let currentChildren = subject.children;
+    const anchorPathLength = Math.max(2, primaryPath.length - 1);
+    for (let depth = 2; depth < anchorPathLength; depth += 1) {
+      if (!currentChildren) break;
+      const index = currentChildren.findIndex((item) => item.id === primaryPath[depth]);
+      if (index === -1) break;
+      const node = currentChildren[index];
+      const baseRadius = LEVEL_RING_RADIUS[Math.min(depth, LEVEL_RING_RADIUS.length - 1)];
+      const legacyScale = caseDomain.id === "criminal" ? 1.82 : 1.58;
+      const pos = node.dx !== undefined && node.dy !== undefined
+        ? { x: anchorX + node.dx * legacyScale, y: anchorY + node.dy * legacyScale }
+        : autoRadialPosition(anchorX, anchorY, index, currentChildren.length, baseRadius);
+      anchorX = pos.x;
+      anchorY = pos.y;
+      anchorChildCount = node.children?.length ?? 0;
+      currentChildren = node.children;
     }
 
-    return anchored.map((entry) => {
-      const key = `${Math.round(entry.anchorX)}:${Math.round(entry.anchorY)}`;
-      const group = anchorGroups.get(key)!;
-      const groupIndex = group.indexOf(entry);
-      const groupSize = group.length;
+    const anchorLeafRingRadius = ringRadiusFor(LEVEL_RING_RADIUS[4], anchorChildCount);
+    const hubDistance = anchorLeafRingRadius + 150;
+    const hubX = anchorX - hubDistance * 0.82;
+    const hubY = anchorY - hubDistance * 0.82;
+    const issueCount = Math.max(1, caseData.issues.length);
+    const issueRadius = 78 + issueCount * 4;
 
-      const anchorLeafRingRadius = ringRadiusFor(LEVEL_RING_RADIUS[4], entry.anchorChildCount);
-      const hubDistance = anchorLeafRingRadius + 150;
-      // Single case at this anchor: the original fixed up-left direction.
-      // Multiple cases sharing it: fan out across a wide wedge centered on
-      // that same up-left direction instead, so a shared มาตรา still reads
-      // as "up-left of its หมวด," just with more than one hub near it.
-      const baseAngle = Math.atan2(-0.82, -0.82);
-      const spread = Math.min(Math.PI * 0.95, (groupSize - 1) * 0.6);
-      const hubAngle = groupSize > 1
-        ? baseAngle - spread / 2 + (spread / (groupSize - 1)) * groupIndex
-        : baseAngle;
-      // Two cases converging on the same anchor (the exact scenario worth
-      // showing off - they cite the same มาตรา) tend to also share most of
-      // their OTHER citations, so angle alone isn't enough separation once
-      // each hub's own issue cloud is added on top - stagger distance too,
-      // putting each case sharing an anchor on its own concentric ring.
-      const hubDistanceForCase = hubDistance * (1 + groupIndex * 0.55);
-      const hubX = entry.anchorX + Math.cos(hubAngle) * hubDistanceForCase;
-      const hubY = entry.anchorY + Math.sin(hubAngle) * hubDistanceForCase;
-
-      const issueCount = Math.max(1, entry.caseData.issues.length);
-      const issueRadius = 78 + issueCount * 4;
-
-      // Point each issue node toward the real direction of its own cited
-      // มาตรา (average, if it cites more than one) instead of even angular
-      // spacing - keeps the hub->issue link and the issue->มาตรา link
-      // roughly collinear so they read as one path instead of crossing
-      // each other. An issue with no resolved target falls back to the
-      // direction the hub itself was pushed from the anchor.
-      const hubOffsetAngle = Math.atan2(hubY - entry.anchorY, hubX - entry.anchorX);
-      const naturalAngles = entry.caseData.issues.map((issue) => {
-        const relatedTargets = entry.targets.filter((target) => target.issueId === issue.id);
-        if (relatedTargets.length === 0) return hubOffsetAngle;
-        const avgX = relatedTargets.reduce((sum, target) => sum + target.x, 0) / relatedTargets.length;
-        const avgY = relatedTargets.reduce((sum, target) => sum + target.y, 0) / relatedTargets.length;
-        return Math.atan2(avgY - hubY, avgX - hubX);
-      });
-
-      const MIN_ISSUE_GAP = Math.PI / 5;
-      const order = naturalAngles.map((angle, index) => ({ angle, index })).sort((a, b) => a.angle - b.angle);
-      const resolvedAngles = new Array<number>(issueCount);
-      order.forEach((orderEntry, sortedIndex) => {
-        const prevAngle = sortedIndex === 0 ? orderEntry.angle : resolvedAngles[order[sortedIndex - 1].index];
-        resolvedAngles[orderEntry.index] = sortedIndex === 0 ? orderEntry.angle : Math.max(orderEntry.angle, prevAngle + MIN_ISSUE_GAP);
-      });
-
-      const issues = entry.caseData.issues.map((issue, issueIndex) => {
-        const issueAngle = resolvedAngles[issueIndex];
-        return { id: issue.id, title: issue.title, x: hubX + Math.cos(issueAngle) * issueRadius, y: hubY + Math.sin(issueAngle) * issueRadius };
-      });
-      return { caseId: entry.caseId, title: entry.caseData.title, color: caseAccentColor(entry.caseId), x: hubX, y: hubY, issues };
+    // Point each issue node toward the real direction of its own cited
+    // มาตรา (average, if it cites more than one) instead of even angular
+    // spacing - keeps the hub->issue link and the issue->มาตรา link
+    // roughly collinear so they read as one path instead of crossing each
+    // other. An issue with no resolved target (e.g. a law cited from a book
+    // outside this case's domain, like ป.วิ.อ. inside a criminal-domain
+    // case) has no real direction to point along - falls back to the same
+    // direction the hub itself was already pushed from the anchor, since
+    // that's the one side of the map guaranteed clear of the ring content.
+    const hubOffsetAngle = Math.atan2(hubY - anchorY, hubX - anchorX);
+    const naturalAngles = caseData.issues.map((issue) => {
+      const relatedTargets = caseLawTargets.filter((target) => target.issueId === issue.id);
+      if (relatedTargets.length === 0) return hubOffsetAngle;
+      const avgX = relatedTargets.reduce((sum, target) => sum + target.x, 0) / relatedTargets.length;
+      const avgY = relatedTargets.reduce((sum, target) => sum + target.y, 0) / relatedTargets.length;
+      return Math.atan2(avgY - hubY, avgX - hubX);
     });
-  }, [openCaseIds, caseLawTargets]);
 
-  // Every domain any open case actually touches - its own home domain plus
+    // Enforce a minimum angular gap between neighboring issue nodes so two
+    // issues whose real มาตรา happen to sit close together don't land on
+    // top of each other - sort by natural angle, then nudge later ones
+    // forward just enough to keep them apart.
+    const MIN_ISSUE_GAP = Math.PI / 5;
+    const order = naturalAngles.map((angle, index) => ({ angle, index })).sort((a, b) => a.angle - b.angle);
+    const resolvedAngles = new Array<number>(issueCount);
+    order.forEach((entry, sortedIndex) => {
+      const prevAngle = sortedIndex === 0 ? entry.angle : resolvedAngles[order[sortedIndex - 1].index];
+      resolvedAngles[entry.index] = sortedIndex === 0 ? entry.angle : Math.max(entry.angle, prevAngle + MIN_ISSUE_GAP);
+    });
+
+    const issues = caseData.issues.map((issue, issueIndex) => {
+      const issueAngle = resolvedAngles[issueIndex];
+      return { id: issue.id, title: issue.title, x: hubX + Math.cos(issueAngle) * issueRadius, y: hubY + Math.sin(issueAngle) * issueRadius };
+    });
+    return { title: caseData.title, x: hubX, y: hubY, issues };
+  }, [caseOverlayOpen, activeCaseData, caseDomain, caseLawTargets]);
+
+  // Every domain the open case actually touches - its own home domain plus
   // wherever any of its resolved laws landed. Used so a secondary domain
-  // (e.g. criminal-procedure, pulled in only because a case cites ป.วิ.อ.)
+  // (e.g. criminal-procedure, pulled in only because the case cites ป.วิ.อ.)
   // renders its subject/ลักษณะ/มาตรา content and stays undimmed even though
   // it isn't the one the user manually drilled into via selectedPath.
   const caseRelevantDomainIds = useMemo(() => {
-    if (openCaseIds.length === 0) return null;
+    if (!caseOverlayOpen) return null;
     const ids = new Set<string>(caseLawTargets.map((target) => target.domainId));
-    for (const caseId of openCaseIds) ids.add(caseGraphs[caseId].domainId);
+    if (caseDomain) ids.add(caseDomain.id);
     return ids;
-  }, [openCaseIds, caseLawTargets]);
+  }, [caseOverlayOpen, caseLawTargets, caseDomain]);
 
-  // Camera override while any nexus is open: fit every point every open
-  // nexus touches (every hub, issue node, and resolved มาตรา) into one
-  // bounding box instead of using the normal single-domain depth-based
-  // target. A cross-domain case's second domain - or a second open case
-  // entirely - can sit far outside whatever one domain's own drill-down
-  // framing would show, so without this a resolved node would draw a line
-  // correctly but land off-screen. Falls back to the normal depth-based
-  // target when nothing is open.
+  // Camera override while the nexus is open: fit every point the nexus
+  // touches (hub, issue nodes, every resolved มาตรา) into one bounding box
+  // instead of using the normal single-domain depth-based target. A
+  // cross-domain case's second domain can sit far outside whatever the
+  // primary domain's own drill-down framing would show, so without this
+  // the real ป.วิ.อ. node (say) would resolve and draw a line correctly but
+  // land off-screen. Falls back to the normal depth-based target when no
+  // case is open.
   const caseCameraFrame = useMemo(() => {
-    if (caseOverlays.length === 0) return null;
+    if (!caseOverlayOpen || !caseOverlay2D) return null;
     const points = [
-      ...caseOverlays.flatMap((overlay) => [{ x: overlay.x, y: overlay.y }, ...overlay.issues.map((issue) => ({ x: issue.x, y: issue.y }))]),
+      { x: caseOverlay2D.x, y: caseOverlay2D.y },
+      ...caseOverlay2D.issues.map((issue) => ({ x: issue.x, y: issue.y })),
       ...caseLawTargets.map((target) => ({ x: target.x, y: target.y })),
     ];
     const xs = points.map((point) => point.x);
@@ -1133,8 +1089,8 @@ export default function Home() {
     const boxWidth = Math.max(1, maxX - minX + margin * 2);
     const boxHeight = Math.max(1, maxY - minY + margin * 2);
     const fitScale = Math.min(1440 / boxWidth, 900 / boxHeight);
-    return { x: (minX + maxX) / 2, y: (minY + maxY) / 2, scale: Math.min(1.55, Math.max(0.42, fitScale)) };
-  }, [caseOverlays, caseLawTargets]);
+    return { x: (minX + maxX) / 2, y: (minY + maxY) / 2, scale: Math.min(1.55, Math.max(0.5, fitScale)) };
+  }, [caseOverlayOpen, caseOverlay2D, caseLawTargets]);
 
   const cameraTarget = caseCameraFrame ?? baseCameraTarget;
   const cameraScale = cameraEnabled && cameraTarget
@@ -1147,47 +1103,38 @@ export default function Home() {
     : `translate(${720 + pan.x} ${450 + pan.y}) scale(${zoom}) translate(-720 -450)`;
   particleTargetRef.current = expanded && cameraTarget ? { x: cameraTarget.x, y: cameraTarget.y } : null;
 
-  // Toggles ONE case's membership in the open set, leaving whatever else
-  // is open untouched - opening a second case is how a shared มาตรา ever
-  // gets to show two nexuses converging on it.
-  const toggleCase = (caseId: string) => {
-    const wasOpen = openCaseIds.includes(caseId);
-    setOpenCaseIds((current) => (wasOpen ? current.filter((id) => id !== caseId) : [...current, caseId]));
-    setLawSelection(null);
-    if (wasOpen) return;
-    // Only jump the camera/expand/focus state when actually opening a case
-    // (closing one just lets the bbox-fit camera above re-frame whatever's
-    // left, rather than resetting navigation).
+  const toggleCaseOverlay = (caseId: string) => {
+    if (caseOverlayOpen && activeCaseId === caseId) {
+      setCaseOverlayOpen(false);
+      setLawSelection(null);
+      return;
+    }
     const caseData = caseGraphs[caseId];
     const domain = legalDomains.find((item) => item.id === caseData.domainId) ?? null;
     const firstLaw = caseData.issues[0]?.laws[0];
     const path = domain && firstLaw ? findArticlePath(domain, firstLaw.book, firstLaw.number) : null;
+    setActiveCaseId(caseId);
+    setCaseOverlayOpen(true);
+    setLawSelection(null);
     setExpanded(true);
     setPan({ x: 0, y: 0 });
+    // Focus the camera on the case's domain+subject (rather than resetting
+    // to the top-level overview) so the auto-revealed real มาตรา branches
+    // land centered in view alongside the nexus, not off in a corner.
     setSelectedPath(path ? [path[0], path[1]] : domain ? [domain.id] : []);
     setZoom(1);
     setViewMode("network");
   };
 
   // Only used by the 3D nexus (ForceNetwork3D still renders its own law
-  // nodes rather than pointing at real มาตรา positions, and only ever
-  // shows one case at a time - see the project's memory notes on this
-  // being 3D-only follow-up work). The 2D map instead lets the
-  // now-auto-revealed real มาตรา node itself open this panel via the
-  // normal onSelectArticle click path.
+  // nodes rather than pointing at real มาตรา positions - see the
+  // project's memory notes on this being 3D-only follow-up work). The 2D
+  // map instead lets the now-auto-revealed real มาตรา node itself open
+  // this panel via the normal onSelectArticle click path.
   const handleSelectOverlayLaw = (law: CaseLawRef, issueId: string) => {
-    let issueTitle = "";
-    for (const caseId of openCaseIds) {
-      const issue = caseGraphs[caseId].issues.find((item) => item.id === issueId);
-      if (issue) { issueTitle = issue.title; break; }
-    }
-    setLawSelection({ law, issueTitle });
+    const issue = activeCaseData.issues.find((item) => item.id === issueId);
+    setLawSelection({ law, issueTitle: issue?.title ?? "" });
   };
-
-  // 3D mode was never extended to show more than one case (see comment
-  // above) - hand it whichever case was opened most recently as a
-  // reasonable single-case fallback.
-  const primaryCaseData = openCaseIds.length ? caseGraphs[openCaseIds[openCaseIds.length - 1]] : null;
 
   const returnToAllDomains = () => {
     setSelectedPath([]);
@@ -1278,10 +1225,10 @@ export default function Home() {
           <button className="atlas-controls__trigger" onClick={() => setCaseMenuOpen((value) => !value)} aria-expanded={caseMenuOpen}><span>คดี</span><Scale size={16} /></button>
           <div className="atlas-controls__content">
             {Object.values(caseGraphs).map((caseItem) => {
-              const isActive = openCaseIds.includes(caseItem.id);
+              const isActive = caseOverlayOpen && activeCaseId === caseItem.id;
               return (
                 <div key={caseItem.id} className="case-menu-row">
-                  <button className={isActive ? "is-active" : ""} style={isActive ? { boxShadow: `inset 2px 0 0 ${caseAccentColor(caseItem.id)}` } : undefined} aria-pressed={isActive} onClick={() => toggleCase(caseItem.id)} title={caseItem.subtitle}>
+                  <button className={isActive ? "is-active" : ""} aria-pressed={isActive} onClick={() => toggleCaseOverlay(caseItem.id)} title={caseItem.subtitle}>
                     <span>{caseItem.title}</span><GitBranch size={14} />
                   </button>
                   {caseItem.newsUrl && (
@@ -1318,7 +1265,7 @@ export default function Home() {
         {selectedDomain && <button className={`return-overview-chip ${caseMenuOpen ? "is-veiled" : ""}`} onClick={returnToAllDomains}><RotateCcw size={14} /> กลับภาพรวม</button>}
         {is3D && viewMode === "network" ? (
           <WebGLBoundary onFallback={() => setIs3D(false)}>
-            <ForceNetwork3D domains={legalDomains} expanded={expanded} selectedDomainId={selectedId} selectedSubjectId={selectedSubjectId} selectedPath={selectedPath} showConnections={showConnections} motionEnabled={motionEnabled} caseOverlay={primaryCaseData} onSelectPath={selectPath} onSelectArticle={handleSelectArticle} onOpen={() => { playSoftTone(); setExpanded(true); }} onReset={resetExplorer} onFallbackTo2D={() => setIs3D(false)} onSelectLaw={handleSelectOverlayLaw} />
+            <ForceNetwork3D domains={legalDomains} expanded={expanded} selectedDomainId={selectedId} selectedSubjectId={selectedSubjectId} selectedPath={selectedPath} showConnections={showConnections} motionEnabled={motionEnabled} caseOverlay={caseOverlayOpen ? activeCaseData : null} onSelectPath={selectPath} onSelectArticle={handleSelectArticle} onOpen={() => { playSoftTone(); setExpanded(true); }} onReset={resetExplorer} onFallbackTo2D={() => setIs3D(false)} onSelectLaw={handleSelectOverlayLaw} />
           </WebGLBoundary>
         ) : (
         <svg className={`law-map ${isPanning ? "is-panning" : ""} ${lawSelection ? "law-focus" : ""}`} viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" onPointerDown={handleMapPointerDown} onPointerMove={handleMapPointerMove} onPointerUp={handleMapPointerUp} onPointerCancel={handleMapPointerUp} onPointerLeave={() => { if (panGestureRef.current.pointerId === -1) setIsPanning(false); }} onWheel={handleMapWheel} onClick={(event) => { if (event.target === event.currentTarget && !didDragRef.current) setLawSelection(null); }}>
@@ -1356,42 +1303,34 @@ export default function Home() {
                 (domains/subjects/มาตรา leaves all paint after this in document
                 order) - a line reaching a node should visually disappear behind
                 it, not draw across on top of it. */}
-            {caseOverlays.length > 0 && (
+            {caseOverlay2D && (
               <g className="case-overlay-2d__links" aria-hidden="true">
-                {caseOverlays.map((overlay) => (
-                  <Fragment key={`hub-links-${overlay.caseId}`}>
-                    {overlay.issues.map((issue) => (
-                      <path key={`nexus-link-${overlay.caseId}-${issue.id}`} d={curvedPath(overlay.x, overlay.y, issue.x, issue.y)} fill="none" stroke={overlay.color} strokeWidth="1.4" opacity="0.4" />
-                    ))}
-                  </Fragment>
+                {caseOverlay2D.issues.map((issue) => (
+                  <path key={`nexus-link-${issue.id}`} d={curvedPath(caseOverlay2D.x, caseOverlay2D.y, issue.x, issue.y)} fill="none" stroke="#D64545" strokeWidth="1.4" opacity="0.4" />
                 ))}
                 {/* Straight to the real มาตรา node's own resolved position - no
                     duplicate law node in the nexus itself; the real node IS the
                     endpoint. Draws in as the real node's own arrival animation
-                    plays, so the line reads as part of the same reveal. Colored
-                    per-case (not a single fixed blue) so when two open cases
-                    cite the same มาตรา, both lines arriving at it stay visually
-                    traceable back to which case each one belongs to. */}
+                    plays, so the line reads as part of the same reveal. */}
                 {caseLawTargets.map((target) => {
-                  const overlay = caseOverlays.find((item) => item.caseId === target.caseId);
-                  const issue = overlay?.issues.find((item) => item.id === target.issueId);
-                  if (!overlay || !issue) return null;
+                  const issue = caseOverlay2D.issues.find((item) => item.id === target.issueId);
+                  if (!issue) return null;
                   const linkPath = curvedPath(issue.x, issue.y, target.x, target.y);
-                  const linkKey = `${target.caseId}-${target.issueId}-${target.law.book}-${target.law.number}`;
+                  const linkKey = `${target.issueId}-${target.law.book}-${target.law.number}`;
                   return (
                     <g key={`nexus-real-link-group-${linkKey}`}>
                       <path
                         className="nexus-real-link"
                         d={linkPath}
                         fill="none"
-                        stroke={overlay.color}
+                        stroke="#1B4F91"
                         strokeWidth="1.6"
                         pathLength={1}
                       />
                       {/* Small dot travelling issue -> real มาตรา, on a loop -
                           the "effect" reinforcing which way the connection
                           reaches, once the initial draw-in has settled. */}
-                      <circle r="3" fill={overlay.color} className="nexus-real-link__pulse" style={{ filter: `drop-shadow(0 0 3px ${overlay.color})` }}>
+                      <circle r="3" fill="#1B4F91" className="nexus-real-link__pulse">
                         <animateMotion dur="2.6s" begin="0.85s" repeatCount="indefinite" path={linkPath} />
                         <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.15;0.85;1" dur="2.6s" begin="0.85s" repeatCount="indefinite" />
                       </circle>
@@ -1501,25 +1440,25 @@ export default function Home() {
               );
             })}
 
-            {caseOverlays.map((overlay) => (
-              <g key={overlay.caseId} className="case-overlay-2d" aria-label={`ภาพรวมคดี ${overlay.title}`}>
-                {overlay.issues.map((issue) => (
-                  <g key={`issue-${overlay.caseId}-${issue.id}`} className="overlay-node overlay-node--issue">
+            {caseOverlay2D && (
+              <g className="case-overlay-2d" aria-label={`ภาพรวมคดี ${caseOverlay2D.title}`}>
+                {caseOverlay2D.issues.map((issue) => (
+                  <g key={`issue-${issue.id}`} className="overlay-node overlay-node--issue">
                     <circle cx={issue.x} cy={issue.y} r="19" fill="#E8933A" opacity="0.14" filter="url(#softBlur)" />
                     <circle cx={issue.x} cy={issue.y} r="11" fill="#E8933A" filter="url(#nodeShadow)" />
                     <text x={issue.x} y={issue.y + 25} textAnchor="middle" className="overlay-label overlay-label--issue">{issue.title}</text>
                   </g>
                 ))}
 
-                <g className="overlay-node overlay-node--nexus" role="button" tabIndex={0} aria-label={`${overlay.title} - คลิกเพื่อปิด`} onPointerDown={(event) => event.stopPropagation()} onClick={() => toggleCase(overlay.caseId)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); toggleCase(overlay.caseId); } }}>
-                  <circle cx={overlay.x} cy={overlay.y} r="52" fill={overlay.color} opacity="0.08" filter="url(#softBlur)" />
-                  <circle cx={overlay.x} cy={overlay.y} r="30" fill={overlay.color} opacity="0.14" filter="url(#softBlur)" />
-                  <circle cx={overlay.x} cy={overlay.y} r="17" fill={overlay.color} filter="url(#nodeShadow)" />
-                  <circle cx={overlay.x} cy={overlay.y} r="21" fill="none" stroke={overlay.color} strokeOpacity="0.5" strokeWidth="1.2" />
-                  <text x={overlay.x} y={overlay.y + 33} textAnchor="middle" className="overlay-label overlay-label--nexus" style={{ fill: overlay.color }}>{overlay.title}</text>
+                <g className="overlay-node overlay-node--nexus" role="button" tabIndex={0} aria-label={caseOverlay2D.title} onPointerDown={(event) => event.stopPropagation()} onClick={() => setCaseOverlayOpen(false)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setCaseOverlayOpen(false); } }}>
+                  <circle cx={caseOverlay2D.x} cy={caseOverlay2D.y} r="52" fill="#D64545" opacity="0.08" filter="url(#softBlur)" />
+                  <circle cx={caseOverlay2D.x} cy={caseOverlay2D.y} r="30" fill="#D64545" opacity="0.14" filter="url(#softBlur)" />
+                  <circle cx={caseOverlay2D.x} cy={caseOverlay2D.y} r="17" fill="#D64545" filter="url(#nodeShadow)" />
+                  <circle cx={caseOverlay2D.x} cy={caseOverlay2D.y} r="21" fill="none" stroke="#D64545" strokeOpacity="0.5" strokeWidth="1.2" />
+                  <text x={caseOverlay2D.x} y={caseOverlay2D.y + 33} textAnchor="middle" className="overlay-label overlay-label--nexus">{caseOverlay2D.title}</text>
                 </g>
               </g>
-            ))}
+            )}
           </g>
         </svg>
         )}

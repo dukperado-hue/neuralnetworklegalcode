@@ -929,32 +929,89 @@ export default function Home() {
   }, [caseLawTargets]);
 
   // Nexus overlay: hub + issue nodes positioned in the map's own raw
-  // coordinate space (not a fixed viewport point), pushed outward from the
-  // domain along the domain->subject direction - far enough to clear the
-  // subject's own ลักษณะ ring entirely (ringRadiusFor, same formula the
-  // ring itself uses, plus a margin for node radius/labels) so the nexus
-  // reads as a separate satellite next to the crowd rather than sitting in
-  // the middle of it. Sharing the map's own coordinate space (rather than
-  // a fixed viewport point) means a line from an issue straight to a real
-  // มาตรา node's resolved position just works under the same camera
-  // transform, no separate screen-space conversion needed.
+  // coordinate space (not a fixed viewport point). The hub anchors off the
+  // primary law's immediate parent grouping (e.g. "หมวด 1" for ม.288 -
+  // walked the same way resolveSelectedPath does, one level short of the
+  // leaf) rather than the far edge of the whole subject/ลักษณะ ring, so it
+  // reads as attached to the specific ประเด็น the case is about. It's then
+  // pushed up-and-left of that anchor - clear of the anchor's own
+  // มาตรา-leaf ring (ringRadiusFor at the next depth down, same formula
+  // every ring uses) plus a margin for the hub circle/label. Sharing the
+  // map's own coordinate space (rather than a fixed viewport point) means a
+  // line from an issue straight to a real มาตรา node's resolved position
+  // just works under the same camera transform, no separate screen-space
+  // conversion needed.
   const caseOverlay2D = useMemo(() => {
     if (!caseOverlayOpen || !caseDomain) return null;
     const caseData = activeCaseData;
-    const primarySubjectId = caseLawTargets[0]?.path[1];
-    const subject = caseDomain.children.find((item) => item.id === primarySubjectId) ?? caseDomain.children[0];
+    const primaryPath = caseLawTargets[0]?.path ?? [];
+    const subject = caseDomain.children.find((item) => item.id === primaryPath[1]) ?? caseDomain.children[0];
     if (!subject) return null;
-    const dx = subject.x - caseDomain.x;
-    const dy = subject.y - caseDomain.y;
-    const dist = Math.max(1, Math.hypot(dx, dy));
-    const subjectRingRadius = ringRadiusFor(LEVEL_RING_RADIUS[2], subject.children?.length ?? 0);
-    const hubDistance = subjectRingRadius + 190;
-    const hubX = subject.x + (dx / dist) * hubDistance;
-    const hubY = subject.y + (dy / dist) * hubDistance;
+
+    // Walk down to the anchor node (primaryPath minus its own มาตรา leaf),
+    // mirroring resolveSelectedPath's loop, so we land on the leaf's
+    // immediate parent grouping and know how many siblings it has (for its
+    // own leaf-ring clearance below).
+    let anchorX = subject.x;
+    let anchorY = subject.y;
+    let anchorChildCount = subject.children?.length ?? 0;
+    let currentChildren = subject.children;
+    const anchorPathLength = Math.max(2, primaryPath.length - 1);
+    for (let depth = 2; depth < anchorPathLength; depth += 1) {
+      if (!currentChildren) break;
+      const index = currentChildren.findIndex((item) => item.id === primaryPath[depth]);
+      if (index === -1) break;
+      const node = currentChildren[index];
+      const baseRadius = LEVEL_RING_RADIUS[Math.min(depth, LEVEL_RING_RADIUS.length - 1)];
+      const legacyScale = caseDomain.id === "criminal" ? 1.82 : 1.58;
+      const pos = node.dx !== undefined && node.dy !== undefined
+        ? { x: anchorX + node.dx * legacyScale, y: anchorY + node.dy * legacyScale }
+        : autoRadialPosition(anchorX, anchorY, index, currentChildren.length, baseRadius);
+      anchorX = pos.x;
+      anchorY = pos.y;
+      anchorChildCount = node.children?.length ?? 0;
+      currentChildren = node.children;
+    }
+
+    const anchorLeafRingRadius = ringRadiusFor(LEVEL_RING_RADIUS[4], anchorChildCount);
+    const hubDistance = anchorLeafRingRadius + 150;
+    const hubX = anchorX - hubDistance * 0.82;
+    const hubY = anchorY - hubDistance * 0.82;
     const issueCount = Math.max(1, caseData.issues.length);
+    const issueRadius = 78 + issueCount * 4;
+
+    // Point each issue node toward the real direction of its own cited
+    // มาตรา (average, if it cites more than one) instead of even angular
+    // spacing - keeps the hub->issue link and the issue->มาตรา link
+    // roughly collinear so they read as one path instead of crossing each
+    // other. An issue with no resolved target (e.g. a law cited from a book
+    // outside this case's domain, like ป.วิ.อ. inside a criminal-domain
+    // case) has no real direction to point along - falls back to the same
+    // direction the hub itself was already pushed from the anchor, since
+    // that's the one side of the map guaranteed clear of the ring content.
+    const hubOffsetAngle = Math.atan2(hubY - anchorY, hubX - anchorX);
+    const naturalAngles = caseData.issues.map((issue) => {
+      const relatedTargets = caseLawTargets.filter((target) => target.issueId === issue.id);
+      if (relatedTargets.length === 0) return hubOffsetAngle;
+      const avgX = relatedTargets.reduce((sum, target) => sum + target.x, 0) / relatedTargets.length;
+      const avgY = relatedTargets.reduce((sum, target) => sum + target.y, 0) / relatedTargets.length;
+      return Math.atan2(avgY - hubY, avgX - hubX);
+    });
+
+    // Enforce a minimum angular gap between neighboring issue nodes so two
+    // issues whose real มาตรา happen to sit close together don't land on
+    // top of each other - sort by natural angle, then nudge later ones
+    // forward just enough to keep them apart.
+    const MIN_ISSUE_GAP = Math.PI / 5;
+    const order = naturalAngles.map((angle, index) => ({ angle, index })).sort((a, b) => a.angle - b.angle);
+    const resolvedAngles = new Array<number>(issueCount);
+    order.forEach((entry, sortedIndex) => {
+      const prevAngle = sortedIndex === 0 ? entry.angle : resolvedAngles[order[sortedIndex - 1].index];
+      resolvedAngles[entry.index] = sortedIndex === 0 ? entry.angle : Math.max(entry.angle, prevAngle + MIN_ISSUE_GAP);
+    });
+
     const issues = caseData.issues.map((issue, issueIndex) => {
-      const issueAngle = (issueIndex / issueCount) * Math.PI * 2 - Math.PI / 2;
-      const issueRadius = 78 + issueCount * 4;
+      const issueAngle = resolvedAngles[issueIndex];
       return { id: issue.id, title: issue.title, x: hubX + Math.cos(issueAngle) * issueRadius, y: hubY + Math.sin(issueAngle) * issueRadius };
     });
     return { title: caseData.title, x: hubX, y: hubY, issues };
@@ -1084,9 +1141,24 @@ export default function Home() {
             {Object.values(caseGraphs).map((caseItem) => {
               const isActive = caseOverlayOpen && activeCaseId === caseItem.id;
               return (
-                <button key={caseItem.id} className={isActive ? "is-active" : ""} aria-pressed={isActive} onClick={() => toggleCaseOverlay(caseItem.id)} title={caseItem.subtitle}>
-                  <span>{caseItem.title}</span><GitBranch size={14} />
-                </button>
+                <div key={caseItem.id} className="case-menu-row">
+                  <button className={isActive ? "is-active" : ""} aria-pressed={isActive} onClick={() => toggleCaseOverlay(caseItem.id)} title={caseItem.subtitle}>
+                    <span>{caseItem.title}</span><GitBranch size={14} />
+                  </button>
+                  {caseItem.newsUrl && (
+                    <a
+                      className="case-menu-row__news"
+                      href={caseItem.newsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={`อ่านข่าว: ${caseItem.title} (coolunclelab.com)`}
+                      aria-label={`อ่านข่าว ${caseItem.title} บน Cool Uncle Lab`}
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <ArrowUpRight size={13} /> อ่านข่าว
+                    </a>
+                  )}
+                </div>
               );
             })}
           </div>

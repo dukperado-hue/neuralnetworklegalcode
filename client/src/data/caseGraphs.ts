@@ -18,7 +18,17 @@ export type CaseLawRef = {
   anchorMicroNodeId?: string;
 };
 export type CaseIssue = { id: string; title: string; summary: string; laws: CaseLawRef[] };
-export type CaseGraphData = { id: string; title: string; subtitle: string; domainId: string; issues: CaseIssue[] };
+export type CaseGraphData = {
+  id: string;
+  title: string;
+  subtitle: string;
+  domainId: string;
+  issues: CaseIssue[];
+  /** Link out to the real news write-up on coolunclelab.com's "โหมดอ่านข่าว"
+   * (news-reading mode) for this case, opened in a new tab from the คดี
+   * menu. Omit for a case with no matching real-world write-up yet. */
+  newsUrl?: string;
+};
 
 export const caseGraphs: Record<string, CaseGraphData> = {
   "serm-jenjira": {
@@ -26,6 +36,7 @@ export const caseGraphs: Record<string, CaseGraphData> = {
     title: "คดี: เสริม–เจนจิรา",
     subtitle: "สถานการณ์สมมติเพื่อการศึกษา — คดีฆาตกรรมหั่นศพ",
     domainId: "criminal",
+    newsUrl: "https://coolunclelab.com/news-case-khdii-serm-sakonrat-2541.html",
     issues: [
       {
         id: "murder",
@@ -41,6 +52,31 @@ export const caseGraphs: Record<string, CaseGraphData> = {
         title: "การซ่อนเร้นทำลายศพ",
         summary: "ประเด็นความรับผิดฐานย้าย ซ่อนเร้น หรือทำลายศพเพื่อปิดบังเหตุแห่งการตาย",
         laws: [{ book: "criminal", number: "199", label: "ซ่อนเร้น ย้าย หรือทำลายศพ" }],
+      },
+    ],
+  },
+  "syamol-forensic": {
+    id: "syamol-forensic",
+    title: "คดี: ศยามล",
+    subtitle: "สถานการณ์สมมติเพื่อการศึกษา — คดีจ้างวานฆ่าด้วยพยานหลักฐานนิติวิทยาศาสตร์",
+    domainId: "criminal",
+    newsUrl: "https://coolunclelab.com/news-case-khdii-syamol-forensic-2536.html",
+    issues: [
+      {
+        id: "hired-murder",
+        title: "การจ้างวานฆ่าโดยไตร่ตรองไว้ก่อน",
+        summary: "อดีตสามีจ้างวานกลุ่มมือปืนให้ฆ่าอดีตภรรยา ผู้ใช้ให้ผู้อื่นกระทำความผิดต้องรับโทษเสมือนเป็นตัวการ และเมื่อเป็นการฆ่าโดยไตร่ตรองไว้ก่อน โทษคือประหารชีวิต",
+        laws: [
+          { book: "criminal", number: "288", label: "ฆ่าผู้อื่น" },
+          { book: "criminal", number: "289", label: "ฆ่าโดยไตร่ตรองไว้ก่อน" },
+          { book: "criminal", number: "84", label: "ผู้ใช้ให้ผู้อื่นกระทำความผิด" },
+        ],
+      },
+      {
+        id: "forensic-evidence",
+        title: "พยานหลักฐานทางนิติวิทยาศาสตร์",
+        summary: "คดีแรกๆ ของไทยที่ใช้การตรวจ DNA คลี่คลายคดีอย่างเต็มรูปแบบ สร้างบรรทัดฐานให้ศาลรับฟังพยานหลักฐานทางวิทยาศาสตร์แทนพยานบุคคลเพียงอย่างเดียว",
+        laws: [{ book: "crimpro", number: "226/2", label: "การรับฟังพยานหลักฐานทางวิทยาศาสตร์" }],
       },
     ],
   },

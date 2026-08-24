@@ -1353,6 +1353,9 @@ export default function Home() {
                   <button className={isActive ? "is-active" : ""} aria-pressed={isActive} onClick={() => toggleCaseOverlay(caseItem.id)} title={caseItem.subtitle}>
                     <span>{caseItem.title}</span><GitBranch size={14} />
                   </button>
+                  <p className="case-menu-row__basis">
+                    {caseItem.basedOn ?? "สถานการณ์สมมติเพื่อการศึกษา — ไม่มีคดีจริง/ฎีกาอ้างอิง"}
+                  </p>
                   {caseItem.newsUrl && (
                     <a
                       className="case-menu-row__news"

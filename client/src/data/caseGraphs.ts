@@ -28,6 +28,14 @@ export type CaseGraphData = {
    * (news-reading mode) for this case, opened in a new tab from the คดี
    * menu. Omit for a case with no matching real-world write-up yet. */
   newsUrl?: string;
+  /** One-line grounding note - why this nexus exists, distilled from the
+   * real ฎีกา/case's own "ประเด็นกฎหมายที่คดีนี้ถาม" section on its newsUrl
+   * page (not re-derived here - see that page for the full write-up).
+   * Shown directly in the คดี menu so it's readable without hovering. Omit
+   * for a case built from a purely pedagogical/exam-sourced fact pattern
+   * with no real court precedent behind it - the menu falls back to
+   * `subtitle` alone for those. */
+  basedOn?: string;
 };
 
 export const caseGraphs: Record<string, CaseGraphData> = {
@@ -37,6 +45,7 @@ export const caseGraphs: Record<string, CaseGraphData> = {
     subtitle: "สถานการณ์สมมติเพื่อการศึกษา — คดีฆาตกรรมหั่นศพ",
     domainId: "criminal",
     newsUrl: "https://coolunclelab.com/news-case-khdii-serm-sakonrat-2541.html",
+    basedOn: "จากคดีจริง เสริม สาครราษฎร์ (2541) — ศาลฎีกาปี 2545 ลดโทษจากประหารชีวิตเหลือจำคุกตลอดชีวิต เพราะจำเลยรับสารภาพเป็นประโยชน์ต่อการพิจารณา",
     issues: [
       {
         id: "murder",
@@ -61,6 +70,7 @@ export const caseGraphs: Record<string, CaseGraphData> = {
     subtitle: "สถานการณ์สมมติเพื่อการศึกษา — คดีจ้างวานฆ่าด้วยพยานหลักฐานนิติวิทยาศาสตร์",
     domainId: "criminal",
     newsUrl: "https://coolunclelab.com/news-case-khdii-syamol-forensic-2536.html",
+    basedOn: "จากคดีจริง ศยามล (2536) — คดีแรกๆ ของไทยที่ใช้การตรวจ DNA คลี่คลายคดี วางบรรทัดฐานให้ศาลรับฟังพยานหลักฐานทางนิติวิทยาศาสตร์แทนพยานบุคคลเพียงอย่างเดียว",
     issues: [
       {
         id: "hired-murder",

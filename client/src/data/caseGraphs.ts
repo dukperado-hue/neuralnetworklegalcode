@@ -17,7 +17,20 @@ export type CaseLawRef = {
    * of scope for the 2D map rewrite); no longer set or used for positioning. */
   anchorMicroNodeId?: string;
 };
-export type CaseIssue = { id: string; title: string; summary: string; laws: CaseLawRef[] };
+export type CaseIssue = {
+  id: string;
+  title: string;
+  summary: string;
+  laws: CaseLawRef[];
+  /** Why THIS specific nexus node exists - the real court's own reasoning
+   * on this issue, distilled from the case's "ประเด็นกฎหมายที่คดีนี้ถาม"
+   * section on its newsUrl page (same source as the case-level `basedOn`,
+   * just the slice of it that maps to this particular issue). Shown when
+   * the user clicks the issue node in the nexus overlay. Omit for an issue
+   * with no real ruling behind it - the panel falls back to a note that
+   * it's a hypothetical scenario. */
+  reasoning?: string;
+};
 export type CaseGraphData = {
   id: string;
   title: string;
@@ -55,12 +68,14 @@ export const caseGraphs: Record<string, CaseGraphData> = {
           { book: "criminal", number: "288", label: "ฆ่าผู้อื่น" },
           { book: "criminal", number: "289", label: "ฆ่าโดยไตร่ตรองไว้ก่อน" },
         ],
+        reasoning: "ศาลชั้นต้นเห็นว่าเป็นการกระทำที่โหดเหี้ยมผิดวิสัยมนุษย์ พิพากษาประหารชีวิต ก่อนศาลฎีกาปี 2545 ลดโทษเหลือจำคุกตลอดชีวิต เพราะจำเลยให้การรับสารภาพซึ่งเป็นประโยชน์อย่างยิ่งต่อการพิจารณา (ป.อ. มาตรา 78)",
       },
       {
         id: "conceal-corpse",
         title: "การซ่อนเร้นทำลายศพ",
         summary: "ประเด็นความรับผิดฐานย้าย ซ่อนเร้น หรือทำลายศพเพื่อปิดบังเหตุแห่งการตาย",
         laws: [{ book: "criminal", number: "199", label: "ซ่อนเร้น ย้าย หรือทำลายศพ" }],
+        reasoning: "การทำลายศพเป็นความผิดแยกต่างหากตาม ป.อ. มาตรา 199 แต่ในแง่คดีฆาตกรรม ศาลนำพฤติการณ์การหั่นศพมาพิจารณาประกอบเป็นเหตุแสดงถึงความโหดเหี้ยมทารุณของการกระทำด้วย",
       },
     ],
   },
@@ -81,12 +96,14 @@ export const caseGraphs: Record<string, CaseGraphData> = {
           { book: "criminal", number: "289", label: "ฆ่าโดยไตร่ตรองไว้ก่อน" },
           { book: "criminal", number: "84", label: "ผู้ใช้ให้ผู้อื่นกระทำความผิด" },
         ],
+        reasoning: "ศาลพิพากษาประหารชีวิตทั้งอดีตสามีผู้ว่าจ้างและทีมมือปืน — การที่ผู้บงการเป็นแพทย์ผู้มีความรู้และหน้าที่ทางวิชาชีพ สะท้อนปัญหาการใช้ความรู้ทางวิชาชีพในทางที่ผิดเพื่อวางแผนอาชญากรรมที่ซับซ้อน",
       },
       {
         id: "forensic-evidence",
         title: "พยานหลักฐานทางนิติวิทยาศาสตร์",
         summary: "คดีแรกๆ ของไทยที่ใช้การตรวจ DNA คลี่คลายคดีอย่างเต็มรูปแบบ สร้างบรรทัดฐานให้ศาลรับฟังพยานหลักฐานทางวิทยาศาสตร์แทนพยานบุคคลเพียงอย่างเดียว",
         laws: [{ book: "crimpro", number: "226/2", label: "การรับฟังพยานหลักฐานทางวิทยาศาสตร์" }],
+        reasoning: "การตรวจ DNA จากคราบอสุจิและเส้นผมในที่เกิดเหตุ เป็นเทคโนโลยีใหม่ในขณะนั้นที่นำไปสู่การจับกุมทีมฆ่าทั้งหมดได้ สร้างบรรทัดฐานให้ศาลไทยยอมรับพยานหลักฐานทางนิติวิทยาศาสตร์ที่มีความแม่นยำสูง แทนที่จะพึ่งพยานบุคคลเพียงอย่างเดียว",
       },
     ],
   },

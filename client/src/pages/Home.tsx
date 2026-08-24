@@ -7,7 +7,8 @@ import { Link } from "wouter";
 import ForceNetwork3D from "@/components/ForceNetwork3D";
 import WebGLBoundary from "@/components/WebGLBoundary";
 import LawSidePanel from "@/components/LawSidePanel";
-import { caseGraphs, DEFAULT_CASE_ID, type CaseLawRef } from "@/data/caseGraphs";
+import CaseIssuePanel from "@/components/CaseIssuePanel";
+import { caseGraphs, DEFAULT_CASE_ID, type CaseIssue, type CaseLawRef } from "@/data/caseGraphs";
 import { civilHierarchy, criminalHierarchy, civproHierarchy, crimproHierarchy } from "@/data/legalHierarchy.generated";
 import {
   ArrowUpRight,
@@ -793,6 +794,12 @@ export default function Home() {
   const [caseOverlayOpen, setCaseOverlayOpen] = useState(false);
   const [activeCaseId, setActiveCaseId] = useState(DEFAULT_CASE_ID);
   const [lawSelection, setLawSelection] = useState<{ law: CaseLawRef; issueTitle: string } | null>(null);
+  // "ทำไมเกิด nexus node นี้ขึ้น" - the real court's own reasoning on a
+  // specific case issue, shown when the user clicks an issue node in the
+  // nexus overlay (separate from lawSelection, which is มาตรา-text content
+  // for a leaf click). Mutually exclusive with lawSelection so the two
+  // side panels - same screen position - never stack.
+  const [issueReasonSelection, setIssueReasonSelection] = useState<{ issue: CaseIssue; caseData: (typeof caseGraphs)[string] } | null>(null);
   const backgroundMusicRef = useRef<HTMLAudioElement>(null);
   const panGestureRef = useRef({ pointerId: -1, startX: 0, startY: 0, startPanX: 0, startPanY: 0 });
   const didDragRef = useRef(false);
@@ -997,7 +1004,13 @@ export default function Home() {
 
   const handleSelectArticle = (book: string, node: LegalNode, groupLabel: string) => {
     if (!node.number) return;
+    setIssueReasonSelection(null);
     setLawSelection({ law: { book, number: node.number, label: node.label }, issueTitle: groupLabel });
+  };
+
+  const handleSelectIssueReason = (issue: CaseIssue) => {
+    setLawSelection(null);
+    setIssueReasonSelection({ issue, caseData: activeCaseData });
   };
 
   const activeCaseData = caseGraphs[activeCaseId];
@@ -1229,6 +1242,7 @@ export default function Home() {
     if (caseOverlayOpen && activeCaseId === caseId) {
       setCaseOverlayOpen(false);
       setLawSelection(null);
+      setIssueReasonSelection(null);
       return;
     }
     const caseData = caseGraphs[caseId];
@@ -1238,6 +1252,7 @@ export default function Home() {
     setActiveCaseId(caseId);
     setCaseOverlayOpen(true);
     setLawSelection(null);
+    setIssueReasonSelection(null);
     setExpanded(true);
     setPan({ x: 0, y: 0 });
     // Focus the camera on the case's domain+subject (rather than resetting
@@ -1255,6 +1270,7 @@ export default function Home() {
   // this panel via the normal onSelectArticle click path.
   const handleSelectOverlayLaw = (law: CaseLawRef, issueId: string) => {
     const issue = activeCaseData.issues.find((item) => item.id === issueId);
+    setIssueReasonSelection(null);
     setLawSelection({ law, issueTitle: issue?.title ?? "" });
   };
 
@@ -1393,7 +1409,7 @@ export default function Home() {
             <ForceNetwork3D domains={legalDomains} expanded={expanded} selectedDomainId={selectedId} selectedSubjectId={selectedSubjectId} selectedPath={selectedPath} showConnections={showConnections} motionEnabled={motionEnabled} caseOverlay={caseOverlayOpen ? activeCaseData : null} onSelectPath={selectPath} onSelectArticle={handleSelectArticle} onOpen={() => { playSoftTone(); setExpanded(true); }} onReset={resetExplorer} onFallbackTo2D={() => setIs3D(false)} onSelectLaw={handleSelectOverlayLaw} />
           </WebGLBoundary>
         ) : (
-        <svg className={`law-map ${isPanning ? "is-panning" : ""} ${lawSelection ? "law-focus" : ""}`} viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" onPointerDown={handleMapPointerDown} onPointerMove={handleMapPointerMove} onPointerUp={handleMapPointerUp} onPointerCancel={handleMapPointerUp} onPointerLeave={() => { if (panGestureRef.current.pointerId === -1) setIsPanning(false); }} onWheel={handleMapWheel} onClick={(event) => { if (event.target === event.currentTarget && !didDragRef.current) setLawSelection(null); }}>
+        <svg className={`law-map ${isPanning ? "is-panning" : ""} ${lawSelection || issueReasonSelection ? "law-focus" : ""}`} viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" role="img" aria-label="แผนที่ความสัมพันธ์ของประมวลกฎหมายไทย" onPointerDown={handleMapPointerDown} onPointerMove={handleMapPointerMove} onPointerUp={handleMapPointerUp} onPointerCancel={handleMapPointerUp} onPointerLeave={() => { if (panGestureRef.current.pointerId === -1) setIsPanning(false); }} onWheel={handleMapWheel} onClick={(event) => { if (event.target === event.currentTarget && !didDragRef.current) { setLawSelection(null); setIssueReasonSelection(null); } }}>
           <defs>
             <filter id="softBlur"><feGaussianBlur stdDeviation="16" /></filter>
             <filter id="nodeShadow" x="-70%" y="-70%" width="240%" height="240%"><feDropShadow dx="0" dy="9" stdDeviation="8" floodColor="#3C3651" floodOpacity="0.16" /></filter>
@@ -1586,13 +1602,25 @@ export default function Home() {
 
             {caseOverlay2D && (
               <g className="case-overlay-2d" aria-label={`ภาพรวมคดี ${caseOverlay2D.title}`}>
-                {caseOverlay2D.issues.map((issue) => (
-                  <g key={`issue-${issue.id}`} className="overlay-node overlay-node--issue">
-                    <circle cx={issue.x} cy={issue.y} r="19" fill="#E8933A" opacity="0.14" filter="url(#softBlur)" />
-                    <circle cx={issue.x} cy={issue.y} r="11" fill="#E8933A" filter="url(#nodeShadow)" />
-                    <text x={issue.x} y={issue.y + 25} textAnchor="middle" className="overlay-label overlay-label--issue">{issue.title}</text>
-                  </g>
-                ))}
+                {caseOverlay2D.issues.map((issue) => {
+                  const fullIssue = activeCaseData.issues.find((item) => item.id === issue.id);
+                  return (
+                    <g
+                      key={`issue-${issue.id}`}
+                      className="overlay-node overlay-node--issue"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`ทำไมประเด็นนี้จึงเกิดขึ้น: ${issue.title}`}
+                      onPointerDown={(event) => event.stopPropagation()}
+                      onClick={() => fullIssue && handleSelectIssueReason(fullIssue)}
+                      onKeyDown={(event) => { if (fullIssue && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); handleSelectIssueReason(fullIssue); } }}
+                    >
+                      <circle cx={issue.x} cy={issue.y} r="19" fill="#E8933A" opacity="0.14" filter="url(#softBlur)" />
+                      <circle cx={issue.x} cy={issue.y} r="11" fill="#E8933A" filter="url(#nodeShadow)" />
+                      <text x={issue.x} y={issue.y + 25} textAnchor="middle" className="overlay-label overlay-label--issue">{issue.title}</text>
+                    </g>
+                  );
+                })}
 
                 <g className="overlay-node overlay-node--nexus" role="button" tabIndex={0} aria-label={caseOverlay2D.title} onPointerDown={(event) => event.stopPropagation()} onClick={() => setCaseOverlayOpen(false)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setCaseOverlayOpen(false); } }}>
                   <circle cx={caseOverlay2D.x} cy={caseOverlay2D.y} r="52" fill="#D64545" opacity="0.08" filter="url(#softBlur)" />
@@ -1634,6 +1662,7 @@ export default function Home() {
         )}
 
         <LawSidePanel selection={lawSelection} onClose={() => setLawSelection(null)} />
+        <CaseIssuePanel selection={issueReasonSelection} onClose={() => setIssueReasonSelection(null)} />
       </section>
     </main>
   );

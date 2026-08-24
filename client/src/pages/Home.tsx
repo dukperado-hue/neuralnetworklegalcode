@@ -661,6 +661,42 @@ function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, 
           })}
         </g>
       )}
+      {placed.map(({ node, pos }) => {
+        // Recursion into a node's children must paint BEFORE that node's
+        // own circle (rendered in the pass below), not after. A child
+        // ring's micro-connections-layer draws lines starting exactly AT
+        // this node's own center - so if the recursion (which includes
+        // those lines) renders later in DOM order than this node's circle,
+        // the lines paint over it; rendering it earlier lets this node's
+        // own circle (drawn last, below) cover the near-origin ends of its
+        // children's lines instead. This inductively holds at every depth:
+        // each node's circle is always the LAST thing drawn in its own
+        // ring, after its full recursive subtree - หมวด, ภาค, ลักษณะ, มาตรา
+        // circles alike stay clean of their own outgoing connections.
+        const isActive = activeId === node.id;
+        const isPinned = pinnedPathIds?.has(node.id) ?? false;
+        if (!(isActive || isPinned) || !node.children) return null;
+        return (
+          <LegalNodeRing
+            key={`recurse-${node.id}`}
+            nodes={node.children}
+            centerX={pos.x}
+            centerY={pos.y}
+            depth={depth + 1}
+            domainId={domainId}
+            domainColor={domainColor}
+            domainSoftColor={domainSoftColor}
+            groupLabel={node.label}
+            selectedPath={selectedPath}
+            pathPrefix={[...pathPrefix, node.id]}
+            onSelectPath={onSelectPath}
+            onSelectArticle={onSelectArticle}
+            showConnections={showConnections}
+            legacyScale={legacyScale}
+            pinnedPathIds={pinnedPathIds}
+          />
+        );
+      })}
       {placed.map(({ node, pos }, index) => {
         const isLeaf = !node.children;
         const isActive = activeId === node.id;
@@ -701,42 +737,6 @@ function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, 
               </g>
             </g>
           </g>
-        );
-      })}
-      {placed.map(({ node, pos }) => {
-        // Recursion into a node's children was previously nested inside
-        // that same node's own <g> (right after its circle), which put the
-        // child ring's own micro-connections-layer - lines starting AT this
-        // node's center - later in paint order than this node's own circle,
-        // so the lines painted on top of it (visible at every depth: หมวด,
-        // ภาค, ลักษณะ, มาตรา alike). Rendering all recursions in a separate
-        // pass, after every sibling circle in this ring has already been
-        // drawn, guarantees a node's own circle is never covered by its
-        // children's connecting lines. The child ring still draws its own
-        // links before its own nodes internally, so link-under-node holds
-        // at every depth simultaneously.
-        const isActive = activeId === node.id;
-        const isPinned = pinnedPathIds?.has(node.id) ?? false;
-        if (!(isActive || isPinned) || !node.children) return null;
-        return (
-          <LegalNodeRing
-            key={`recurse-${node.id}`}
-            nodes={node.children}
-            centerX={pos.x}
-            centerY={pos.y}
-            depth={depth + 1}
-            domainId={domainId}
-            domainColor={domainColor}
-            domainSoftColor={domainSoftColor}
-            groupLabel={node.label}
-            selectedPath={selectedPath}
-            pathPrefix={[...pathPrefix, node.id]}
-            onSelectPath={onSelectPath}
-            onSelectArticle={onSelectArticle}
-            showConnections={showConnections}
-            legacyScale={legacyScale}
-            pinnedPathIds={pinnedPathIds}
-          />
         );
       })}
     </>
@@ -1453,32 +1453,15 @@ export default function Home() {
                   </g>
                   {(isSelected || isCaseRelevant) && (
                     <>
-                      {domain.children.map((subject, subjectIndex) => {
-                        const isSubjectSelected = selectedSubjectId === subject.id;
-                        const isSubjectPinned = casePinnedIds.has(subject.id);
-                        return (
-                          <g key={subject.id} className="subject-node-wrap" style={{ "--subject-delay": `${subjectIndex * 55}ms`, "--drift-delay": `${(subjectIndex % 7) * -0.9}s` } as CSSProperties}>
-                            <g className="subject-node-drift">
-                              <g className={`graph-node graph-node--subject ${isSubjectSelected || isSubjectPinned ? "is-selected" : ""} ${selectedSubjectId && !isSubjectSelected && !isSubjectPinned ? "is-sibling-dimmed" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => selectPath([domain.id, subject.id])} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectPath([domain.id, subject.id]); } }}>
-                                <circle cx={subject.x} cy={subject.y} r={subject.radius + 10} fill={domain.color} opacity={isSubjectSelected ? 0.19 : 0.075} filter="url(#softBlur)" />
-                                <circle cx={subject.x} cy={subject.y} r={subject.radius} fill={domain.softColor} stroke={domain.color} strokeWidth={isSubjectSelected ? 2.1 : 1.15} filter="url(#nodeShadow)" />
-                                <circle cx={subject.x} cy={subject.y} r={Math.max(4, subject.radius * 0.3)} fill="#FFFFFF" opacity="0.38" />
-                                <text x={subject.x} y={subject.y + subject.radius + 20} textAnchor="middle" className="subject-label">
-                                  <tspan x={subject.x}>{subject.label}</tspan>
-                                  {subject.range && <tspan x={subject.x} dy="13" className="node-label__range">{subject.range}</tspan>}
-                                </text>
-                              </g>
-                            </g>
-                          </g>
-                        );
-                      })}
                       {/* Same fix as inside LegalNodeRing: a subject's own
-                          children-ring (ภาค/บรรพ -> ลักษณะ) used to render
-                          nested inside that subject's own <g>, right after
-                          its circle, so the ring's lines (which start at the
-                          subject's own center) painted over the subject
-                          circle itself. Rendered here instead, after every
-                          subject circle in this domain is already drawn. */}
+                          children-ring (ภาค/บรรพ -> ลักษณะ) must paint BEFORE
+                          the subject's own circle (rendered in the pass
+                          below), not after - the ring's lines start exactly
+                          AT the subject's own center, so rendering the
+                          recursion first lets the subject circle (drawn
+                          last) cover the near-origin ends of its own
+                          children's lines instead of the lines crossing
+                          over the subject circle. */}
                       {domain.children.map((subject) => {
                         const isSubjectSelected = selectedSubjectId === subject.id;
                         const isSubjectPinned = casePinnedIds.has(subject.id);
@@ -1502,6 +1485,25 @@ export default function Home() {
                             pinnedPathIds={casePinnedIds}
                             legacyScale={domain.id === "criminal" ? 1.82 : 1.58}
                           />
+                        );
+                      })}
+                      {domain.children.map((subject, subjectIndex) => {
+                        const isSubjectSelected = selectedSubjectId === subject.id;
+                        const isSubjectPinned = casePinnedIds.has(subject.id);
+                        return (
+                          <g key={subject.id} className="subject-node-wrap" style={{ "--subject-delay": `${subjectIndex * 55}ms`, "--drift-delay": `${(subjectIndex % 7) * -0.9}s` } as CSSProperties}>
+                            <g className="subject-node-drift">
+                              <g className={`graph-node graph-node--subject ${isSubjectSelected || isSubjectPinned ? "is-selected" : ""} ${selectedSubjectId && !isSubjectSelected && !isSubjectPinned ? "is-sibling-dimmed" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => selectPath([domain.id, subject.id])} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectPath([domain.id, subject.id]); } }}>
+                                <circle cx={subject.x} cy={subject.y} r={subject.radius + 10} fill={domain.color} opacity={isSubjectSelected ? 0.19 : 0.075} filter="url(#softBlur)" />
+                                <circle cx={subject.x} cy={subject.y} r={subject.radius} fill={domain.softColor} stroke={domain.color} strokeWidth={isSubjectSelected ? 2.1 : 1.15} filter="url(#nodeShadow)" />
+                                <circle cx={subject.x} cy={subject.y} r={Math.max(4, subject.radius * 0.3)} fill="#FFFFFF" opacity="0.38" />
+                                <text x={subject.x} y={subject.y + subject.radius + 20} textAnchor="middle" className="subject-label">
+                                  <tspan x={subject.x}>{subject.label}</tspan>
+                                  {subject.range && <tspan x={subject.x} dy="13" className="node-label__range">{subject.range}</tspan>}
+                                </text>
+                              </g>
+                            </g>
+                          </g>
                         );
                       })}
                     </>

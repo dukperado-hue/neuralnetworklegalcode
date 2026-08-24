@@ -700,26 +700,43 @@ function LegalNodeRing({ nodes, centerX, centerY, depth, domainId, domainColor, 
                 </text>
               </g>
             </g>
-            {(isActive || isPinned) && node.children && (
-              <LegalNodeRing
-                nodes={node.children}
-                centerX={pos.x}
-                centerY={pos.y}
-                depth={depth + 1}
-                domainId={domainId}
-                domainColor={domainColor}
-                domainSoftColor={domainSoftColor}
-                groupLabel={node.label}
-                selectedPath={selectedPath}
-                pathPrefix={nodePath}
-                onSelectPath={onSelectPath}
-                onSelectArticle={onSelectArticle}
-                showConnections={showConnections}
-                legacyScale={legacyScale}
-                pinnedPathIds={pinnedPathIds}
-              />
-            )}
           </g>
+        );
+      })}
+      {placed.map(({ node, pos }) => {
+        // Recursion into a node's children was previously nested inside
+        // that same node's own <g> (right after its circle), which put the
+        // child ring's own micro-connections-layer - lines starting AT this
+        // node's center - later in paint order than this node's own circle,
+        // so the lines painted on top of it (visible at every depth: หมวด,
+        // ภาค, ลักษณะ, มาตรา alike). Rendering all recursions in a separate
+        // pass, after every sibling circle in this ring has already been
+        // drawn, guarantees a node's own circle is never covered by its
+        // children's connecting lines. The child ring still draws its own
+        // links before its own nodes internally, so link-under-node holds
+        // at every depth simultaneously.
+        const isActive = activeId === node.id;
+        const isPinned = pinnedPathIds?.has(node.id) ?? false;
+        if (!(isActive || isPinned) || !node.children) return null;
+        return (
+          <LegalNodeRing
+            key={`recurse-${node.id}`}
+            nodes={node.children}
+            centerX={pos.x}
+            centerY={pos.y}
+            depth={depth + 1}
+            domainId={domainId}
+            domainColor={domainColor}
+            domainSoftColor={domainSoftColor}
+            groupLabel={node.label}
+            selectedPath={selectedPath}
+            pathPrefix={[...pathPrefix, node.id]}
+            onSelectPath={onSelectPath}
+            onSelectArticle={onSelectArticle}
+            showConnections={showConnections}
+            legacyScale={legacyScale}
+            pinnedPathIds={pinnedPathIds}
+          />
         );
       })}
     </>
@@ -842,8 +859,19 @@ export default function Home() {
     const bounds = event.currentTarget.getBoundingClientRect();
     const gesture = panGestureRef.current;
     if (gesture.pointerId !== event.pointerId) return;
-    const dx = ((event.clientX - gesture.startX) / bounds.width) * 1440;
-    const dy = ((event.clientY - gesture.startY) / bounds.height) * 900;
+    // preserveAspectRatio="xMidYMid slice" scales the 1440x900 viewBox
+    // uniformly (never stretched) using whichever axis ratio is larger, then
+    // crops the overflow - so converting screen px to viewBox units must use
+    // that SAME single scale for both axes. Using bounds.width for dx and
+    // bounds.height for dy independently (the old code) only matches when
+    // the container's aspect ratio happens to equal 1440/900; any wider or
+    // narrower window skews the two conversions apart, so vertical drags hit
+    // the pan clamp after less real mouse movement than horizontal ones -
+    // read as "can't pan down/up far enough" even though the clamp values
+    // themselves were correct.
+    const viewboxPerPixel = 1 / Math.max(bounds.width / 1440, bounds.height / 900);
+    const dx = (event.clientX - gesture.startX) * viewboxPerPixel;
+    const dy = (event.clientY - gesture.startY) * viewboxPerPixel;
     if (Math.hypot(dx, dy) > 4) {
       didDragRef.current = true;
       if (!event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.setPointerCapture(event.pointerId);
@@ -886,7 +914,13 @@ export default function Home() {
 
   const handleMapWheel = (event: ReactWheelEvent<SVGSVGElement>) => {
     event.preventDefault();
-    const delta = event.deltaY > 0 ? -0.06 : 0.06;
+    // Proportional to the wheel event's own magnitude rather than a flat
+    // step per event - a fixed 0.06 made one mouse-wheel notch (which fires
+    // a single event with deltaY ~100-120) feel sluggish (half the +/-
+    // button's 0.12 step), while trackpads that fire many small-deltaY
+    // events in a row still get a smooth, proportionally small zoom per
+    // event. Clamped so a single large notch can't overshoot too far.
+    const delta = Math.max(-0.18, Math.min(0.18, (-event.deltaY / 100) * 0.18));
     setZoom((value) => Math.max(0.42, Math.min(1.32, Number((value + delta).toFixed(2)))));
   };
 
@@ -1417,24 +1451,41 @@ export default function Home() {
                     <text x={domain.x} y={domain.y - 3} textAnchor="middle" className="domain-abbr">{domain.abbreviation}</text>
                     <text x={domain.x} y={domain.y + domain.radius + 25} textAnchor="middle" className="domain-label">{domain.shortLabel}</text>
                   </g>
-                  {(isSelected || isCaseRelevant) && domain.children.map((subject, subjectIndex) => {
-                    const isSubjectSelected = selectedSubjectId === subject.id;
-                    const isSubjectPinned = casePinnedIds.has(subject.id);
-                    return (
-                      <g key={subject.id} className="subject-node-wrap" style={{ "--subject-delay": `${subjectIndex * 55}ms`, "--drift-delay": `${(subjectIndex % 7) * -0.9}s` } as CSSProperties}>
-                        <g className="subject-node-drift">
-                          <g className={`graph-node graph-node--subject ${isSubjectSelected || isSubjectPinned ? "is-selected" : ""} ${selectedSubjectId && !isSubjectSelected && !isSubjectPinned ? "is-sibling-dimmed" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => selectPath([domain.id, subject.id])} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectPath([domain.id, subject.id]); } }}>
-                            <circle cx={subject.x} cy={subject.y} r={subject.radius + 10} fill={domain.color} opacity={isSubjectSelected ? 0.19 : 0.075} filter="url(#softBlur)" />
-                            <circle cx={subject.x} cy={subject.y} r={subject.radius} fill={domain.softColor} stroke={domain.color} strokeWidth={isSubjectSelected ? 2.1 : 1.15} filter="url(#nodeShadow)" />
-                            <circle cx={subject.x} cy={subject.y} r={Math.max(4, subject.radius * 0.3)} fill="#FFFFFF" opacity="0.38" />
-                            <text x={subject.x} y={subject.y + subject.radius + 20} textAnchor="middle" className="subject-label">
-                              <tspan x={subject.x}>{subject.label}</tspan>
-                              {subject.range && <tspan x={subject.x} dy="13" className="node-label__range">{subject.range}</tspan>}
-                            </text>
+                  {(isSelected || isCaseRelevant) && (
+                    <>
+                      {domain.children.map((subject, subjectIndex) => {
+                        const isSubjectSelected = selectedSubjectId === subject.id;
+                        const isSubjectPinned = casePinnedIds.has(subject.id);
+                        return (
+                          <g key={subject.id} className="subject-node-wrap" style={{ "--subject-delay": `${subjectIndex * 55}ms`, "--drift-delay": `${(subjectIndex % 7) * -0.9}s` } as CSSProperties}>
+                            <g className="subject-node-drift">
+                              <g className={`graph-node graph-node--subject ${isSubjectSelected || isSubjectPinned ? "is-selected" : ""} ${selectedSubjectId && !isSubjectSelected && !isSubjectPinned ? "is-sibling-dimmed" : ""}`} role="button" tabIndex={0} aria-label={`เปิดหัวข้อ ${subject.label}`} onPointerDown={(event) => event.stopPropagation()} onClick={() => selectPath([domain.id, subject.id])} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); selectPath([domain.id, subject.id]); } }}>
+                                <circle cx={subject.x} cy={subject.y} r={subject.radius + 10} fill={domain.color} opacity={isSubjectSelected ? 0.19 : 0.075} filter="url(#softBlur)" />
+                                <circle cx={subject.x} cy={subject.y} r={subject.radius} fill={domain.softColor} stroke={domain.color} strokeWidth={isSubjectSelected ? 2.1 : 1.15} filter="url(#nodeShadow)" />
+                                <circle cx={subject.x} cy={subject.y} r={Math.max(4, subject.radius * 0.3)} fill="#FFFFFF" opacity="0.38" />
+                                <text x={subject.x} y={subject.y + subject.radius + 20} textAnchor="middle" className="subject-label">
+                                  <tspan x={subject.x}>{subject.label}</tspan>
+                                  {subject.range && <tspan x={subject.x} dy="13" className="node-label__range">{subject.range}</tspan>}
+                                </text>
+                              </g>
+                            </g>
                           </g>
-                        </g>
-                        {(isSubjectSelected || isSubjectPinned) && subject.children && (
+                        );
+                      })}
+                      {/* Same fix as inside LegalNodeRing: a subject's own
+                          children-ring (ภาค/บรรพ -> ลักษณะ) used to render
+                          nested inside that subject's own <g>, right after
+                          its circle, so the ring's lines (which start at the
+                          subject's own center) painted over the subject
+                          circle itself. Rendered here instead, after every
+                          subject circle in this domain is already drawn. */}
+                      {domain.children.map((subject) => {
+                        const isSubjectSelected = selectedSubjectId === subject.id;
+                        const isSubjectPinned = casePinnedIds.has(subject.id);
+                        if (!(isSubjectSelected || isSubjectPinned) || !subject.children) return null;
+                        return (
                           <LegalNodeRing
+                            key={`recurse-${subject.id}`}
                             nodes={subject.children}
                             centerX={subject.x}
                             centerY={subject.y}
@@ -1451,10 +1502,10 @@ export default function Home() {
                             pinnedPathIds={casePinnedIds}
                             legacyScale={domain.id === "criminal" ? 1.82 : 1.58}
                           />
-                        )}
-                      </g>
-                    );
-                  })}
+                        );
+                      })}
+                    </>
+                  )}
                 </g>
               );
             })}

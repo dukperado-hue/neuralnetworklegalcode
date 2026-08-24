@@ -829,7 +829,17 @@ export default function Home() {
       didDragRef.current = true;
       if (!event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.setPointerCapture(event.pointerId);
       setIsPanning(true);
-      setPan({ x: Math.max(-300, Math.min(300, gesture.startPanX + dx)), y: Math.max(-210, Math.min(210, gesture.startPanY + dy)) });
+      // Pan range scales with the current camera scale - a fixed
+      // viewBox-unit clamp (the old ±300/±210) means the same drag covers
+      // less and less real ground the more zoomed in the camera is (e.g.
+      // drilled several levels deep, or focused on a cross-domain case),
+      // making it feel stuck long before you've actually reached the edge
+      // of the map. Math.max(1, ...) keeps the floor at the old bounds when
+      // zoomed out so the overview doesn't gain excess empty pan room.
+      const panScale = Math.max(1, cameraScale);
+      const panLimitX = 340 * panScale;
+      const panLimitY = 260 * panScale;
+      setPan({ x: Math.max(-panLimitX, Math.min(panLimitX, gesture.startPanX + dx)), y: Math.max(-panLimitY, Math.min(panLimitY, gesture.startPanY + dy)) });
     }
   };
 

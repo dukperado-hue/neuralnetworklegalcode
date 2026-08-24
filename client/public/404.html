@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ประมวลNN</title>
+    <!--
+      GitHub Pages is a static file host - a direct hit on a client-routed
+      path like /case or /case/:caseId has no matching file, so GH Pages
+      serves this 404.html instead of ever loading the real SPA. This
+      redirects back to the real index.html, encoding the originally
+      requested path (and query/hash) into a query string so index.html's
+      own decode script (see client/index.html) can restore it via
+      history.replaceState before wouter reads the URL. Standard
+      spa-github-pages trick (rafgraph/spa-github-pages) - pathSegmentsToKeep
+      must match vite.config.ts's GH Pages base ("/neuralnetworklegalcode/",
+      one segment).
+    -->
+    <script type="text/javascript">
+      var pathSegmentsToKeep = 1;
+      var l = window.location;
+      l.replace(
+        l.protocol + "//" + l.hostname + (l.port ? ":" + l.port : "") +
+        l.pathname.split("/").slice(0, 1 + pathSegmentsToKeep).join("/") + "/?/" +
+        l.pathname.slice(1).split("/").slice(pathSegmentsToKeep).join("/").replace(/&/g, "~and~") +
+        (l.search ? "&" + l.search.slice(1).replace(/&/g, "~and~") : "") +
+        l.hash
+      );
+    </script>
+  </head>
+  <body></body>
+</html>

@@ -15851,6 +15851,12 @@ export const civproHierarchy: LegalNode[] = [
                 "number": "20 ทวิ"
               },
               {
+                "id": "civpro-art-20-ตรี",
+                "label": "ก่อนยื่นฟ้องคดี บุคคลที่จะเป็นคู่ความอาจยื่นคำ",
+                "book": "civpro",
+                "number": "20 ตรี"
+              },
+              {
                 "id": "civpro-art-21",
                 "label": "เมื่อคู่ความฝ่ายใดเสนอคําขอหรือคําแถลงต่อศาล (๑)",
                 "book": "civpro",
